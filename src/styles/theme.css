@@ -1,0 +1,65 @@
+/* ============================================
+   GLOBAL THEME COLORS - Change colors here to update entire project
+   ============================================ */
+
+:root {
+  /* Header Colors - Matching Home Section Theme */
+  --header-bg: #2a3441; /* Dark blue-grey matching home section */
+  --header-text: #ffffff; /* White */
+  --header-logo-bg: #ffd700; /* Yellow/Gold */
+  --header-logo-symbol: #9c27b0; /* Purple for Om symbol */
+  --header-link-hover: #ffd700; /* Gold on hover */
+  
+  /* Background Colors */
+  --bg-primary: #2a3441; /* Dark blue-grey (center) */
+  --bg-secondary: #1e2835; /* Darker blue-grey */
+  --bg-tertiary: #1a2330; /* Even darker */
+  --bg-darkest: #000000; /* Black (corners) */
+  
+  /* Card/Container Colors */
+  --card-bg: #3a3a3a; /* Dark grey card background */
+  --card-border: rgba(255, 255, 255, 0.1); /* Subtle border */
+  --card-shadow: rgba(0, 0, 0, 0.5); /* Card shadow */
+  
+  /* Text Colors */
+  --text-primary: #ffffff; /* White */
+  --text-secondary: rgba(255, 255, 255, 0.9); /* Slightly transparent white */
+  --text-muted: rgba(255, 255, 255, 0.7); /* Muted white */
+  
+  /* Accent Colors */
+  --accent-gold: #ffd700;
+  --accent-purple: #9c27b0;
+  --accent-yellow: #ffd700;
+  
+  /* Button Colors */
+  --btn-primary: #4CAF50;
+  --btn-primary-hover: #45a049;
+  --btn-secondary: #1976d2;
+  --btn-secondary-hover: #1565c0;
+  
+  /* Table Colors */
+  --table-header-bg: #f8f9fa;
+  --table-border: #dee2e6;
+  --table-row-hover: #f8f9fa;
+  
+  /* Section Colors */
+  --section-bg: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+  
+  /* Spacing */
+  --spacing-xs: 8px;
+  --spacing-sm: 16px;
+  --spacing-md: 24px;
+  --spacing-lg: 32px;
+  --spacing-xl: 48px;
+  
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+

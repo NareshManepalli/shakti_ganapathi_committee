@@ -1,0 +1,31 @@
+import React from 'react'
+import { LanguageProvider } from './contexts/LanguageContext'
+import Header from './components/Header'
+import Home from './components/Home'
+import About from './components/About'
+import Committee from './components/Committee'
+import Gallery from './components/Gallery'
+import FundSection from './components/FundSection'
+import MandapamLocation from './components/MandapamLocation'
+import Footer from './components/Footer'
+import './App.css'
+
+function App() {
+  return (
+    <LanguageProvider>
+      <div className="App">
+        <Header />
+        <Home />
+        <About />
+        <Committee />
+        <Gallery />
+        <FundSection />
+        <MandapamLocation />
+        <Footer />
+      </div>
+    </LanguageProvider>
+  )
+}
+
+export default App
+
