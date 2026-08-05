@@ -4,6 +4,7 @@ import Header from './components/Header'
 import Home from './components/Home'
 import About from './components/About'
 import Committee from './components/Committee'
+import Schedule from './components/Schedule'
 import Gallery from './components/Gallery'
 import MandapamLocation from './components/MandapamLocation'
 import Footer from './components/Footer'
@@ -17,6 +18,7 @@ function App() {
         <Home />
         <About />
         <Committee />
+        <Schedule />
         <Gallery />
         {/* The fund ledger is not public. Phase 5 replaces it with a
             Committee Fund button that gates access to /transactions. */}

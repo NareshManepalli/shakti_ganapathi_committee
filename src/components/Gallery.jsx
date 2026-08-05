@@ -25,6 +25,17 @@ const imagesForYear = (year) => {
   }));
 };
 
+// The newest year that actually has photos. Until this year's festival
+// pictures are uploaded the gallery opens on the previous year, so visitors
+// land on real photos rather than an empty state. The moment the current
+// year has any, it becomes the default on its own.
+const latestYearWithPhotos = (currentYear) => {
+  for (let y = currentYear; y >= GALLERY_START_YEAR; y -= 1) {
+    if (imagesForYear(y).length > 0) return y;
+  }
+  return currentYear;
+};
+
 const Gallery = () => {
   const { language } = useLanguage();
   const t = translations[language];
@@ -38,7 +49,9 @@ const Gallery = () => {
     return list;
   }, [currentYear]);
 
-  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedYear, setSelectedYear] = useState(() =>
+    latestYearWithPhotos(currentYear)
+  );
   const [rowCount, setRowCount] = useState(getRowCount);
   const [selectedImage, setSelectedImage] = useState(null);
   const loading = useSectionReady();

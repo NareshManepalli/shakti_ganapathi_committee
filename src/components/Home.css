@@ -37,16 +37,16 @@
   --bg-painted-h: max(var(--hero-h), calc(100vw * 0.5628));
   /* Fraction of the painted background height from its bottom edge up to the
      stage's seating surface. Lower this to sit the idol further down. */
-  --stage-y: calc(var(--bg-painted-h) * 0.145);
+  --stage-y: calc(var(--bg-painted-h) * 0.158);
 
   /* Breathing room above the title, scaled to the viewport. */
-  --hero-pt: clamp(26px, 5.5vh, 74px);
+  --hero-pt: clamp(14px, 2.8vh, 40px);
 
   /* Title width lives here so the idol's ceiling can be derived from it.
      The title art is ~2.8:1, so its height is width / 2.8. The idol may not
      grow past the gap between the title and the stage — without this cap a
      short, wide window (1920x800) pushes the headdress over the wordmark. */
-  --title-w: min(33vw, 335px);
+  --title-w: min(28vw, 285px);
   --idol-max-h: calc(
     var(--hero-h) - var(--stage-y) - var(--hero-pt) - (var(--title-w) / 1.778) - 4vh
   );
@@ -126,7 +126,7 @@
 }
 
 .home-idol-img {
-  height: min(calc(var(--hero-h) * 0.51), calc(100vw * 0.285), var(--idol-max-h));
+  height: min(calc(var(--hero-h) * 0.46), calc(100vw * 0.255), var(--idol-max-h));
   width: auto;
   display: block;
   /* Cancels bot2.png's transparent padding — see the note at the top. */
@@ -227,10 +227,10 @@ body.lang-te .countdown-unit-label {
 
 /* Tablet */
 @media (max-width: 968px) {
-  .home-hero { --title-w: min(50vw, 306px); }
+  .home-hero { --title-w: min(43vw, 260px); }
 
   .home-idol-img {
-    height: min(calc(var(--hero-h) * 0.475), calc(100vw * 0.60), var(--idol-max-h));
+    height: min(calc(var(--hero-h) * 0.43), calc(100vw * 0.54), var(--idol-max-h));
   }
 }
 
@@ -280,19 +280,19 @@ body.lang-te .countdown-unit-label {
 @media (max-width: 640px) {
   .home-hero { min-height: 460px; }
 
-  .home-hero { --title-w: min(72vw, 306px); }
+  .home-hero { --title-w: min(62vw, 260px); }
 
   .home-idol-img {
-    height: min(calc(var(--hero-h) * 0.455), calc(100vw * 0.75), var(--idol-max-h));
+    height: min(calc(var(--hero-h) * 0.41), calc(100vw * 0.68), var(--idol-max-h));
   }
 }
 
 /* Small mobile */
 @media (max-width: 480px) {
-  .home-hero { --title-w: 77vw; }
+  .home-hero { --title-w: 66vw; }
 
   .home-idol-img {
-    height: min(calc(var(--hero-h) * 0.44), calc(100vw * 0.79), var(--idol-max-h));
+    height: min(calc(var(--hero-h) * 0.40), calc(100vw * 0.72), var(--idol-max-h));
   }
 }
 
@@ -301,11 +301,11 @@ body.lang-te .countdown-unit-label {
 @media (max-height: 560px) and (orientation: landscape) {
   .home-hero {
     min-height: 380px;
-    --title-w: min(30vw, 250px);
+    --title-w: min(26vw, 213px);
     --hero-pt: 12px;
   }
   .home-idol-img {
-    height: min(calc(var(--hero-h) * 0.46), calc(100vw * 0.185), var(--idol-max-h));
+    height: min(calc(var(--hero-h) * 0.42), calc(100vw * 0.17), var(--idol-max-h));
   }
 }
 

@@ -32,6 +32,12 @@ export const translations = {
     position: "Position",
     viewAllMembers: "View All Members",
     
+    // Schedule Section
+    scheduleEvents: "Events",
+    scheduleSubtitle: "The full festival schedule, day by day",
+    scheduleAt: "at",
+    scheduleDay: "Day",
+
     // Gallery Section
     galleryTitle: "Photo Gallery",
     gallerySubtitle: "Browse through our memorable moments and events",
@@ -105,6 +111,12 @@ export const translations = {
     position: "స్థానం",
     viewAllMembers: "అందరు సభ్యులను చూడండి",
     
+    // Schedule Section
+    scheduleEvents: "కార్యక్రమాలు",
+    scheduleSubtitle: "పండుగ కార్యక్రమాల పూర్తి వివరాలు, రోజువారీగా",
+    scheduleAt: "",
+    scheduleDay: "రోజు",
+
     // Gallery Section
     galleryTitle: "ఫోటో గ్యాలరీ",
     gallerySubtitle: "మా గుర్తుంచుకోదగిన క్షణాలు మరియు కార్యక్రమాలను బ్రౌజ్ చేయండి",

@@ -69,8 +69,8 @@
   /* --- Section headings ------------------------------------------------ */
   /* Every section title/subtitle reads from these, so the whole site
      rescales from one place. */
-  --section-title-size: clamp(1.45rem, 3.2vw, 2.15rem);
-  --section-subtitle-size: clamp(0.85rem, 1.6vw, 1rem);
+  --section-title-size: clamp(1.28rem, 2.75vw, 1.82rem);
+  --section-subtitle-size: clamp(0.8rem, 1.4vw, 0.92rem);
 
   /* Section rhythm — shared so every section's heading sits at the same
      height and the same distance above its content. */
@@ -97,13 +97,13 @@
   --shadow-gold: 0 0 18px rgba(223, 174, 77, 0.35);
 
   /* --- Header height, shared by the hero so the two always agree -------- */
-  --header-h: 72px;
+  --header-h: 62px;
 }
 
 @media (max-width: 968px) {
-  :root { --header-h: 66px; }
+  :root { --header-h: 58px; }
 }
 
 @media (max-width: 640px) {
-  :root { --header-h: 60px; }
+  :root { --header-h: 54px; }
 }

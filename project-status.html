@@ -190,14 +190,14 @@
     <div class="progress-hero">
       <div class="progress-hero-top">
         <span class="progress-hero-label">Overall completion</span>
-        <span class="progress-hero-pct">9%</span>
+        <span class="progress-hero-pct">11%</span>
       </div>
-      <div class="progress-hero-track" role="img" aria-label="4 of 44 deliverables complete, 7 more in progress">
-        <span class="progress-hero-fill" style="width: 9%"></span>
+      <div class="progress-hero-track" role="img" aria-label="5 of 44 deliverables complete, 7 more in progress">
+        <span class="progress-hero-fill" style="width: 11%"></span>
         <span class="progress-hero-part" style="width: 16%"></span>
       </div>
       <div class="progress-hero-legend">
-        <span><span class="dot c"></span><b>4 of 44</b> complete</span>
+        <span><span class="dot c"></span><b>5 of 44</b> complete</span>
         <span><span class="dot p"></span><b>7</b> built, awaiting data binding</span>
         <span>Phase 0 underway · Phase 1 not started</span>
       </div>
@@ -205,16 +205,16 @@
   </header>
 
   <div class="summary">
-    <div class="stat done"><div class="n">4</div><div class="l">Done</div></div>
+    <div class="stat done"><div class="n">5</div><div class="l">Done</div></div>
     <div class="stat prog"><div class="n">7</div><div class="l">In progress</div></div>
     <div class="stat rework"><div class="n">0</div><div class="l">Untouched — needs rework</div></div>
-    <div class="stat todo"><div class="n">33</div><div class="l">To build from scratch</div></div>
+    <div class="stat todo"><div class="n">32</div><div class="l">To build from scratch</div></div>
   </div>
-  <div class="bar" role="img" aria-label="4 done, 7 in progress, 0 rework, 33 to build">
-    <span class="s-done" style="flex: 4"></span>
+  <div class="bar" role="img" aria-label="5 done, 7 in progress, 0 rework, 32 to build">
+    <span class="s-done" style="flex: 5"></span>
     <span class="s-prog" style="flex: 7"></span>
     <span class="s-rework" style="flex: 0"></span>
-    <span class="s-todo" style="flex: 33"></span>
+    <span class="s-todo" style="flex: 32"></span>
   </div>
 
   <div class="legend">
@@ -317,16 +317,18 @@
 
     <div class="phase">
       <div class="phase-head">
-        <div><div class="phase-no">Phase 3</div><div class="phase-title">9-Day Schedule Section <span style="font-size:11.5px;color:var(--faint);font-weight:500">· new</span></div></div>
+        <div><div class="phase-no">Phase 3 · built</div><div class="phase-title">9-Day Schedule Section</div></div>
         <div class="phase-meta">est. 2–3 days<br><span class="dep">depends on: <b>Phase 1</b></span></div>
       </div>
       <p class="phase-goal">
-        A new section between Committee Members and Gallery — the nine days as cards (day number,
-        date, pooja / event, timing, description, image), bilingual, scoped to the active festival
-        year, today's day highlighted. Also becomes the source for the hero countdown.
+        Built. Nine ticket-style cards — image, day count, event name and day + time, with the date
+        on the right — 3 per row on large screens, 2 on medium, 1 on small. Bilingual, with the
+        weekday, month and clock all derived from one stored date so the two languages can't drift.
+        Still on dummy data; Phase 1 binds it to the schedule sheet, which then also feeds the
+        hero countdown.
       </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 0%"></span></div>
-      <div class="phase-foot"><span><b>0 / 1</b> deliverable</span><span>0%</span></div>
+      <div class="phase-track"><span class="phase-fill" style="width: 100%"></span></div>
+      <div class="phase-foot"><span><b>1 / 1</b> deliverable</span><span>100%</span></div>
     </div>
 
     <div class="phase">
@@ -410,11 +412,11 @@
   <div class="tablecard"><div class="scroll"><table>
     <thead><tr><th>Section</th><th>State</th><th>Source</th><th>Phase</th><th>Status</th></tr></thead>
     <tbody>
-      <tr><td><span class="name">Header / Nav</span></td><td class="use">Rebuilt — circular emblem with the wordmark locked to its height, five links (Home · About Us · Committee · Gallery · Mandapam), scroll-spy, gold language switch, mobile drawer. Still to add: Admin Login entry</td><td class="src">translations · settings sheet</td><td class="ph">P2</td><td><span class="pill prog">In progress</span></td></tr>
+      <tr><td><span class="name">Header / Nav</span></td><td class="use">Rebuilt — circular emblem with the wordmark locked to its height, six links (Home · About Us · Committee · Events · Gallery · Mandapam), scroll-spy, gold language switch, mobile drawer. Still to add: Admin Login entry</td><td class="src">translations · settings sheet</td><td class="ph">P2</td><td><span class="pill prog">In progress</span></td></tr>
       <tr><td><span class="name">Home — Intro</span></td><td class="use">Rebuilt. Background artwork, language-swapped title, Ganesha anchored to the stage, live countdown to day&nbsp;1. <b>Static by design</b></td><td class="src">static assets</td><td class="ph">P0</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">About</span></td><td class="use">Rebuilt on the Peetam History layout — image left, heading + subtext + justified copy right, reordering to heading → image → copy on small screens</td><td class="src">about sheet</td><td class="ph">P2</td><td><span class="pill prog">In progress</span></td></tr>
       <tr><td><span class="name">Committee Members</span></td><td class="use">Rebuilt — executives in the first two columns beside a 4×3 member grid, fixed card widths, View All (2 rows on phones), keyboard-accessible cards. Still placeholder names and photos</td><td class="src">committee sheet · Drive</td><td class="ph">P2</td><td><span class="pill prog">In progress</span></td></tr>
-      <tr><td><span class="name">9-Day Schedule</span></td><td class="use">New section — nine day cards, bilingual, scoped to the active year</td><td class="src">schedule sheet</td><td class="ph">P3</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">9-Day Schedule</span></td><td class="use">Built — ticket cards (image · day count · event · day and time · date), 3/2/1 per row by screen. Heading reads "{year} Events" from the clock. Dummy data until the sheet lands</td><td class="src">schedule sheet</td><td class="ph">P3</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Gallery</span></td><td class="use">Rebuilt — year selector (2025 → current), alternating scroll rows (2 large / 3 small), lightbox with keys and counter, and a "celebrations haven't begun" state for the current year. Photos still placeholders</td><td class="src">Drive (script)</td><td class="ph">P4</td><td><span class="pill prog">In progress</span></td></tr>
       <tr><td><span class="name">Mandapam Location</span></td><td class="use">Rebuilt — address card left, map right, no contact details. Real address wired to the embed, Get Directions and Open in Maps from one string</td><td class="src">mandapam sheet</td><td class="ph">P2</td><td><span class="pill prog">In progress</span></td></tr>
       <tr><td><span class="name">Committee Fund button</span></td><td class="use">The last thing on the public page — a single button, no figures</td><td class="src">static</td><td class="ph">P5</td><td><span class="pill todo">To build</span></td></tr>

@@ -2,6 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
 import { committeeMembers } from '../data/committeeMembers';
+import logoImg from '../assets/logo.png';
+// Two cutouts stand in until real photos arrive — alternated per member so
+// the cards don't all look identical.
+import memberPhotoA from '../assets/naresh.png';
+import memberPhotoB from '../assets/naresh2.png';
 import { useSectionReady } from '../hooks/useSectionReady';
 import './Committee.css';
 
@@ -11,6 +16,14 @@ import './Committee.css';
 // Anything past this is revealed by the button: on large screens the area
 // becomes a scroller, on small screens the list simply grows.
 const LARGE_MIN_WIDTH = 969;
+const DownloadIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 3.5v11" />
+    <path d="M7.5 10.5 12 15l4.5-4.5" />
+    <path d="M4.5 19.5h15" />
+  </svg>
+);
+
 const VISIBLE_LARGE = 12;
 const VISIBLE_SMALL = 6;
 
@@ -35,6 +48,36 @@ const Committee = () => {
   // The executive column defines the height of the three member rows beside it.
   // Measuring it lets the expanded members area scroll inside exactly that
   // height, so revealing extra members never changes the section's height.
+  const cardRef = useRef(null);
+  const [downloading, setDownloading] = useState(false);
+
+  // html2canvas is ~200 kB — loaded only when someone actually downloads,
+  // so it never reaches the public bundle.
+  const downloadCard = async () => {
+    const el = cardRef.current;
+    if (!el || downloading) return;
+    setDownloading(true);
+    try {
+      const { default: html2canvas } = await import('html2canvas');
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        // JPEG has no alpha, so give it the card's own backdrop rather than
+        // letting transparent areas render black.
+        backgroundColor: '#050a14',
+      });
+      const link = document.createElement('a');
+      link.download = `${getMemberName(selectedMember).replace(/\s+/g, '-')}.jpg`;
+      link.href = canvas.toDataURL('image/jpeg', 0.95);
+      link.click();
+    } catch (err) {
+      console.error('Could not export the card:', err);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const execRef = useRef(null);
   const [execHeight, setExecHeight] = useState(null);
 
@@ -182,43 +225,69 @@ const Committee = () => {
       {/* Member detail modal */}
       {selectedMember && (
         <div className="member-modal" onClick={closeModal}>
+          <div className="modal-actions" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="modal-action-btn"
+              onClick={downloadCard}
+              disabled={downloading}
+              aria-label="Download card"
+              title="Download card"
+            >
+              <DownloadIcon />
+            </button>
+            <button
+              className="modal-action-btn modal-close-btn"
+              onClick={closeModal}
+              aria-label="Close"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </div>
           <div
-            className="member-modal-content"
+            ref={cardRef}
+            className="idcard"
             role="dialog"
             aria-modal="true"
             aria-label={getMemberName(selectedMember)}
             onClick={(e) => e.stopPropagation()}
           >
-            <button className="modal-close-btn" onClick={closeModal} aria-label="Close">
-              ×
-            </button>
-            <div className="modal-image-wrapper">
-              {selectedMember.image ? (
-                <img
-                  src={selectedMember.image}
-                  alt={getMemberName(selectedMember)}
-                  className="modal-member-image"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextElementSibling.style.display = 'flex';
-                  }}
-                />
-              ) : null}
-              <div
-                className="modal-placeholder"
-                style={{ display: selectedMember.image ? 'none' : 'flex' }}
-              >
-                <span className="plus-icon-large">+</span>
-              </div>
+            <span className="idcard-rings" aria-hidden="true" />
+
+            <header className="idcard-brand">
+              <span className="idcard-logo">
+                <img src={logoImg} alt="" />
+              </span>
+              <span className="idcard-brandtext">
+                {language === 'te' ? (
+                  /* Telugu reads as one phrase — split across two lines it
+                     looked broken, so the card uses the full name instead. */
+                  <span className="idcard-brand-single">{t.committeeName}</span>
+                ) : (
+                  <>
+                    <span className="idcard-brand-1">{t.brandLine1}</span>
+                    <span className="idcard-brand-2">{t.brandLine2}</span>
+                  </>
+                )}
+              </span>
+            </header>
+
+            <div className="idcard-photo">
+              <img
+                src={selectedMember.id % 2 === 1 ? memberPhotoA : memberPhotoB}
+                alt=""
+              />
             </div>
-            <div className="modal-member-details">
-              <h2 className="modal-member-name">{getMemberName(selectedMember)}</h2>
-              <p className="modal-member-position">
-                <strong>{t.position}:</strong> {getMemberPosition(selectedMember)}
-              </p>
-              <p className="modal-member-mobile">
-                <strong>{t.mobileNumber}:</strong> {selectedMember.mobile}
-              </p>
+
+            <span className="idcard-smoke" aria-hidden="true" />
+
+            <div className="idcard-details">
+              <h3 className="idcard-name">{getMemberName(selectedMember)}</h3>
+              <div className="idcard-meta">
+                <p className="idcard-line">{getMemberPosition(selectedMember)}</p>
+                <p className="idcard-line">{selectedMember.mobile}</p>
+              </div>
             </div>
           </div>
         </div>

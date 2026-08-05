@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
-import logoImg from '../assets/logo.jpeg';
+import logoImg from '../assets/logo.png';
 import './Header.css';
 
 // Section ids in page order — drives both the nav links and the scroll-spy.
@@ -37,6 +37,19 @@ const MENU_ITEMS = [
         <path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5" />
         <circle cx="17" cy="9.5" r="2.4" />
         <path d="M15 14.4c2.6-.5 5.5 1.1 5.5 4.1" />
+      </svg>
+    ),
+  },
+  {
+    // Label shared with the section heading so the two can't drift apart
+    key: 'scheduleEvents',
+    target: '#schedule',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3.5" y="5" width="17" height="16" rx="2" />
+        <path d="M3.5 9.5h17" />
+        <path d="M8 3v4M16 3v4" />
+        <path d="M7.5 13h3M7.5 17h3M13.5 13h3" />
       </svg>
     ),
   },
@@ -200,8 +213,6 @@ const Header = () => {
             aria-label={t.committeeName}
             onClick={(e) => e.stopPropagation()}
           >
-            <span className="mobile-drawer-watermark" aria-hidden="true">ॐ</span>
-
             <div className="mobile-drawer-header">
               <div className="mobile-drawer-profile">
                 <div className="mobile-drawer-avatar">

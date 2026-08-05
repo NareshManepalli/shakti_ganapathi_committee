@@ -7,9 +7,9 @@ import './MandapamLocation.css';
 // Phase 2 moves these to the `mandapam` sheet so the committee can edit them.
 const ADDRESS_LINES = [
   'Sri Shakthi Nilayam',
-  'D.No: 44-13-101, Annapurnamma Peta',
-  'Pedda Veedhi, Beside Nayi Bramin Sangam',
-  '533101',
+  'D.No: 44-13-101, Annapurnamma Peta,',
+  'Pedda Veedhi, Beside Nayi Brahmin Seva Sangam',
+  'Rajamahendravaram - 533101',
 ];
 
 // One source of truth for the location string — the embed, the directions link

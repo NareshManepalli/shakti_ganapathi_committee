@@ -45,7 +45,7 @@
   font-style: italic;
 }
 
-body.lang-te .committee-section-subtitle { font-size: 0.92rem; }
+body.lang-te .committee-section-subtitle { font-size: 0.85rem; }
 
 /* ============================================
    Layout — 6 notional columns: the two executives own the first 2, the
@@ -227,17 +227,6 @@ body.lang-te .committee-section-subtitle { font-size: 0.92rem; }
   }
 }
 
-.member-modal-content {
-  background: var(--bg-primary);
-  border-radius: var(--radius-md);
-  padding: 40px;
-  max-width: 500px;
-  width: 100%;
-  position: relative;
-  box-shadow: var(--shadow-lg);
-  animation: slideUp 0.3s ease;
-}
-
 @keyframes slideUp {
   from {
     transform: translateY(50px);
@@ -249,86 +238,44 @@ body.lang-te .committee-section-subtitle { font-size: 0.92rem; }
   }
 }
 
-.modal-close-btn {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  font-size: 36px;
-  line-height: 1;
-  cursor: pointer;
+.modal-actions {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 1;
+  display: flex;
+  gap: 10px;
+}
+
+.modal-action-btn {
   width: 40px;
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: all 0.3s;
+  border: 1px solid rgba(223, 174, 77, 0.35);
+  background: rgba(10, 20, 36, 0.75);
+  color: var(--gold-300);
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
 }
 
-.modal-close-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: rotate(90deg);
+.modal-action-btn svg { width: 19px; height: 19px; }
+
+.modal-action-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--gold-300), var(--gold-500));
+  color: var(--blue-950);
 }
 
-.modal-image-wrapper {
-  width: 200px;
-  height: 200px;
-  margin: 0 auto 30px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 4px solid var(--header-logo-bg);
-  background: rgba(255, 255, 255, 0.05);
+.modal-action-btn:disabled { opacity: 0.55; cursor: progress; }
+
+.modal-action-btn:focus-visible {
+  outline: 2px solid var(--gold-100);
+  outline-offset: 3px;
 }
 
-.modal-member-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.modal-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.plus-icon-large {
-  font-size: 80px;
-  color: var(--text-muted);
-  font-weight: 300;
-  line-height: 1;
-}
-
-.modal-member-details {
-  text-align: center;
-}
-
-.modal-member-name {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 20px 0;
-}
-
-.modal-member-position,
-.modal-member-mobile {
-  font-size: 16px;
-  color: var(--text-secondary);
-  margin: 10px 0;
-  line-height: 1.6;
-}
-
-.modal-member-position strong,
-.modal-member-mobile strong {
-  color: var(--text-primary);
-  font-weight: 600;
-}
+.modal-close-btn:hover { transform: rotate(90deg); }
 
 /* Tablet and below — the two executives sit side by side as before, with the
    remaining members three across underneath. Heading sizes are left to the
@@ -411,20 +358,6 @@ body.lang-te .committee-section-subtitle { font-size: 0.92rem; }
   .plus-icon {
     font-size: 28px;
   }
-
-  .member-modal-content {
-    padding: 30px 20px;
-    max-width: 90%;
-  }
-
-  .modal-image-wrapper {
-    width: 150px;
-    height: 150px;
-  }
-
-  .modal-member-name {
-    font-size: 24px;
-  }
 }
 
 @media (max-width: 480px) {
@@ -458,22 +391,7 @@ body.lang-te .committee-section-subtitle { font-size: 0.92rem; }
   .plus-icon {
     font-size: 24px;
   }
-
-  .modal-image-wrapper {
-    width: 120px;
-    height: 120px;
-  }
-
-  .modal-member-name {
-    font-size: 20px;
-  }
-
-  .modal-member-position,
-  .modal-member-mobile {
-    font-size: 14px;
-  }
 }
-
 
 /* Very narrow phones — one more step down so three columns still fit */
 @media (max-width: 360px) {
@@ -496,3 +414,183 @@ body.lang-te .committee-section-subtitle { font-size: 0.92rem; }
   width: var(--exec-card-w);
   height: 100%;
 }
+
+/* ============================================
+   Member identity card
+   Proportioned like a real ID badge (portrait ~0.63), so it reads as a card
+   rather than a dialog. Layers bottom-up: gradient + rings, cutout photo,
+   smoke fade, then the details on top.
+   ============================================ */
+.idcard {
+  position: relative;
+  width: min(88vw, 330px);
+  aspect-ratio: 0.70;
+  border-radius: 18px;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 50% 34%, var(--blue-600) 0%, var(--blue-800) 46%, var(--blue-950) 100%);
+  border: 1px solid rgba(223, 174, 77, 0.4);
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.65);
+  animation: slideUp 0.3s ease;
+}
+
+/* Concentric rings, echoing the reference card */
+/* The reference card's rings are broad tonal bands, not hairlines — so this
+   layers wide alternating bands under a crisp line at each band edge. */
+.idcard-rings {
+  position: absolute;
+  inset: -25%;
+  /* Soft tonal bands only — no outline at the band edges. */
+  background: repeating-radial-gradient(
+    circle at 50% 44%,
+    rgba(244, 214, 142, 0.035) 0 46px,
+    rgba(244, 214, 142, 0) 46px 92px
+  );
+  pointer-events: none;
+}
+
+/* ---- Brand strip ------------------------------------------------------ */
+.idcard-brand {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 14px 15px;
+}
+
+.idcard-logo {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  clip-path: circle(50%);
+  background: var(--blue-950);
+}
+
+.idcard-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Same 98px transparent margin as the header emblem */
+  transform: scale(1.106);
+  display: block;
+}
+
+.idcard-brandtext {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+
+.idcard-brand-1,
+.idcard-brand-2 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--gold-300);
+}
+
+.idcard-brand-1 { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; }
+.idcard-brand-2 { font-size: 9px; font-weight: 600; letter-spacing: 0.13em; opacity: 0.9; }
+
+/* Telugu uses one line instead of two, so it can carry a little more size */
+.idcard-brand-single {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  color: var(--gold-300);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Cutout photo ----------------------------------------------------- */
+.idcard-photo {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 12%;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.idcard-photo img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  object-fit: contain;
+  object-position: bottom center;
+  display: block;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.55));
+}
+
+/* ---- Smoke ------------------------------------------------------------ */
+/* A plain linear fade reads as a hard band over a cutout; the radial layers
+   break the edge up so it drifts rather than banding. */
+.idcard-smoke {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: 0;
+  height: 52%;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 58% at 30% 88%, rgba(5, 10, 20, 0.85), transparent 70%),
+    radial-gradient(ellipse 70% 52% at 72% 92%, rgba(5, 10, 20, 0.8), transparent 70%),
+    linear-gradient(
+      180deg,
+      rgba(5, 10, 20, 0) 0%,
+      rgba(5, 10, 20, 0.45) 34%,
+      rgba(5, 10, 20, 0.82) 60%,
+      rgba(5, 10, 20, 0.96) 100%
+    );
+}
+
+/* ---- Details ---------------------------------------------------------- */
+.idcard-details {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  padding: 0 16px 18px;
+  text-align: center;
+}
+
+.idcard-name {
+  margin: 0 0 8px;
+  font-size: clamp(17px, 4.6vw, 20px);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--gold-300);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+body.lang-te .idcard-name { font-size: clamp(16px, 4.2vw, 18.5px); }
+
+/* Icon badges stand in for the old "Position:" / "Mobile Number:" labels */
+.idcard-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.idcard-line {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-primary);
+}
+
