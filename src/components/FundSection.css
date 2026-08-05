@@ -4,9 +4,9 @@
     var(--bg-primary) 0%,
     var(--bg-secondary) 20%,
     var(--bg-tertiary) 40%,
-    #151c26 60%,
-    #0f1419 80%,
-    #080b0f 90%,
+    var(--blue-800) 60%,
+    var(--blue-900) 80%,
+    var(--blue-950) 90%,
     var(--bg-darkest) 100%
   );
   padding: 30px 20px;
@@ -21,17 +21,18 @@
 
 .section-title {
   text-align: center;
-  font-size: 42px;
+  font-size: var(--section-title-size);
   font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 10px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.5px;
+  color: var(--accent-gold);
+  margin-bottom: var(--spacing-xs);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
 }
 
 .section-subtitle {
   text-align: center;
-  font-size: 18px;
-  color: var(--text-secondary);
+  font-size: var(--section-subtitle-size);
+  color: var(--text-muted);
   margin-bottom: 30px;
   font-style: italic;
 }
@@ -67,7 +68,7 @@
 .tab-button.active {
   color: var(--header-logo-bg);
   border-bottom-color: var(--header-logo-bg);
-  background: rgba(255, 215, 0, 0.1);
+  background: rgba(223, 174, 77, 0.1);
 }
 
 .tab-content {
@@ -114,7 +115,7 @@
 .year-select:focus {
   outline: none;
   border-color: var(--header-logo-bg);
-  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+  box-shadow: 0 0 0 2px rgba(223, 174, 77, 0.2);
 }
 
 .year-select option {

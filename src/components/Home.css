@@ -1,660 +1,315 @@
+/* ============================================
+   Home hero
+
+   The stone stage, pillars and lamps are part of hm_bg. Only two foreground
+   pieces sit on top: the title artwork at the top, and the Ganesha resting on
+   the stage.
+
+   Anchoring the idol to the stage
+   -------------------------------
+   hm_bg is 1672x941 (aspect 1.7768) and the stage's seating surface sits at
+   ~16% of the image height above the image's bottom edge. With
+   `background-size: cover` + `background-position: center bottom`, the image
+   bottom always meets the hero bottom, and the painted height is
+   max(heroHeight, heroWidth / 1.7768). So the stage is always
+   0.16 x that painted height above the hero's bottom — which is exactly what
+   --stage-y computes. The idol is then pinned to that offset, so it stays
+   seated on the stage at every viewport size instead of drifting with a
+   hardcoded padding.
+
+   The source images carry transparent padding, which the CSS compensates for:
+
+   bot2.png is 944x1117 with the figure occupying 890x1020 at offset (16, 58).
+   That leaves 39px of empty space below the feet (3.5% of the height) and puts
+   the figure 11px left of the image's centre (1.2% of the width). Placing the
+   raw image bottom on the stage would therefore float the idol above it and
+   sit it slightly off-centre — the translate on .home-idol-img cancels both.
+
+   title_*.png are 4000x2250 (16:9) with the lettering filling only ~92% of the
+   width and ~56% of the height. The box is sized up to compensate so the
+   lettering still renders at the intended size, and --idol-max-h divides by the
+   file's 1.778 aspect rather than the lettering's.
+   ============================================ */
+
 .home-hero {
-  min-height: calc(100vh - 70px);
-  background: linear-gradient(
-    to bottom,
-    #0a0e1a 0%,
-    #0f1419 20%,
-    #1a2330 40%,
-    #2a3441 60%,
-    #1e2835 75%,
-    #0f1419 90%,
-    #080b0f 100%
+  --hero-h: calc(100vh - var(--header-h)); /* fallback */
+  --hero-h: calc(100lvh - var(--header-h));
+  --bg-painted-h: max(var(--hero-h), calc(100vw * 0.5628));
+  /* Fraction of the painted background height from its bottom edge up to the
+     stage's seating surface. Lower this to sit the idol further down. */
+  --stage-y: calc(var(--bg-painted-h) * 0.145);
+
+  /* Breathing room above the title, scaled to the viewport. */
+  --hero-pt: clamp(26px, 5.5vh, 74px);
+
+  /* Title width lives here so the idol's ceiling can be derived from it.
+     The title art is ~2.8:1, so its height is width / 2.8. The idol may not
+     grow past the gap between the title and the stage — without this cap a
+     short, wide window (1920x800) pushes the headdress over the wordmark. */
+  --title-w: min(33vw, 335px);
+  --idol-max-h: calc(
+    var(--hero-h) - var(--stage-y) - var(--hero-pt) - (var(--title-w) / 1.778) - 4vh
   );
+
   position: relative;
+  width: 100%;
+  height: var(--hero-h);
+  min-height: 480px;
+  background-color: var(--blue-950);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center bottom;
   overflow: hidden;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 0;
-  scroll-margin-top: 80px;
-}
-
-/* Starry Background */
-.stars-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.star {
-  position: absolute;
-  width: 2px;
-  height: 2px;
-  background: #ffffff;
-  border-radius: 50%;
-  box-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
-  animation: twinkle 3s infinite;
-}
-
-.star:nth-child(3n) {
-  width: 3px;
-  height: 3px;
-  background: #ffd700;
-  box-shadow: 0 0 4px rgba(255, 215, 0, 0.9);
-}
-
-.star:nth-child(5n) {
-  width: 1.5px;
-  height: 1.5px;
-  background: #fff;
-  box-shadow: 0 0 3px rgba(255, 255, 255, 0.7);
-}
-
-@keyframes twinkle {
-  0%, 100% {
-    opacity: 0.3;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.2);
-  }
-}
-
-/* Golden Sparkles */
-.sparkles-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 2;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.sparkle {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: #ffd700;
-  border-radius: 50%;
-  box-shadow: 
-    0 0 6px rgba(255, 215, 0, 0.8),
-    0 0 12px rgba(255, 215, 0, 0.6),
-    0 0 18px rgba(255, 215, 0, 0.4);
-  animation: sparkleFloat 4s infinite ease-in-out;
-}
-
-.sparkle:nth-child(2n) {
-  width: 6px;
-  height: 6px;
-  box-shadow: 
-    0 0 8px rgba(255, 215, 0, 0.9),
-    0 0 16px rgba(255, 215, 0, 0.7),
-    0 0 24px rgba(255, 215, 0, 0.5);
-}
-
-.sparkle:nth-child(3n) {
-  width: 3px;
-  height: 3px;
-  box-shadow: 
-    0 0 4px rgba(255, 215, 0, 0.7),
-    0 0 8px rgba(255, 215, 0, 0.5);
-}
-
-@keyframes sparkleFloat {
-  0%, 100% {
-    opacity: 0;
-    transform: translateY(0) scale(0.5);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-20px) scale(1);
-  }
-}
-
-/* Golden Light Arc Effect */
-.golden-light-arc {
-  position: absolute;
-  top: 15%;
-  right: 5%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(255, 215, 0, 0.4) 0%,
-    rgba(255, 215, 0, 0.25) 25%,
-    rgba(255, 215, 0, 0.15) 40%,
-    transparent 70%
-  );
-  border-radius: 50%;
-  filter: blur(50px);
-  z-index: 2;
-  animation: lightPulse 4s ease-in-out infinite;
-  pointer-events: none;
-  transform: rotate(-15deg);
-}
-
-.golden-light-arc::before {
-  content: '';
-  position: absolute;
-  top: -50px;
-  right: -50px;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(
-    circle,
-    rgba(255, 215, 0, 0.3) 0%,
-    transparent 70%
-  );
-  border-radius: 50%;
-  filter: blur(30px);
-  animation: lightPulse 3s ease-in-out infinite reverse;
-}
-
-@keyframes lightPulse {
-  0%, 100% {
-    opacity: 0.6;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.2);
-  }
-}
-
-/* Decorative Corner Elements */
-.corner-decoration {
-  position: absolute;
-  width: 80px;
-  height: 80px;
-  z-index: 3;
-  pointer-events: none;
-}
-
-.corner-top-left {
-  top: 20px;
-  left: 20px;
-  background: linear-gradient(135deg, transparent 50%, rgba(255, 215, 0, 0.3) 50%);
-  border-top: 2px solid rgba(255, 215, 0, 0.5);
-  border-left: 2px solid rgba(255, 215, 0, 0.5);
-  border-radius: 0 0 100% 0;
-}
-
-.corner-top-right {
-  top: 20px;
-  right: 20px;
-  background: linear-gradient(225deg, transparent 50%, rgba(255, 215, 0, 0.3) 50%);
-  border-top: 2px solid rgba(255, 215, 0, 0.5);
-  border-right: 2px solid rgba(255, 215, 0, 0.5);
-  border-radius: 0 0 0 100%;
-}
-
-/* Home Container */
-.home-container {
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
+  scroll-margin-top: var(--header-h);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  text-align: center;
-  position: relative;
-  min-height: calc(100vh - 70px);
-  z-index: 3;
-  padding: 40px 20px 0;
+  padding-top: var(--hero-pt);
 }
 
-/* Committee Name Wrapper */
-.committee-name-wrapper {
-  position: relative;
-  z-index: 4;
-  margin-top: 40px;
-}
-
-.committee-name {
-  font-size: 52px;
-  font-weight: 400;
-  color: #ffffff;
-  margin: 0;
-  text-shadow: 
-    0 0 15px rgba(255, 255, 255, 0.6),
-    0 0 30px rgba(255, 215, 0, 0.4),
-    0 0 45px rgba(255, 215, 0, 0.2),
-    2px 2px 6px rgba(0, 0, 0, 0.9);
-  letter-spacing: 4px;
-  line-height: 1.5;
-  /* font-family: 'Georgia', 'Times New Roman', serif; */
-  text-transform: uppercase;
-  animation: textGlow 3s ease-in-out infinite;
-}
-
-@keyframes textGlow {
-  0%, 100% {
-    text-shadow: 
-      0 0 15px rgba(255, 255, 255, 0.6),
-      0 0 30px rgba(255, 215, 0, 0.4),
-      0 0 45px rgba(255, 215, 0, 0.2),
-      2px 2px 6px rgba(0, 0, 0, 0.9);
-  }
-  50% {
-    text-shadow: 
-      0 0 20px rgba(255, 255, 255, 0.8),
-      0 0 40px rgba(255, 215, 0, 0.6),
-      0 0 60px rgba(255, 215, 0, 0.4),
-      2px 2px 6px rgba(0, 0, 0, 0.9);
-  }
-}
-
-.golden-line {
-  width: 250px;
-  height: 2px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    #ffd700 20%,
-    #ffd700 80%,
-    transparent
-  );
-  margin: 20px auto 0;
-  box-shadow: 
-    0 0 10px rgba(255, 215, 0, 0.8),
-    0 0 20px rgba(255, 215, 0, 0.5);
-  animation: lineGlow 2s ease-in-out infinite;
-}
-
-@keyframes lineGlow {
-  0%, 100% {
-    opacity: 0.8;
-    box-shadow: 
-      0 0 10px rgba(255, 215, 0, 0.8),
-      0 0 20px rgba(255, 215, 0, 0.5);
-  }
-  50% {
-    opacity: 1;
-    box-shadow: 
-      0 0 15px rgba(255, 215, 0, 1),
-      0 0 30px rgba(255, 215, 0, 0.7);
-  }
-}
-
-/* Ganesha Wrapper */
-.ganesha-wrapper {
+/* Vignette so the gold title keeps its contrast over the artwork */
+.home-hero::before {
+  content: "";
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.5) 100%),
+    linear-gradient(180deg, rgba(5, 10, 20, 0.72) 0%, rgba(5, 10, 20, 0) 20%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ---- Title artwork ---------------------------------------------------- */
+/* Widths follow the Peetam hero so the title scales the same way per screen. */
+.home-title {
+  position: relative;
+  z-index: 3;
+  flex: 0 0 auto;
+  width: var(--title-w);
+  max-width: 100%;
   display: flex;
   justify-content: center;
-  align-items: flex-end;
-  z-index: 3;
-  padding-bottom: 20px;
-}
-
-/* Golden Couch */
-.golden-couch {
-  position: relative;
-  width: 600px;
-  max-width: 90%;
-  margin-bottom: 20px;
-  z-index: 3;
-}
-
-.golden-couch::before {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 0;
-  right: 0;
-  height: 80px;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 215, 0, 0.4) 0%,
-    rgba(255, 215, 0, 0.2) 50%,
-    transparent 100%
-  );
-  border-radius: 50%;
-  filter: blur(20px);
-  z-index: -1;
-}
-
-.ganesha-image {
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  display: block;
-  filter: drop-shadow(0 10px 30px rgba(255, 215, 0, 0.3));
-  position: relative;
-  z-index: 2;
-}
-
-.image-placeholder {
-  width: 100%;
-  aspect-ratio: 1;
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 152, 0, 0.1) 100%);
-  border-radius: var(--radius-sm);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.placeholder-icon {
-  font-size: 200px;
-  opacity: 0.3;
-  color: var(--accent-purple);
-}
-
-/* Reflective Floor */
-.reflective-floor {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 35%;
-  /* background: linear-gradient(
-    to top,
-    rgba(10, 14, 26, 0.95) 0%,
-    rgba(15, 20, 30, 0.8) 30%,
-    rgba(26, 35, 48, 0.6) 60%,
-    transparent 100%
-  ); */
-  z-index: 1;
-  overflow: hidden;
-}
-
-.reflective-floor::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
-  background: linear-gradient(
-    to top,
-    rgba(255, 215, 0, 0.1) 0%,
-    transparent 50%
-  );
   pointer-events: none;
 }
 
-.reflective-floor::before {
-  content: '';
+.home-title-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  animation: titleGlow 4s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 14px rgba(223, 174, 77, 0.3))
+      drop-shadow(0 6px 14px rgba(0, 0, 0, 0.7));
+  }
+  50% {
+    filter: drop-shadow(0 0 26px rgba(244, 214, 142, 0.55))
+      drop-shadow(0 6px 14px rgba(0, 0, 0, 0.7));
+  }
+}
+
+/* ---- Idol ------------------------------------------------------------- */
+/* Pinned to the stage rather than laid out in the flex flow, so its feet meet
+   the stone at any aspect ratio. Height drives the size; width follows the
+   aspect, with a vw ceiling so tall narrow phones can't overflow sideways. */
+.home-idol {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  /* background: linear-gradient(
-    to right,
-    transparent,
-    rgba(255, 215, 0, 0.3),
-    transparent
-  ); */
-  /* box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); */
-}
-
-/* Lotus Decorations */
-.lotus-decoration {
-  position: absolute;
-  width: 150px;
-  height: 150px;
-  bottom: 30px;
-  z-index: 2;
-  opacity: 0.7;
-}
-
-.lotus-left {
-  left: 3%;
-  background: radial-gradient(
-    circle,
-    rgba(255, 215, 0, 0.5) 0%,
-    rgba(255, 215, 0, 0.3) 30%,
-    rgba(255, 215, 0, 0.15) 50%,
-    transparent 80%
-  );
-  border-radius: 50%;
-  filter: blur(20px);
-}
-
-.lotus-right {
-  right: 3%;
-  background: radial-gradient(
-    circle,
-    rgba(255, 215, 0, 0.5) 0%,
-    rgba(255, 215, 0, 0.3) 30%,
-    rgba(255, 215, 0, 0.15) 50%,
-    transparent 80%
-  );
-  border-radius: 50%;
-  filter: blur(20px);
-}
-
-.lotus-decoration::before {
-  content: '🪷';
-  position: absolute;
-  top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 80px;
-  opacity: 0.6;
-  filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.9));
-  animation: lotusGlow 3s ease-in-out infinite;
+  bottom: var(--stage-y);
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
 }
 
-@keyframes lotusGlow {
-  0%, 100% {
-    opacity: 0.5;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: translate(-50%, -50%) scale(1.1);
-  }
+.home-idol-img {
+  height: min(calc(var(--hero-h) * 0.51), calc(100vw * 0.285), var(--idol-max-h));
+  width: auto;
+  display: block;
+  /* Cancels bot2.png's transparent padding — see the note at the top. */
+  transform: translate(1.2%, 3.5%);
+  filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.8))
+    drop-shadow(0 0 38px rgba(223, 174, 77, 0.22));
 }
 
-/* Golden String Lights */
-.golden-string-lights {
+/* ---- Countdown card --------------------------------------------------- */
+.home-countdown {
   position: absolute;
-  bottom: 40px;
   left: 0;
   right: 0;
-  height: 2px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(255, 215, 0, 0.3) 20%,
-    rgba(255, 215, 0, 0.5) 50%,
-    rgba(255, 215, 0, 0.3) 80%,
-    transparent
-  );
-  box-shadow: 
-    0 0 10px rgba(255, 215, 0, 0.6),
-    0 0 20px rgba(255, 215, 0, 0.4);
-  z-index: 2;
-  animation: lightFlow 3s ease-in-out infinite;
+  bottom: clamp(12px, 2.2vh, 26px);
+  z-index: 4;
+  display: flex;
+  justify-content: center;
+  padding: 0 clamp(10px, 3vw, 30px);
 }
 
-@keyframes lightFlow {
-  0%, 100% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 1;
-  }
+.home-countdown-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(14px, 3vw, 42px);
+  padding: clamp(12px, 1.8vh, 20px) clamp(18px, 3vw, 46px);
+  border-radius: 14px;
+  border: 1px solid rgba(223, 174, 77, 0.22);
+  background: linear-gradient(180deg, rgba(23, 44, 77, 0.86), rgba(5, 10, 20, 0.92));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.55);
 }
 
-/* Tablet Styles */
+.countdown-label {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(13px, 1.3vw, 18px);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  background: linear-gradient(180deg, var(--gold-100) 0%, var(--gold-500) 60%, var(--gold-700) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+body.lang-te .countdown-label {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: clamp(12px, 1.15vw, 16px);
+}
+
+.countdown-units {
+  display: flex;
+  align-items: stretch;
+}
+
+.countdown-unit {
+  min-width: clamp(58px, 6.5vw, 86px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0 clamp(8px, 1.2vw, 18px);
+  border-left: 1px solid rgba(223, 174, 77, 0.16);
+}
+
+.countdown-unit:first-child { border-left: none; }
+
+.countdown-value {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(22px, 2.4vw, 34px);
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--gold-300);
+  /* Fixed-width digits so the seconds ticking never nudges the layout. */
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.countdown-unit-label {
+  font-size: clamp(9.5px, 0.8vw, 12px);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+body.lang-te .countdown-unit-label {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ============================================
+   Breakpoints — title widths mirror the Peetam hero
+   ============================================ */
+
+/* Tablet */
 @media (max-width: 968px) {
-  .committee-name {
-    font-size: 36px;
-    letter-spacing: 2px;
-  }
+  .home-hero { --title-w: min(50vw, 306px); }
 
-  .golden-line {
-    width: 150px;
-  }
-
-  .golden-couch {
-    width: 500px;
-    max-width: 85%;
-  }
-
-  .golden-light-arc {
-    width: 300px;
-    height: 300px;
-    top: 15%;
-    right: 5%;
-  }
-
-  .corner-decoration {
-    width: 60px;
-    height: 60px;
-  }
-
-  .lotus-decoration {
-    width: 100px;
-    height: 100px;
-  }
-
-  .lotus-decoration::before {
-    font-size: 50px;
+  .home-idol-img {
+    height: min(calc(var(--hero-h) * 0.475), calc(100vw * 0.60), var(--idol-max-h));
   }
 }
 
-/* Mobile Styles */
+/* The label stops sitting comfortably beside the digits — stack it above. */
+@media (max-width: 860px) {
+  .home-countdown-inner {
+    flex-direction: column;
+    gap: clamp(6px, 1.2vh, 12px);
+    padding: clamp(10px, 1.6vh, 16px) clamp(12px, 3vw, 24px);
+  }
+
+  .countdown-label { font-size: 12.5px; }
+  body.lang-te .countdown-label { font-size: 12px; }
+  .countdown-value { font-size: clamp(20px, 5.2vw, 30px); }
+  .countdown-unit { min-width: clamp(54px, 15vw, 78px); }
+  .countdown-unit-label { font-size: 10px; }
+}
+
+/* Phones — pull the whole card in so it reads as a caption under the idol
+   rather than a slab across the bottom of the screen. */
+@media (max-width: 520px) {
+  .home-countdown { padding: 0 12px; }
+
+  .home-countdown-inner {
+    gap: 6px;
+    padding: 9px 12px;
+    border-radius: 12px;
+  }
+
+  .countdown-label { font-size: 10.5px; letter-spacing: 0.04em; }
+  body.lang-te .countdown-label { font-size: 10px; }
+  .countdown-value { font-size: clamp(16px, 4.4vw, 21px); }
+  .countdown-unit { min-width: clamp(42px, 12vw, 56px); padding: 0 7px; }
+  .countdown-unit-label { font-size: 8.5px; letter-spacing: 0.03em; }
+}
+
+/* Narrow phones */
+@media (max-width: 380px) {
+  .countdown-label { font-size: 9.5px; }
+  body.lang-te .countdown-label { font-size: 9px; }
+  .countdown-value { font-size: 15px; }
+  .countdown-unit { min-width: 40px; padding: 0 5px; }
+  .countdown-unit-label { font-size: 8px; }
+}
+
+/* Mobile */
 @media (max-width: 640px) {
-  .home-hero {
-    min-height: calc(100vh - 60px);
-  }
+  .home-hero { min-height: 460px; }
 
-  .home-container {
-    min-height: calc(100vh - 60px);
-    padding: 30px 15px 0;
-  }
+  .home-hero { --title-w: min(72vw, 306px); }
 
-  .committee-name-wrapper {
-    margin-top: 120px;
-  }
-
-  .committee-name {
-    font-size: 24px;
-    letter-spacing: 1.5px;
-    padding: 0 10px;
-  }
-
-  .golden-line {
-    width: 120px;
-    margin-top: 10px;
-  }
-
-  .ganesha-wrapper {
-    position: absolute;
-    bottom: 0;
-    padding-bottom: 10px;
-  }
-
-  .golden-couch {
-    width: 100%;
-    max-width: 100%;
-    margin-bottom: 0;
-  }
-
-  .ganesha-image {
-    width: 100%;
-    object-fit: cover;
-    object-position: center bottom;
-  }
-
-  .golden-light-arc {
-    width: 250px;
-    height: 250px;
-    top: 10%;
-    right: 0;
-  }
-
-  .corner-decoration {
-    width: 40px;
-    height: 40px;
-    top: 10px;
-  }
-
-  .corner-top-left {
-    left: 10px;
-  }
-
-  .corner-top-right {
-    right: 10px;
-  }
-
-  .reflective-floor {
-    height: 25%;
-  }
-
-  .lotus-decoration {
-    width: 80px;
-    height: 80px;
-    bottom: 15px;
-  }
-
-  .lotus-decoration::before {
-    font-size: 40px;
-  }
-
-  .golden-string-lights {
-    bottom: 30px;
-  }
-
-  .sparkle {
-    width: 3px;
-    height: 3px;
+  .home-idol-img {
+    height: min(calc(var(--hero-h) * 0.455), calc(100vw * 0.75), var(--idol-max-h));
   }
 }
 
-/* Small Mobile Styles */
+/* Small mobile */
 @media (max-width: 480px) {
-  .committee-name {
-    font-size: 26px;
-    letter-spacing: 1px;
-  }
+  .home-hero { --title-w: 77vw; }
 
-  .golden-line {
-    width: 100px;
-  }
-
-  .golden-couch {
-    margin-bottom: 0;
-  }
-
-  .golden-light-arc {
-    width: 200px;
-    height: 200px;
-  }
-
-  .lotus-decoration {
-    width: 60px;
-    height: 60px;
-  }
-
-  .lotus-decoration::before {
-    font-size: 30px;
+  .home-idol-img {
+    height: min(calc(var(--hero-h) * 0.44), calc(100vw * 0.79), var(--idol-max-h));
   }
 }
 
-/* Extra Small Mobile Styles */
-@media (max-width: 360px) {
-  .committee-name {
-    font-size: 18px;
+/* Short landscape phones — the stage sits high in frame, so shrink the idol
+   rather than letting it collide with the title. */
+@media (max-height: 560px) and (orientation: landscape) {
+  .home-hero {
+    min-height: 380px;
+    --title-w: min(30vw, 250px);
+    --hero-pt: 12px;
   }
+  .home-idol-img {
+    height: min(calc(var(--hero-h) * 0.46), calc(100vw * 0.185), var(--idol-max-h));
+  }
+}
 
-  .golden-line {
-    width: 80px;
-  }
+/* Respect reduced-motion — kill the title glow loop */
+@media (prefers-reduced-motion: reduce) {
+  .home-title-img { animation: none; }
 }

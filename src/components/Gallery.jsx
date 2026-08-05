@@ -1,114 +1,144 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
+import { FESTIVAL_START, GALLERY_START_YEAR } from '../config/festival';
+import { useSectionReady } from '../hooks/useSectionReady';
 import './Gallery.css';
+
+// Same split as the Peetam gallery: two scrolling rows on large screens,
+// three on anything narrower.
+const getRowCount = () =>
+  (typeof window === 'undefined' ? 2 : window.innerWidth >= 1025 ? 2 : 3);
+
+// PLACEHOLDER photos until Phase 4 reads the real media from Drive.
+// Keyed by year so swapping in the Drive response is a drop-in change.
+const PLACEHOLDER_BY_YEAR = {
+  2025: 12,
+};
+
+const imagesForYear = (year) => {
+  const count = PLACEHOLDER_BY_YEAR[year] || 0;
+  return Array.from({ length: count }, (_, i) => ({
+    id: `${year}-${i + 1}`,
+    year,
+    url: `https://picsum.photos/480/320?random=${year}${i + 1}`,
+  }));
+};
 
 const Gallery = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  
-  // Get current year and previous year
+
   const currentYear = new Date().getFullYear();
-  const previousYear = currentYear - 1;
-  
-  // Generate years array (current year and 5 years back)
-  const years = Array.from({ length: 6 }, (_, i) => currentYear - i);
-  
-  const [selectedYear, setSelectedYear] = useState(previousYear);
-  const [showAll, setShowAll] = useState(false);
+
+  // 2025 → current year, newest first. Grows on its own each January.
+  const years = useMemo(() => {
+    const list = [];
+    for (let y = currentYear; y >= GALLERY_START_YEAR; y -= 1) list.push(y);
+    return list;
+  }, [currentYear]);
+
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [rowCount, setRowCount] = useState(getRowCount);
   const [selectedImage, setSelectedImage] = useState(null);
-  
-  // Generate dummy images for all years using placeholder service
-  const generateGalleryImages = () => {
-    const images = [];
-    years.forEach((year, yearIndex) => {
-      // Previous year has 12 images
-      if (year === previousYear) {
-        for (let i = 1; i <= 12; i++) {
-          images.push({
-            id: `${year}-${i}`,
-            year: year,
-            url: `https://picsum.photos/400/400?random=${year}${i}`
-          });
-        }
-      }
-      // Current year has 6 images
-      else if (year === currentYear) {
-        for (let i = 1; i <= 6; i++) {
-          images.push({
-            id: `${year}-${i}`,
-            year: year,
-            url: `https://picsum.photos/400/400?random=${year}${i}`
-          });
-        }
-      }
-      // 2 years ago has 8 images
-      else if (year === currentYear - 2) {
-        for (let i = 1; i <= 8; i++) {
-          images.push({
-            id: `${year}-${i}`,
-            year: year,
-            url: `https://picsum.photos/400/400?random=${year}${i}`
-          });
-        }
-      }
-      // 3 years ago has 4 images
-      else if (year === currentYear - 3) {
-        for (let i = 1; i <= 4; i++) {
-          images.push({
-            id: `${year}-${i}`,
-            year: year,
-            url: `https://picsum.photos/400/400?random=${year}${i}`
-          });
-        }
-      }
-      // Other years have no images (will show "no images available")
+  const loading = useSectionReady();
+
+  useEffect(() => {
+    const onResize = () => setRowCount(getRowCount());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const images = useMemo(() => imagesForYear(selectedYear), [selectedYear]);
+
+  // The current year has nothing to show until the festival actually starts.
+  const notBegunYet =
+    selectedYear === currentYear && Date.now() < FESTIVAL_START.getTime();
+
+  // Spread the photos evenly across the rows, each row scrolling on its own.
+  const perRow = Math.max(1, Math.ceil(images.length / rowCount));
+  const rows = Array.from({ length: rowCount }, (_, r) =>
+    images
+      .slice(r * perRow, (r + 1) * perRow)
+      .map((img, i) => ({ ...img, index: r * perRow + i }))
+  ).filter((row) => row.length > 0);
+
+  // Alternate where each row starts: even rows (1st, 3rd) sit at their left
+  // edge so they read left-to-right, odd rows (2nd) start scrolled fully right
+  // so they read right-to-left. Same staggered effect as the Peetam gallery.
+  const rowRefs = useRef([]);
+
+  const applyRowOffsets = useCallback(() => {
+    rowRefs.current.forEach((el, r) => {
+      if (!el) return;
+      el.scrollLeft = r % 2 === 1 ? el.scrollWidth - el.clientWidth : 0;
     });
-    return images;
-  };
+  }, []);
 
-  const galleryImages = generateGalleryImages();
-  const filteredImages = galleryImages.filter(img => img.year === selectedYear);
-  const displayedImages = showAll ? filteredImages : filteredImages.slice(0, 6);
-  const hasMoreImages = filteredImages.length > 6;
+  useLayoutEffect(() => {
+    applyRowOffsets();
+  }, [applyRowOffsets, rowCount, images]);
 
-  // Reset showAll when year changes
   useEffect(() => {
-    setShowAll(false);
-    setSelectedImage(null);
-  }, [selectedYear]);
+    window.addEventListener('resize', applyRowOffsets);
+    return () => window.removeEventListener('resize', applyRowOffsets);
+  }, [applyRowOffsets]);
 
-  // Prevent body scroll when modal is open
+  useEffect(() => setSelectedImage(null), [selectedYear]);
+
+  // Lock the page behind the lightbox.
   useEffect(() => {
-    if (selectedImage !== null) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
+    document.body.style.overflow = selectedImage ? 'hidden' : 'unset';
     return () => {
       document.body.style.overflow = 'unset';
     };
   }, [selectedImage]);
 
-  const openImagePreview = (image) => {
-    setSelectedImage(image);
+  const navigate = (dir) => {
+    if (!selectedImage) return;
+    const i = images.findIndex((im) => im.id === selectedImage.id);
+    const next = dir === 'next'
+      ? (i + 1) % images.length
+      : (i - 1 + images.length) % images.length;
+    setSelectedImage({ ...images[next], index: next });
   };
 
-  const closeImagePreview = () => {
-    setSelectedImage(null);
-  };
+  // Escape / arrow keys in the lightbox.
+  useEffect(() => {
+    if (!selectedImage) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setSelectedImage(null);
+      else if (e.key === 'ArrowRight') navigate('next');
+      else if (e.key === 'ArrowLeft') navigate('prev');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
 
-  const navigateImage = (direction) => {
-    const currentIndex = filteredImages.findIndex(img => img.id === selectedImage.id);
-    let newIndex;
-    if (direction === 'next') {
-      newIndex = (currentIndex + 1) % filteredImages.length;
-    } else {
-      newIndex = currentIndex - 1;
-      if (newIndex < 0) newIndex = filteredImages.length - 1;
-    }
-    setSelectedImage(filteredImages[newIndex]);
-  };
+  if (loading) {
+    return (
+      <section id="gallery" className="gallery-section" aria-busy="true">
+        <div className="gallery-container">
+          <div className="skeleton-head">
+            <span className="skeleton skeleton-title" />
+            <span className="skeleton skeleton-subtitle" />
+          </div>
+          <div className="gallery-year">
+            <span className="skeleton gal-skel-year" />
+          </div>
+          <div className="gallery-rows">
+            {Array.from({ length: rowCount }, (_, r) => (
+              <div className="gallery-row" key={r}>
+                {Array.from({ length: 6 }, (_, i) => (
+                  <span className="skeleton gallery-item" key={i} />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <>
@@ -116,98 +146,88 @@ const Gallery = () => {
         <div className="gallery-container">
           <h2 className="gallery-title">{t.galleryTitle}</h2>
           <p className="gallery-subtitle">{t.gallerySubtitle}</p>
-          
-          <div className="year-selector-wrapper">
-            <div className="year-selector">
-              <label htmlFor="year-select" className="year-label">{t.selectYear}:</label>
-              <select 
-                id="year-select"
-                className="year-select"
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              >
-                {years.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          
-          <div className="gallery-grid">
-            {filteredImages.length > 0 ? (
-              displayedImages.map((image) => (
-                <div 
-                  key={image.id} 
-                  className="gallery-item"
-                  onClick={() => openImagePreview(image)}
-                >
-                  <img 
-                    src={image.url} 
-                    alt={`Gallery ${image.id}`}
-                    className="gallery-image"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextElementSibling.style.display = 'flex';
-                    }}
-                  />
-                  <div className="gallery-placeholder">
-                    <span className="placeholder-text">📷</span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="no-images">
-                <p>{t.noImagesAvailable}</p>
-              </div>
-            )}
+
+          <div className="gallery-year">
+            <label className="gallery-year-label" htmlFor="gallery-year-select">
+              {t.selectYear}:
+            </label>
+            <select
+              id="gallery-year-select"
+              className="gallery-year-select"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+            >
+              {years.map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
           </div>
 
-          {hasMoreImages && (
-            <div className="show-more-wrapper">
-              <button 
-                className="show-more-btn"
-                onClick={() => setShowAll(!showAll)}
-              >
-                {showAll ? t.showLess : t.showMore}
-              </button>
+          {notBegunYet ? (
+            <div className="gallery-notice">
+              <span className="gallery-notice-emoji" aria-hidden="true">🪔</span>
+              <p className="gallery-notice-title">{t.celebrationsNotBegun}</p>
+              <p className="gallery-notice-hint">{t.celebrationsNotBegunHint}</p>
+            </div>
+          ) : images.length === 0 ? (
+            <p className="gallery-empty">{t.noImagesAvailable}</p>
+          ) : (
+            <div className="gallery-rows">
+              {rows.map((row, r) => (
+                <div
+                  className="gallery-row"
+                  key={r}
+                  ref={(el) => { rowRefs.current[r] = el; }}
+                >
+                  {row.map((img) => (
+                    <button
+                      type="button"
+                      className="gallery-item"
+                      key={img.id}
+                      onClick={() => setSelectedImage(img)}
+                      aria-label={`${t.galleryTitle} ${img.index + 1}`}
+                    >
+                      <img src={img.url} alt="" loading="lazy" />
+                    </button>
+                  ))}
+                </div>
+              ))}
             </div>
           )}
         </div>
       </section>
 
-      {/* Image Preview Modal */}
       {selectedImage && (
-        <div className="image-preview-modal" onClick={closeImagePreview}>
-          <button className="preview-close-btn" onClick={closeImagePreview}>×</button>
-          <button 
-            className="preview-nav-btn preview-prev"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigateImage('prev');
-            }}
+        <div
+          className="gallery-lightbox"
+          onClick={() => setSelectedImage(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            className="gallery-lb-btn gallery-lb-close"
+            onClick={() => setSelectedImage(null)}
+            aria-label="Close"
+          >
+            ×
+          </button>
+          <button
+            className="gallery-lb-btn gallery-lb-prev"
+            onClick={(e) => { e.stopPropagation(); navigate('prev'); }}
+            aria-label="Previous"
           >
             ‹
           </button>
-          <div className="preview-image-wrapper" onClick={(e) => e.stopPropagation()}>
-            <img 
-              src={selectedImage.url} 
-              alt={`Preview ${selectedImage.id}`}
-              className="preview-image"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextElementSibling.style.display = 'flex';
-              }}
-            />
-            <div className="preview-placeholder">
-              <span className="placeholder-text-large">📷</span>
-            </div>
-          </div>
-          <button 
-            className="preview-nav-btn preview-next"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigateImage('next');
-            }}
+          <figure className="gallery-lb-figure" onClick={(e) => e.stopPropagation()}>
+            <img src={selectedImage.url} alt="" />
+            <figcaption className="gallery-lb-count">
+              {images.findIndex((im) => im.id === selectedImage.id) + 1} / {images.length}
+            </figcaption>
+          </figure>
+          <button
+            className="gallery-lb-btn gallery-lb-next"
+            onClick={(e) => { e.stopPropagation(); navigate('next'); }}
+            aria-label="Next"
           >
             ›
           </button>

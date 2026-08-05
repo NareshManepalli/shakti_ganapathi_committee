@@ -76,12 +76,9 @@ const parseCSV = (csvText) => {
   return data;
 };
 
-// Fallback data based on the image provided
-const getFallbackData = () => {
-  return [
-    { Date: '5-Oct-25', Notes: 'Final Amount', 'Cash In': '9500', 'Cash Out': '', Balance: '9500' },
-  ];
-};
+// No hardcoded sample rows — an unreachable source must read as "no data",
+// never as a real-looking transaction.
+const getFallbackData = () => [];
 
 // Fetch Excel file from Google Drive via Google Apps Script
 const fetchExcelViaAppsScript = async (scriptUrl) => {
@@ -276,30 +273,7 @@ export const fetchSheetData = async (sheetUrl = null) => {
     }
   }
   
-  // Fallback: return sample data
-  console.warn('Could not fetch data automatically. Using fallback data.');
-  console.warn('See SETUP_INSTRUCTIONS.md for setup guide');
-  
-  return getFallbackData();
-};
-
-// New function to fetch from Drive folder (requires file ID)
-export const fetchDataFromDriveFolder = async (fileId = null) => {
-  // If file ID is provided, try to fetch Excel file
-  if (fileId) {
-    const excelData = await fetchExcelFromDrive(fileId);
-    if (excelData) {
-      return excelData;
-    }
-  }
-  
-  // Try to get file ID from folder (this requires Google Drive API)
-  // For now, we'll use a workaround: user needs to provide file ID
-  
-  // Fallback: try to fetch using the folder URL pattern
-  // This won't work directly, but we can guide the user
-  
-  console.warn('File ID not provided. Please get the file ID from the Excel file share link.');
+  console.warn('Could not fetch data from any configured source.');
   return getFallbackData();
 };
 

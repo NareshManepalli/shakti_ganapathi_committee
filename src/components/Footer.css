@@ -1,17 +1,19 @@
-.footer-section {
+/* ============================================
+   Footer — a compact band, shloka above the copyright.
+   No emblem and no committee title; the header already carries the brand.
+   ============================================ */
+
+.site-footer {
   background: linear-gradient(
     to bottom,
     var(--bg-darkest) 0%,
-    var(--bg-tertiary) 50%,
-    var(--bg-secondary) 100%
+    var(--blue-950) 100%
   );
-  padding: 40px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.footer-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  border-top: 1px solid rgba(223, 174, 77, 0.22);
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .footer-content {
@@ -19,133 +21,31 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 5px;
+  padding: 14px var(--spacing-md);
   text-align: center;
 }
 
-.footer-logo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-}
-
-.footer-emblem {
-  width: 60px;
-  height: 60px;
-  background-color: var(--header-logo-bg);
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.3s ease;
-}
-
-.footer-emblem:hover {
-  transform: scale(1.1) rotate(5deg);
-}
-
-.footer-emblem svg {
-  width: 40px;
-  height: 40px;
-}
-
-.footer-name {
-  font-size: 24px;
+.footer-shloka {
+  margin: 0;
   font-weight: 600;
-  color: var(--text-primary);
+  font-size: clamp(0.85rem, 1.9vw, 1.05rem);
+  letter-spacing: 0.5px;
+  color: var(--gold-300);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+.footer-copyright {
   margin: 0;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  font-size: 0.78rem;
+  color: var(--text-muted);
 }
 
-.footer-text {
-  color: var(--text-secondary);
-  font-size: 14px;
-  margin-top: 10px;
+/* English sits tighter than Telugu, which needs the extra leading */
+body.lang-en .footer-content { gap: 8px; }
+
+@media (max-width: 600px) {
+  .site-footer { min-height: 68px; }
+  .footer-content { padding: 12px var(--spacing-sm); }
+  .footer-copyright { font-size: 0.72rem; }
 }
-
-.footer-text p {
-  margin: 0;
-  opacity: 0.8;
-}
-
-/* Tablet Styles */
-@media (max-width: 968px) {
-  .footer-section {
-    padding: 35px 20px;
-  }
-
-  .footer-name {
-    font-size: 22px;
-  }
-
-  .footer-emblem {
-    width: 55px;
-    height: 55px;
-  }
-
-  .footer-emblem svg {
-    width: 35px;
-    height: 35px;
-  }
-}
-
-/* Mobile Styles */
-@media (max-width: 768px) {
-  .footer-section {
-    padding: 30px 15px;
-  }
-
-  .footer-content {
-    gap: 15px;
-  }
-
-  .footer-logo {
-    gap: 12px;
-  }
-
-  .footer-name {
-    font-size: 20px;
-  }
-
-  .footer-emblem {
-    width: 50px;
-    height: 50px;
-  }
-
-  .footer-emblem svg {
-    width: 32px;
-    height: 32px;
-  }
-
-  .footer-text {
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 480px) {
-  .footer-section {
-    padding: 25px 15px;
-  }
-
-  .footer-name {
-    font-size: 18px;
-  }
-
-  .footer-emblem {
-    width: 45px;
-    height: 45px;
-  }
-
-  .footer-emblem svg {
-    width: 28px;
-    height: 28px;
-  }
-
-  .footer-text {
-    font-size: 12px;
-  }
-}
-
-

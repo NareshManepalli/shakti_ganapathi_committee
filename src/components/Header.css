@@ -1,187 +1,354 @@
+/* ============================================
+   Header — blue & gold, sticky, scroll-spy nav
+   ============================================ */
+
 .main-header {
-  background-color: var(--header-bg);
-  color: var(--header-text);
-  padding: 0;
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: var(--shadow-sm);
+  color: var(--header-text);
+  background: linear-gradient(
+    180deg,
+    rgba(10, 20, 36, 0.97) 0%,
+    rgba(7, 14, 26, 0.93) 55%,
+    rgba(4, 9, 18, 0.82) 100%
+  );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    inset 0 -1px 0 rgba(223, 174, 77, 0.28),
+    0 8px 22px rgba(0, 0, 0, 0.55);
 }
 
 .header-content {
-  max-width: 1400px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 15px 20px;
+  height: var(--header-h);
+  padding: 0 clamp(14px, 3vw, 34px);
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  position: relative;
+  gap: 16px;
 }
 
-.header-logo {
+/* ---- Brand ---------------------------------------------------------- */
+/* Must be allowed to shrink. With flex-shrink:0 the nowrap wordmark overflows
+   the bar on narrow phones, which pushes the language switch and menu button
+   off-screen and widens the document — dragging the hero sideways with it. */
+.header-brand {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
+/* Emblem and wordmark share --brand-size so the name block always stands
+   exactly as tall as the logo circle — change one value to rescale both. */
+.header-brand { --brand-size: 50px; }
 
-.golden-emblem {
-  width: 40px;
-  height: 40px;
-  background-color: var(--header-logo-bg);
+.brand-emblem {
+  width: var(--brand-size);
+  height: var(--brand-size);
+  flex-shrink: 0;
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
-  position: relative;
+  overflow: hidden;
+  background: var(--blue-950);
+  box-shadow:
+    0 0 0 1.5px var(--gold-500),
+    0 0 14px rgba(223, 174, 77, 0.4);
+}
+
+.brand-emblem img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.brand-wordmark {
+  height: var(--brand-size);
   display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.golden-emblem svg {
-  width: 24px;
-  height: 24px;
-}
-
-/* Language Toggle */
-.language-toggle {
-  display: flex;
-  gap: 5px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  padding: 4px;
-}
-
-.lang-btn {
-  background: transparent;
-  border: none;
-  color: var(--header-text);
-  padding: 6px 12px;
-  border-radius: 16px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s;
-  font-family: 'Josefin Sans', sans-serif;
-}
-
-.lang-btn.active {
-  background-color: var(--header-logo-bg);
-  color: #000;
-}
-
-.lang-btn:hover {
-  opacity: 0.8;
-}
-
-.mobile-menu-toggle {
-  display: none;
   flex-direction: column;
-  gap: 5px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 5px;
+  justify-content: center;
+  line-height: 1.15;
+  min-width: 0;
+  overflow: hidden;
 }
 
-.mobile-menu-toggle span {
-  width: 25px;
-  height: 3px;
-  background-color: var(--header-text);
-  border-radius: 2px;
-  transition: all 0.3s;
+.brand-line-1,
+.brand-line-2 {
+  font-family: Georgia, 'Times New Roman', serif;
+  letter-spacing: 0.055em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: linear-gradient(180deg, var(--gold-100) 0%, var(--gold-500) 55%, var(--gold-700) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
+/* Sized so line 1 + line 2 fill the emblem's height. */
+.brand-line-1 {
+  font-size: calc(var(--brand-size) * 0.44);
+  font-weight: 700;
+}
+
+.brand-line-2 {
+  font-size: calc(var(--brand-size) * 0.28);
+  font-weight: 600;
+  letter-spacing: 0.085em;
+}
+
+/* Telugu glyphs run taller — ease off the size so the two lines still fit. */
+body.lang-te .brand-line-1 { font-size: calc(var(--brand-size) * 0.38); }
+body.lang-te .brand-line-2 { font-size: calc(var(--brand-size) * 0.25); letter-spacing: 0.04em; }
+
+/* ---- Desktop nav ----------------------------------------------------- */
 .header-nav {
   display: flex;
-  gap: 25px;
   align-items: center;
+  gap: clamp(14px, 2.2vw, 34px);
 }
 
 .header-nav a {
+  position: relative;
   color: var(--header-text);
   text-decoration: none;
-  font-size: 16px;
+  font-size: 15.5px;
   font-weight: 500;
-  transition: color 0.3s;
-  padding: 5px 0;
+  white-space: nowrap;
+  padding: 6px 0;
+  transition: color 0.25s ease;
 }
 
 .header-nav a:hover {
   color: var(--header-link-hover);
 }
 
-/* Mobile Menu Modal */
-.mobile-menu-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  z-index: 2000;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 70px;
-  animation: fadeIn 0.3s ease;
+/* Active link — gold text plus a small ornamental underline, as in the design */
+.header-nav a.active {
+  color: var(--gold-300);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.mobile-menu-content {
-  background-color: var(--header-bg);
+.header-nav a.active::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
   width: 100%;
-  max-width: 400px;
-  border-radius: 0 0 var(--radius-md) var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  animation: slideDown 0.3s ease;
-  overflow: hidden;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gold-500) 30%,
+    var(--gold-100) 50%,
+    var(--gold-500) 70%,
+    transparent 100%
+  );
+  box-shadow: 0 0 8px rgba(223, 174, 77, 0.7);
 }
 
-@keyframes slideDown {
-  from {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
+body.lang-te .header-nav a { font-size: 14px; }
 
-.mobile-menu-header {
+/* ---- Right cluster --------------------------------------------------- */
+.header-right {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 14px;
+  flex: 0 0 auto; /* never yields space to the brand */
 }
 
-.mobile-menu-header h3 {
-  margin: 0;
-  font-size: 18px;
-  color: var(--header-text);
-  font-weight: 600;
+/* Gold pill language switch with a logo knob */
+.lang-switch {
+  position: relative;
+  width: 65px;
+  height: 30px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 18px;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  background: linear-gradient(145deg, var(--gold-100) 0%, var(--gold-500) 45%, var(--gold-700) 100%);
+  box-shadow:
+    inset 0 2px 3px rgba(255, 255, 255, 0.55),
+    inset 0 -3px 5px rgba(80, 48, 6, 0.45),
+    0 3px 7px rgba(0, 0, 0, 0.45);
+  transition: filter 0.2s ease;
 }
 
-.close-menu-btn {
+.lang-switch:hover { filter: brightness(1.06); }
+
+.lang-switch:active {
+  box-shadow:
+    inset 0 2px 4px rgba(80, 48, 6, 0.5),
+    0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.lang-switch-label {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #0b1626;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+}
+
+.lang-switch-knob {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle at 35% 30%, #fffdf7, #f0e6d2 60%, #cbb894 100%);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.9),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+  transition: transform 0.55s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.lang-switch-knob img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* EN active → knob left, label sits in the right half */
+.lang-switch.en .lang-switch-knob { transform: translateX(0); }
+.lang-switch.en .lang-switch-label { left: 50%; }
+
+/* Telugu active → knob slides right, label in the left half */
+.lang-switch.te .lang-switch-knob { transform: translateX(35px); }
+.lang-switch.te .lang-switch-label { left: 0; font-size: 16px; }
+
+.mobile-menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: none;
-  color: var(--header-text);
-  font-size: 32px;
+  cursor: pointer;
+  padding: 5px;
+  color: var(--gold-300);
+}
+
+.mobile-menu-toggle svg { width: 25px; height: 25px; }
+
+/* ============================================
+   Mobile side drawer
+   ============================================ */
+.mobile-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  z-index: 2000;
+  display: flex;
+  animation: drawerFadeIn 0.3s ease;
+}
+
+@keyframes drawerFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.mobile-drawer {
+  position: relative;
+  width: 82%;
+  max-width: 350px;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--blue-900);
+  box-shadow: 6px 0 28px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  animation: drawerSlideIn 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes drawerSlideIn {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+.mobile-drawer-watermark {
+  position: absolute;
+  bottom: 36px;
+  right: 40px;
+  font-size: 190px;
   line-height: 1;
+  color: var(--gold-500);
+  opacity: 0.07;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+.mobile-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 18px 16px;
+  border-bottom: 1px solid rgba(223, 174, 77, 0.22);
+  position: relative;
+  z-index: 1;
+}
+
+.mobile-drawer-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.mobile-drawer-avatar {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 0 2px rgba(223, 174, 77, 0.6);
+}
+
+.mobile-drawer-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mobile-drawer-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gold-300);
+  line-height: 1.3;
+}
+
+body.lang-te .mobile-drawer-name { font-size: 13.5px; }
+
+.close-menu-btn {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0;
   width: 32px;
@@ -189,69 +356,95 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.3s;
+  transition: transform 0.3s, color 0.3s;
 }
+
+.close-menu-btn svg { width: 22px; height: 22px; }
 
 .close-menu-btn:hover {
   transform: rotate(90deg);
+  color: var(--gold-300);
 }
 
-.mobile-menu-nav {
+.mobile-drawer-nav {
   display: flex;
   flex-direction: column;
-  padding: 10px 0;
+  gap: 4px;
+  padding: 10px;
+  position: relative;
+  z-index: 1;
 }
 
-.mobile-menu-nav a {
-  color: var(--header-text);
-  text-decoration: none;
-  font-size: 18px;
-  font-weight: 500;
-  padding: 15px 20px;
-  transition: background-color 0.3s;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.mobile-menu-nav a:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: var(--header-link-hover);
-}
-
-.mobile-menu-nav a:last-child {
-  border-bottom: none;
-}
-
-/* Desktop Navigation */
-.desktop-nav {
+.mobile-drawer-item {
   display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 13px 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--text-muted);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  opacity: 0;
+  animation: drawerItemIn 0.45s ease forwards;
+  animation-delay: var(--drawer-item-delay, 0.08s);
 }
 
-/* Mobile Styles */
-@media (max-width: 768px) {
-  .mobile-menu-toggle {
-    display: flex;
-  }
+@keyframes drawerItemIn {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
 
-  .desktop-nav {
-    display: none;
-  }
+.mobile-drawer-item:hover,
+.mobile-drawer-item.active {
+  background-color: var(--blue-700);
+  color: var(--gold-300);
+}
 
-  .language-toggle {
-    order: -1;
-  }
+.mobile-drawer-item.active .mobile-drawer-item-label { font-weight: 600; }
 
-  .golden-emblem {
-    width: 32px;
-    height: 32px;
-  }
+.mobile-drawer-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+}
 
-  .golden-emblem svg {
-    width: 18px;
-    height: 18px;
-  }
+.mobile-drawer-item-icon svg { width: 22px; height: 22px; }
 
-  .lang-btn {
-    padding: 5px 10px;
-    font-size: 12px;
-  }
+.mobile-drawer-item-label {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+body.lang-te .mobile-drawer-item-label { font-size: 14px; }
+
+/* ============================================
+   Breakpoints
+   ============================================ */
+
+/* The six nav labels stop fitting well before 768px — switch to the drawer at 968 */
+@media (max-width: 968px) {
+  .desktop-nav { display: none; }
+  .mobile-menu-toggle { display: flex; }
+
+  .header-brand { --brand-size: 44px; }
+}
+
+@media (max-width: 640px) {
+  .header-brand { --brand-size: 36px; }
+  .brand-line-2 { letter-spacing: 0.06em; }
+
+  .header-right { gap: 10px; }
+  .lang-switch { width: 58px; height: 27px; }
+  .lang-switch-knob { width: 25px; height: 25px; }
+  .lang-switch.te .lang-switch-knob { transform: translateX(31px); }
+  .lang-switch-label { font-size: 12px; }
+  .lang-switch.te .lang-switch-label { font-size: 14px; }
+}
+
+/* Very narrow phones — drop the wordmark, keep the emblem */
+@media (max-width: 380px) {
+  .brand-wordmark { display: none; }
 }

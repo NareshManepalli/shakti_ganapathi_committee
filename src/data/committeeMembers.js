@@ -1,19 +1,21 @@
-// Committee Members Data
+// TEMPORARY placeholder data — replaced in Phase 2 by the `committee` sheet.
+// Do not put real mobile numbers here: this file is bundled and served to the
+// public, so anything in it is readable by anyone who visits the site.
 export const committeeMembers = [
   // First Row - President and Vice President
   {
     id: 1,
-    name: "Venkat Naresh",
-    nameTe: "వెంకట్ నరేష్",
+    name: "President Name",
+    nameTe: "అధ్యక్షుడి పేరు",
     position: "President",
     positionTe: "అధ్యక్షుడు",
-    mobile: "+91 7702639309",
+    mobile: "+91 98765 43210",
     image: "/assets/members/president.jpg"
   },
   {
     id: 2,
-    name: "Jane Smith",
-    nameTe: "జేన్ స్మిత్",
+    name: "Vice President Name",
+    nameTe: "ఉపాధ్యక్షుడి పేరు",
     position: "Vice President",
     positionTe: "ఉపాధ్యక్షుడు",
     mobile: "+91 98765 43211",

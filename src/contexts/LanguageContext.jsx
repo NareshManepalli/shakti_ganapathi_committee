@@ -16,14 +16,6 @@ export const LanguageProvider = ({ children }) => {
     return localStorage.getItem('language') || 'en';
   });
 
-  // Set initial language class on mount
-  useEffect(() => {
-    const initialLanguage = localStorage.getItem('language') || 'en';
-    document.body.classList.remove('lang-en', 'lang-te');
-    document.body.classList.add(`lang-${initialLanguage}`);
-    document.documentElement.setAttribute('lang', initialLanguage);
-  }, []);
-
   useEffect(() => {
     // Save language preference to localStorage
     localStorage.setItem('language', language);
@@ -34,18 +26,18 @@ export const LanguageProvider = ({ children }) => {
     document.documentElement.setAttribute('lang', language);
   }, [language]);
 
-  const toggleLanguage = () => {
-    setLanguage(prev => prev === 'en' ? 'te' : 'en');
-  };
-
   const setLanguageTo = (lang) => {
     if (lang === 'en' || lang === 'te') {
       setLanguage(lang);
     }
   };
 
+  const toggleLanguage = () => {
+    setLanguage((prev) => (prev === 'en' ? 'te' : 'en'));
+  };
+
   return (
-    <LanguageContext.Provider value={{ language, toggleLanguage, setLanguageTo }}>
+    <LanguageContext.Provider value={{ language, setLanguageTo, toggleLanguage }}>
       {children}
     </LanguageContext.Provider>
   );

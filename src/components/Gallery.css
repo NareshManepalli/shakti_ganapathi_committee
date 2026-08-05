@@ -1,413 +1,312 @@
+/* ============================================
+   Gallery — heading matches the Committee section; the media follows the
+   Peetam gallery: photos spread across horizontally-scrolling rows,
+   two rows on large screens and three below 1025px.
+   ============================================ */
+
 .gallery-section {
   background: radial-gradient(
     circle at center,
     var(--bg-primary) 0%,
     var(--bg-secondary) 20%,
     var(--bg-tertiary) 40%,
-    #151c26 60%,
-    #0f1419 80%,
-    #080b0f 90%,
+    var(--blue-800) 60%,
+    var(--blue-900) 80%,
+    var(--blue-950) 90%,
     var(--bg-darkest) 100%
   );
-  padding: 30px 20px;
-  min-height: 100vh;
-  scroll-margin-top: 80px;
+  padding: var(--section-pad-top) 20px var(--section-pad-bottom);
+  scroll-margin-top: var(--header-h);
+  overflow: hidden;
 }
 
 .gallery-container {
-  max-width: 1200px;
+  max-width: 1180px;
   margin: 0 auto;
 }
 
+/* Heading sizes match the Committee / Peetam section headings */
 .gallery-title {
   text-align: center;
-  font-size: 42px;
+  margin: 0;
+  font-size: var(--section-title-size);
   font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 10px 0;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.5px;
+  color: var(--accent-gold);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
 }
 
 .gallery-subtitle {
   text-align: center;
-  font-size: 18px;
-  color: var(--text-secondary);
-  margin: 0 0 30px 0;
+  margin: var(--spacing-xs) 0 var(--section-head-gap);
+  font-size: var(--section-subtitle-size);
+  color: var(--text-muted);
   font-style: italic;
 }
 
-.year-selector-wrapper {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 30px;
-}
+body.lang-te .gallery-subtitle { font-size: 0.92rem; }
 
-.year-selector {
+/* ---- Year selector ---------------------------------------------------- */
+.gallery-year {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
+  margin-bottom: clamp(20px, 3vw, 32px);
 }
 
-.year-label {
-  font-size: 16px;
-  color: var(--text-secondary);
+.gallery-year-label {
+  font-size: 13.5px;
   font-weight: 500;
-  white-space: nowrap;
-  flex-shrink: 0;
-  min-width: fit-content;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-.year-select {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-sm);
-  padding: 10px 20px;
-  padding-right: 40px;
-  color: var(--text-primary);
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s;
-  font-family: 'Josefin Sans', sans-serif;
+body.lang-te .gallery-year-label {
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+.gallery-year-select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  -webkit-appearance: none;
+  border: 1px solid rgba(223, 174, 77, 0.34);
+  border-radius: 10px;
+  color: var(--gold-300);
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  /* Fixed-width digits so swapping years never shifts the control's width */
+  font-variant-numeric: tabular-nums;
+  padding: 9px 40px 9px 15px;
+  cursor: pointer;
+  background-color: rgba(16, 32, 56, 0.9);
+  /* A real chevron, drawn inline — the old two-triangle gradient trick
+     rendered as a lopsided wedge at this size. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1.25 1.75L6 6.25L10.75 1.75' stroke='%23f4d68e' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 15px center;
-  background-size: 12px;
+  background-position: right 14px center;
+  box-shadow:
+    inset 0 1px 0 rgba(251, 238, 198, 0.09),
+    0 2px 10px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease,
+    background-color 0.2s ease, transform 0.2s ease;
 }
 
-.year-select option {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  padding: 10px;
+.gallery-year-select:hover {
+  border-color: rgba(223, 174, 77, 0.7);
+  background-color: rgba(23, 44, 77, 0.95);
+  transform: translateY(-1px);
 }
 
-.year-select:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.year-select:focus {
+.gallery-year-select:focus-visible {
   outline: none;
-  border-color: var(--header-logo-bg);
-  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+  border-color: var(--gold-300);
+  box-shadow:
+    inset 0 1px 0 rgba(251, 238, 198, 0.12),
+    0 0 0 3px rgba(223, 174, 77, 0.18);
 }
 
-.gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 25px;
-  margin-bottom: 30px;
+.gallery-year-select option {
+  background: var(--blue-900);
+  color: var(--text-primary);
+  font-weight: 500;
 }
+
+/* ---- Scrolling rows --------------------------------------------------- */
+.gallery-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
+/* Each row scrolls on its own, scrollbar hidden as elsewhere on the site */
+.gallery-row {
+  display: flex;
+  gap: var(--spacing-sm);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.gallery-row::-webkit-scrollbar { display: none; }
 
 .gallery-item {
-  position: relative;
-  aspect-ratio: 1;
-  border-radius: var(--radius-md);
+  flex: 0 0 auto;
+  width: 240px;
+  aspect-ratio: 9 / 6;
+  scroll-snap-align: start;
+  padding: 0;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: var(--shadow-md);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .gallery-item:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
+  transform: scale(1.04);
+  border-color: rgba(223, 174, 77, 0.5);
+  box-shadow: var(--shadow-md);
 }
 
-.gallery-image {
+.gallery-item:focus-visible {
+  outline: 2px solid var(--gold-300);
+  outline-offset: 2px;
+}
+
+.gallery-item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.gallery-placeholder {
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  display: none;
-  align-items: center;
-  justify-content: center;
-}
-
-.placeholder-text {
-  font-size: 64px;
-  opacity: 0.3;
-}
-
-.show-more-wrapper {
+/* ---- Empty / not-yet states ------------------------------------------- */
+.gallery-notice {
   text-align: center;
-  margin-top: 30px;
+  padding: clamp(28px, 5vw, 52px) 20px;
+  border: 1px dashed rgba(223, 174, 77, 0.3);
+  border-radius: var(--radius-md);
+  background: rgba(23, 44, 77, 0.35);
 }
 
-.show-more-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-sm);
-  padding: 12px 30px;
-  color: var(--text-primary);
-  font-size: 16px;
+.gallery-notice-emoji {
+  font-size: clamp(38px, 6vw, 54px);
+  line-height: 1;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.gallery-notice-title {
+  margin: 0 0 6px;
+  font-size: clamp(1rem, 2.2vw, 1.25rem);
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-  font-family: 'Josefin Sans', sans-serif;
+  color: var(--gold-300);
 }
 
-.show-more-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: var(--header-logo-bg);
-  transform: translateY(-2px);
-}
-
-.no-images {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 60px;
+.gallery-notice-hint {
+  margin: 0;
+  font-size: clamp(0.85rem, 1.6vw, 0.98rem);
   color: var(--text-muted);
-  font-size: 18px;
-  font-style: italic;
 }
 
-/* Image Preview Modal */
-.image-preview-modal {
+.gallery-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: clamp(28px, 5vw, 52px) 20px;
+  margin: 0;
+}
+
+/* ---- Lightbox --------------------------------------------------------- */
+.gallery-lightbox {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.95);
-  z-index: 4000;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(0, 0, 0, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  animation: fadeIn 0.3s ease;
+  animation: galleryFade 0.25s ease;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+@keyframes galleryFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-.preview-close-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: var(--text-primary);
-  font-size: 40px;
-  line-height: 1;
-  cursor: pointer;
-  width: 50px;
-  height: 50px;
+.gallery-lb-figure {
+  margin: 0;
+  max-width: min(92vw, 1100px);
+  max-height: 86vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.3s;
-  z-index: 4001;
+  gap: 10px;
 }
 
-.preview-close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: rotate(90deg);
-}
-
-.preview-nav-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: var(--text-primary);
-  font-size: 50px;
-  line-height: 1;
-  cursor: pointer;
-  width: 60px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.3s;
-  z-index: 4001;
-}
-
-.preview-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.preview-prev {
-  left: 20px;
-}
-
-.preview-next {
-  right: 20px;
-}
-
-.preview-image-wrapper {
-  max-width: 90%;
-  max-height: 90vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.preview-image {
+.gallery-lb-figure img {
   max-width: 100%;
-  max-height: 90vh;
+  max-height: 78vh;
   object-fit: contain;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-sm);
+  display: block;
 }
 
-.preview-placeholder {
-  width: 400px;
-  height: 400px;
-  background: rgba(255, 255, 255, 0.05);
-  display: none;
+.gallery-lb-count {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.gallery-lb-btn {
+  position: absolute;
+  background: rgba(10, 20, 36, 0.7);
+  border: 1px solid rgba(223, 174, 77, 0.35);
+  color: var(--gold-300);
+  cursor: pointer;
+  border-radius: 50%;
+  width: 46px;
+  height: 46px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-md);
+  font-size: 30px;
+  line-height: 1;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
-.placeholder-text-large {
-  font-size: 120px;
-  opacity: 0.3;
+.gallery-lb-btn:hover {
+  background: rgba(223, 174, 77, 0.25);
+  transform: scale(1.06);
 }
 
-/* Tablet Styles */
-@media (max-width: 968px) {
-  .gallery-title {
-    font-size: 36px;
-    margin-bottom: 10px;
-  }
+.gallery-lb-close { top: 18px; right: 18px; font-size: 26px; }
+.gallery-lb-prev  { left: 18px; top: 50%; transform: translateY(-50%); }
+.gallery-lb-next  { right: 18px; top: 50%; transform: translateY(-50%); }
 
-  .gallery-subtitle {
-    font-size: 16px;
-    margin-bottom: 40px;
-  }
+.gallery-lb-prev:hover,
+.gallery-lb-next:hover { transform: translateY(-50%) scale(1.06); }
 
-  .gallery-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 20px;
-  }
+/* ============================================
+   Breakpoints — item width only; the row count is switched in JS at 1025px
+   ============================================ */
+@media (max-width: 1024px) {
+  .gallery-item { width: 210px; }
 }
 
-/* Mobile Styles */
-@media (max-width: 768px) {
-  .gallery-section {
-    padding: 50px 15px;
-  }
+@media (max-width: 600px) {
+  .gallery-item { width: 180px; }
 
-  .gallery-title {
-    font-size: 32px;
-    margin-bottom: 10px;
-  }
-
-  .gallery-subtitle {
-    font-size: 15px;
-    margin-bottom: 40px;
-  }
-
-  .year-selector-wrapper {
-    margin-bottom: 40px;
-  }
-
-  .year-selector {
-    flex-direction: row;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: nowrap;
-  }
-
-  .year-label {
-    white-space: nowrap;
-    min-width: fit-content;
-  }
-
-  .year-select {
-    min-width: 120px;
-    flex-shrink: 0;
-  }
-
-  .gallery-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-  }
-
-  .preview-nav-btn {
-    width: 50px;
-    height: 50px;
-    font-size: 40px;
-  }
-
-  .preview-prev {
-    left: 10px;
-  }
-
-  .preview-next {
-    right: 10px;
-  }
-
-  .preview-close-btn {
-    width: 40px;
-    height: 40px;
-    font-size: 32px;
-    top: 10px;
-    right: 10px;
-  }
+  .gallery-lb-btn { width: 40px; height: 40px; font-size: 26px; }
+  .gallery-lb-close { top: 12px; right: 12px; font-size: 22px; }
+  .gallery-lb-prev { left: 8px; }
+  .gallery-lb-next { right: 8px; }
 }
 
-@media (max-width: 480px) {
-  .gallery-section {
-    padding: 30px 15px;
-  }
+@media (max-width: 400px) {
+  .gallery-section { padding: clamp(20px, 5vw, 34px) 16px clamp(34px, 7vw, 48px); }
+  .gallery-item { width: 158px; }
+}
 
-  .gallery-title {
-    font-size: 28px;
-    margin-bottom: 8px;
-  }
+/* ---- Skeleton --------------------------------------------------------- */
+.gal-skel-year {
+  width: 190px;
+  height: 40px;
+  border-radius: 10px;
+}
 
-  .gallery-subtitle {
-    font-size: 14px;
-    margin-bottom: 30px;
-  }
-
-  .gallery-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-
-  .year-select {
-    padding: 8px 15px;
-    font-size: 14px;
-  }
-
-  .show-more-btn {
-    padding: 10px 25px;
-    font-size: 14px;
-  }
-
-  .preview-nav-btn {
-    width: 40px;
-    height: 40px;
-    font-size: 30px;
-  }
-
-  .preview-prev {
-    left: 5px;
-  }
-
-  .preview-next {
-    right: 5px;
-  }
+/* The tiles reuse .gallery-item for size, so only the chrome is dropped */
+.gallery-row .skeleton.gallery-item {
+  border-color: transparent;
+  box-shadow: none;
+  cursor: default;
 }

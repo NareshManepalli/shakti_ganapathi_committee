@@ -34,16 +34,8 @@ const FundSection = () => {
       }
     } catch (err) {
       console.error('Error loading data:', err);
-      const fallbackData = [
-        { Date: '5-Oct-25', Notes: 'Final Amount', 'Cash In': '9500', 'Cash Out': '', Balance: '9500' },
-        { Date: '5-Nov-25', Notes: 'November Amount', 'Cash In': '3500', 'Cash Out': '', Balance: '13000' },
-        { Date: '5-Dec-25', Notes: 'December Amount', 'Cash In': '3000', 'Cash Out': '', Balance: '16000' },
-        { Date: '5-Jan-26', Notes: 'January Amount', 'Cash In': '3500', 'Cash Out': '', Balance: '19500' },
-        { Date: '11-Jan-26', Notes: 'Bhogi Celebrations', 'Cash In': '', 'Cash Out': '2000', Balance: '17500' },
-        { Date: '5-Feb-26', Notes: 'February Amount', 'Cash In': '3500', 'Cash Out': '', Balance: '21000' }
-      ];
-      setData(fallbackData);
-      setError(t.usingSampleData);
+      setData([]);
+      setError(t.errorLoading);
     } finally {
       setLoading(false);
     }

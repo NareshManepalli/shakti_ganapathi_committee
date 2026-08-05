@@ -4,66 +4,143 @@
     var(--bg-primary) 0%,
     var(--bg-secondary) 20%,
     var(--bg-tertiary) 40%,
-    #151c26 60%,
-    #0f1419 80%,
-    #080b0f 90%,
+    var(--blue-800) 60%,
+    var(--blue-900) 80%,
+    var(--blue-950) 90%,
     var(--bg-darkest) 100%
   );
-  padding: 80px 20px;
-  min-height: 100vh;
-  scroll-margin-top: 80px;
+  /* Lighter above the heading than below the grid — the header already
+     provides separation at the top. */
+  padding: var(--section-pad-top) 20px var(--section-pad-bottom);
+  scroll-margin-top: var(--header-h);
+
+  /* Card widths are fixed per breakpoint, never fluid. The grid columns are
+     sized from these, so a wider window adds space around the grid rather
+     than stretching the cards. */
+  --card-w: 144px;
+  --exec-card-w: 200px;
 }
 
 .committee-container {
-  max-width: 1200px;
+  max-width: 1180px;
   margin: 0 auto;
 }
 
+/* Heading sizes match the Peetam section headings */
 .committee-section-title {
   text-align: center;
-  font-size: 42px;
+  margin: 0;
+  font-size: var(--section-title-size);
   font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 10px 0;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.5px;
+  color: var(--accent-gold);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
 }
 
 .committee-section-subtitle {
   text-align: center;
-  font-size: 18px;
-  color: var(--text-secondary);
-  margin: 0 0 50px 0;
+  margin: var(--spacing-xs) 0 var(--section-head-gap);
+  font-size: var(--section-subtitle-size);
+  color: var(--text-muted);
   font-style: italic;
 }
 
-/* Executive Row - 2 members */
-.executive-row {
+body.lang-te .committee-section-subtitle { font-size: 0.92rem; }
+
+/* ============================================
+   Layout — 6 notional columns: the two executives own the first 2, the
+   members grid owns the remaining 4. Expressed as 2fr / 4fr so the ratio
+   holds without needing half-row spans.
+   ============================================ */
+/* max-content columns: each side is exactly as wide as its fixed-width cards,
+   and the pair is centred. Nothing stretches. */
+.committee-layout {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 30px;
-  margin-bottom: 40px;
-  max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
+  grid-template-columns: max-content max-content;
+  justify-content: center;
+  gap: clamp(20px, 2.5vw, 36px);
+  /* stretch (not start) so the executive column is exactly as tall as the
+     member grid — that is what makes their top and bottom edges line up. */
+  align-items: stretch;
 }
 
-.executive-card {
-  max-width: 100%;
+/* President above Vice President, splitting the member grid's height evenly:
+   two equal rows means the join lands on the midpoint, and the outer edges
+   align with the first and last member rows. */
+.committee-executives {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: clamp(18px, 2.2vw, 30px);
+  height: 100%;
 }
 
-/* Members Grid - 3 per row */
-.members-grid {
+/* The cards are now taller than their content, so centre it rather than
+   letting it sit at the top with a gap beneath. */
+.member-card.executive-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.committee-members {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 25px;
-  max-width: 1000px;
-  margin: 0 auto;
+  grid-template-columns: repeat(4, var(--card-w));
+  gap: clamp(14px, 1.6vw, 20px);
+  align-content: start;
+  justify-content: center;
+}
+
+/* Expanded — scroll inside the executives' height so the section keeps the
+   same size however many members exist. Scrollbar hidden, as everywhere else. */
+.committee-members.is-expanded {
+  max-height: var(--exec-h, 640px);
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-right: 2px;
+}
+
+.committee-members.is-expanded::-webkit-scrollbar { display: none; }
+
+/* Fixed widths — the photo then fills the card, leaving no dead space
+   either side of it. */
+.member-card { width: var(--card-w); }
+.member-card.executive-card { width: var(--exec-card-w); }
+
+.committee-viewall-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(20px, 3vw, 34px);
+}
+
+.committee-viewall {
+  background: transparent;
+  border: 1px solid var(--gold-500);
+  border-radius: 999px;
+  padding: 10px 28px;
+  color: var(--gold-300);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
+}
+
+.committee-viewall:hover {
+  background: linear-gradient(180deg, var(--gold-300), var(--gold-500));
+  color: var(--blue-950);
+  transform: translateY(-2px);
+}
+
+.committee-viewall:focus-visible {
+  outline: 2px solid var(--gold-100);
+  outline-offset: 3px;
 }
 
 .member-card {
   background: rgba(255, 255, 255, 0.05);
   border-radius: var(--radius-md);
-  padding: 15px;
+  padding: 11px;
   cursor: pointer;
   transition: all 0.3s;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -80,12 +157,9 @@
   aspect-ratio: 1;
   border-radius: var(--radius-sm);
   overflow: hidden;
-  margin-bottom: 12px;
+  margin-bottom: 9px;
   background: rgba(255, 255, 255, 0.05);
   position: relative;
-  max-width: 200px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .member-image {
@@ -105,7 +179,7 @@
 }
 
 .plus-icon {
-  font-size: 40px;
+  font-size: 32px;
   color: var(--text-muted);
   font-weight: 300;
   line-height: 1;
@@ -116,15 +190,15 @@
 }
 
 .member-name {
-  font-size: 16px;
+  font-size: 14.5px;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 5px 0;
+  margin: 0 0 3px 0;
 }
 
 .member-position {
-  font-size: 13px;
-  color: var(--text-secondary);
+  font-size: 12px;
+  color: var(--text-muted);
   margin: 0;
 }
 
@@ -256,31 +330,36 @@
   font-weight: 600;
 }
 
-/* Tablet Styles */
+/* Tablet and below — the two executives sit side by side as before, with the
+   remaining members three across underneath. Heading sizes are left to the
+   clamps above rather than being re-fixed per breakpoint. */
 @media (max-width: 968px) {
-  .committee-section-title {
-    font-size: 36px;
-    margin-bottom: 10px;
+  .committee-section {
+    --card-w: 138px;
+    --exec-card-w: 170px;
   }
 
-  .committee-section-subtitle {
-    font-size: 16px;
-    margin-bottom: 40px;
+  .committee-layout {
+    grid-template-columns: max-content;
+    gap: clamp(22px, 4vw, 34px);
   }
 
-  .executive-row {
+  .committee-executives {
+    grid-template-rows: none;
+    grid-template-columns: repeat(2, var(--exec-card-w));
+    justify-content: center;
     gap: 20px;
-    max-width: 600px;
   }
 
-  .members-grid {
-    grid-template-columns: repeat(3, 1fr);
+  .committee-members {
+    grid-template-columns: repeat(3, var(--card-w));
     gap: 15px;
-    max-width: 100%;
   }
 
-  .member-image-wrapper {
-    max-width: 150px;
+  /* No scroller on small screens — the list simply grows */
+  .committee-members.is-expanded {
+    max-height: none;
+    overflow: visible;
   }
 
   .member-card {
@@ -303,39 +382,22 @@
 /* Mobile Styles */
 @media (max-width: 768px) {
   .committee-section {
-    padding: 50px 15px;
+    padding: clamp(20px, 5vw, 34px) 15px clamp(36px, 8vw, 52px);
+    --card-w: 122px;
+    --exec-card-w: 140px;
   }
 
-  .committee-section-title {
-    font-size: 32px;
-    margin-bottom: 10px;
-  }
-
-  .committee-section-subtitle {
-    font-size: 15px;
-    margin-bottom: 40px;
-  }
-
-  .executive-row {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-    margin-bottom: 30px;
-    max-width: 100%;
-  }
-
-  .members-grid {
-    grid-template-columns: repeat(3, 1fr);
+  .committee-executives {
     gap: 12px;
-    max-width: 100%;
+  }
+
+  .committee-members {
+    grid-template-columns: repeat(3, var(--card-w));
+    gap: 12px;
   }
 
   .member-card {
     padding: 10px;
-  }
-
-  .member-image-wrapper {
-    max-width: 100px;
-    margin-bottom: 8px;
   }
 
   .member-name {
@@ -367,36 +429,22 @@
 
 @media (max-width: 480px) {
   .committee-section {
-    padding: 30px 15px;
+    padding: clamp(18px, 5vw, 28px) 12px clamp(30px, 7vw, 44px);
+    --card-w: 106px;
+    --exec-card-w: 118px;
   }
 
-  .committee-section-title {
-    font-size: 28px;
-    margin-bottom: 8px;
-  }
-
-  .committee-section-subtitle {
-    font-size: 14px;
-    margin-bottom: 30px;
-  }
-
-  .executive-row {
-    gap: 12px;
-    margin-bottom: 25px;
-  }
-
-  .members-grid {
-    grid-template-columns: repeat(3, 1fr);
+  .committee-executives {
     gap: 10px;
+  }
+
+  .committee-members {
+    grid-template-columns: repeat(3, var(--card-w));
+    gap: 8px;
   }
 
   .member-card {
     padding: 8px;
-  }
-
-  .member-image-wrapper {
-    max-width: 80px;
-    margin-bottom: 6px;
   }
 
   .member-name {
@@ -426,3 +474,25 @@
   }
 }
 
+
+/* Very narrow phones — one more step down so three columns still fit */
+@media (max-width: 360px) {
+  .committee-section {
+    --card-w: 92px;
+    --exec-card-w: 108px;
+  }
+}
+
+/* ---- Skeleton --------------------------------------------------------- */
+/* Same widths as the real cards, so the grid holds its shape while loading. */
+.cm-skel-card {
+  width: var(--card-w);
+  border-radius: var(--radius-md);
+  /* photo (square) + name + position + padding */
+  height: calc(var(--card-w) + 62px);
+}
+
+.cm-skel-card.is-exec {
+  width: var(--exec-card-w);
+  height: 100%;
+}

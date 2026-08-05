@@ -1,113 +1,214 @@
-.mandapam-location-section {
+/* ============================================
+   Mandapam Location — address card on the left, map on the right.
+   No contact details by design; the address is the only content.
+   ============================================ */
+
+.mandapam-section {
   background: radial-gradient(
     circle at center,
     var(--bg-primary) 0%,
     var(--bg-secondary) 20%,
     var(--bg-tertiary) 40%,
-    #151c26 60%,
-    #0f1419 80%,
-    #080b0f 90%,
+    var(--blue-800) 60%,
+    var(--blue-900) 80%,
+    var(--blue-950) 90%,
     var(--bg-darkest) 100%
   );
-  padding: 30px 20px;
-  padding-top: 100px;
-  min-height: 80vh;
-  scroll-margin-top: 80px;
+  padding: var(--section-pad-top) 20px var(--section-pad-bottom);
+  scroll-margin-top: var(--header-h);
 }
 
 .mandapam-container {
-  max-width: 1200px;
+  max-width: 1180px;
   margin: 0 auto;
 }
 
 .mandapam-title {
   text-align: center;
-  font-size: 42px;
+  font-size: var(--section-title-size);
   font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 10px 0;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.5px;
+  color: var(--accent-gold);
+  margin: 0 0 var(--spacing-xs);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
 }
 
 .mandapam-subtitle {
   text-align: center;
-  font-size: 18px;
-  color: var(--text-secondary);
-  margin: 0 0 50px 0;
+  font-size: var(--section-subtitle-size);
+  color: var(--text-muted);
+  margin: 0 0 var(--section-head-gap);
   font-style: italic;
 }
 
-.map-container {
-  width: 100%;
-  height: 600px;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+body.lang-te .mandapam-subtitle { font-size: 0.92rem; }
+
+/* ---- Layout ----------------------------------------------------------- */
+.mandapam-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.68fr) minmax(0, 1.32fr);
+  gap: clamp(18px, 2.4vw, 28px);
+  align-items: stretch;
 }
 
-.google-map {
+.mandapam-card {
+  border: 1px solid rgba(223, 174, 77, 0.28);
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(23, 44, 77, 0.75), rgba(10, 20, 36, 0.9));
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+/* ---- Address card ----------------------------------------------------- */
+.mandapam-address-card {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.4vw, 16px);
+  padding: clamp(16px, 1.8vw, 22px);
+}
+
+.mandapam-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mandapam-brand-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold-300);
+  background: linear-gradient(160deg, rgba(223, 174, 77, 0.18), rgba(223, 174, 77, 0.05));
+  border: 1px solid rgba(223, 174, 77, 0.32);
+}
+
+.mandapam-brand-icon svg { width: 22px; height: 22px; }
+
+.mandapam-brand-name {
+  margin: 0;
+  font-size: clamp(0.92rem, 1.25vw, 1.05rem);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--gold-300);
+}
+
+/* Reset the browser's italic default on <address> */
+.mandapam-address {
+  font-style: normal;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: clamp(13px, 1vw, 14.5px);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* ---- Buttons ---------------------------------------------------------- */
+.mandapam-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 17px;
+  border-radius: 10px;
+  border: 1px solid rgba(223, 174, 77, 0.5);
+  background: linear-gradient(180deg, rgba(223, 174, 77, 0.16), rgba(223, 174, 77, 0.06));
+  color: var(--gold-300);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.mandapam-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+.mandapam-btn:hover {
+  background: linear-gradient(180deg, var(--gold-300), var(--gold-500));
+  border-color: var(--gold-100);
+  color: var(--blue-950);
+  transform: translateY(-2px);
+}
+
+.mandapam-btn:focus-visible {
+  outline: 2px solid var(--gold-100);
+  outline-offset: 3px;
+}
+
+/* ---- Map card --------------------------------------------------------- */
+/* The iframe is absolutely positioned, so this card has no natural height of
+   its own — the address card sets the grid row and the map stretches to it.
+   The min-height is only a floor for very short address content. */
+.mandapam-map-card {
+  position: relative;
+  min-height: 200px;
+}
+
+.mandapam-map-card iframe {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  border: none;
+  border: 0;
+  display: block;
 }
 
-/* Tablet Styles */
-@media (max-width: 968px) {
-  .mandapam-title {
-    font-size: 36px;
-  }
-
-  .mandapam-subtitle {
-    font-size: 16px;
-    margin-bottom: 40px;
-  }
-
-  .map-container {
-    height: 500px;
-  }
+.mandapam-btn-overlay {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(16, 32, 56, 0.95), rgba(5, 10, 20, 0.95));
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
 }
 
-/* Mobile Styles */
-@media (max-width: 768px) {
-  .mandapam-location-section {
-    padding: 50px 15px;
-    padding-top: 100px;
+.mandapam-btn-overlay:hover {
+  transform: translateX(-50%) translateY(-2px);
+}
+
+/* ---- Breakpoints ------------------------------------------------------ */
+@media (max-width: 900px) {
+  .mandapam-layout {
+    grid-template-columns: 1fr;
+    max-width: 560px;
+    margin: 0 auto;
   }
 
-  .mandapam-title {
-    font-size: 32px;
-  }
-
-  .mandapam-subtitle {
-    font-size: 15px;
-    margin-bottom: 30px;
-  }
-
-  .map-container {
-    height: 400px;
-  }
+  .mandapam-map-card { min-height: 300px; }
 }
 
 @media (max-width: 480px) {
-  .mandapam-location-section {
-    padding: 30px 15px;
-    padding-top: 100px;
-  }
+  .mandapam-section { padding: clamp(20px, 5vw, 34px) 16px clamp(34px, 7vw, 48px); }
 
-  .mandapam-title {
-    font-size: 28px;
-  }
-
-  .mandapam-subtitle {
-    font-size: 14px;
-    margin-bottom: 25px;
-  }
-
-  .map-container {
-    height: 300px;
-  }
+  .mandapam-address-card { padding: 18px; gap: 14px; }
+  .mandapam-brand-icon { width: 40px; height: 40px; }
+  .mandapam-brand-icon svg { width: 22px; height: 22px; }
+  .mandapam-btn { padding: 9px 16px; font-size: 12.5px; }
+  .mandapam-map-card { min-height: 250px; }
 }
 
+/* ---- Skeleton --------------------------------------------------------- */
+.md-skel-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  flex-shrink: 0;
+}
 
+.md-skel-btn {
+  width: 148px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+.md-skel-map {
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
+}

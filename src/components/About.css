@@ -1,177 +1,179 @@
+/* ============================================
+   About — image left, heading + subtext + copy right.
+
+   Head, media and text are grid siblings, so the order can differ per
+   breakpoint without duplicating markup:
+     desktop  →  image on the left, head above text on the right
+     mobile   →  head, then image, then text
+   Height is driven entirely by the content: no min-height, no fixed column
+   height, so the section is exactly as tall as it needs to be.
+   ============================================ */
+
 .about-section {
   background: radial-gradient(
     circle at center,
     var(--bg-primary) 0%,
     var(--bg-secondary) 20%,
     var(--bg-tertiary) 40%,
-    #151c26 60%,
-    #0f1419 80%,
-    #080b0f 90%,
+    var(--blue-800) 60%,
+    var(--blue-900) 80%,
+    var(--blue-950) 90%,
     var(--bg-darkest) 100%
   );
-  padding: 30px 20px;
-  padding-top: 100px;
-  min-height: 100vh;
-  scroll-margin-top: 80px;
+  padding: var(--section-pad-top) clamp(16px, 4vw, 40px) var(--section-pad-bottom);
+  scroll-margin-top: var(--header-h);
 }
 
-.about-container {
+.about-layout {
   max-width: 1200px;
   margin: 0 auto;
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "media head"
+    "media text";
+  align-items: start;
+  column-gap: clamp(24px, 4vw, 56px);
+  row-gap: clamp(14px, 1.8vw, 22px);
+}
+
+/* ---- Image ------------------------------------------------------------ */
+.about-media {
+  grid-area: media;
+  display: flex;
+  justify-content: center;
+}
+
+.about-media img,
+.about-media-placeholder {
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 3 / 2;
+  display: block;
+  border-radius: 16px;
+  border: 1px solid rgba(223, 174, 77, 0.35);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+.about-media img {
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Shown only until a real About photo exists at ABOUT_IMAGE. */
+.about-media-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--blue-700) 0%, var(--blue-900) 100%);
+}
+
+/* A plus, matching the committee cards — reads as "add an image here". */
+.about-media-placeholder .plus-icon {
+  font-size: clamp(52px, 7vw, 84px);
+  font-weight: 300;
+  line-height: 1;
+  color: var(--gold-500);
+  opacity: 0.55;
+}
+
+/* ---- Skeleton --------------------------------------------------------- */
+/* Shaped to the real layout so the section doesn't jump when content lands.
+   The head/media/text grid areas are reused as-is. */
+.about-skel-media {
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 3 / 2;
+  border-radius: 16px;
+}
+
+.about-skel-text {
+  grid-area: text;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.about-head .skeleton-title,
+.about-head .skeleton-subtitle { margin: 0 auto; }
+
+/* The shared head margin would double up with the grid's row-gap here */
+.about-head.skeleton-head { margin-bottom: 0; }
+
+/* ---- Heading + subtext ------------------------------------------------ */
+.about-head {
+  grid-area: head;
+  text-align: center;
 }
 
 .about-title {
-  text-align: center;
-  font-size: 42px;
+  font-size: var(--section-title-size);
   font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 10px 0;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  line-height: 1.15;
+  color: var(--accent-gold);
+  margin: 0 0 8px;
 }
 
 .about-subtitle {
-  text-align: center;
-  font-size: 18px;
-  color: var(--text-secondary);
-  margin: 0 0 50px 0;
+  font-size: var(--section-subtitle-size);
+  color: var(--text-muted);
   font-style: italic;
+  margin: 0;
 }
 
-.about-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 60px;
-  align-items: center;
-}
-
-.about-image-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.about-image {
-  width: 100%;
-  height: auto;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  object-fit: cover;
-  display: block;
-}
-
-.about-image-placeholder {
-  width: 100%;
-  aspect-ratio: 4/3;
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 152, 0, 0.1) 100%);
-  border-radius: var(--radius-md);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-lg);
-}
-
-.placeholder-icon {
-  font-size: 120px;
-  opacity: 0.3;
-  color: var(--accent-purple);
-}
-
-.about-content-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
+/* ---- Copy ------------------------------------------------------------- */
 .about-text {
+  grid-area: text;
+  margin: 0;
+  font-size: clamp(15px, 1.25vw, 17.5px);
+  line-height: 1.75;
   color: var(--text-secondary);
-  font-size: 18px;
-  line-height: 1.8;
+  text-align: justify;
+  /* Justified text on a narrow column opens ugly word gaps; hyphenation lets
+     the browser break long words instead. Ignored for Telugu, which has no
+     hyphenation rules — its glyphs pack tightly enough without it. */
+  hyphens: auto;
+  -webkit-hyphens: auto;
 }
 
-.about-text p {
-  margin-bottom: var(--spacing-md);
-}
-
-.about-text p:last-child {
-  margin-bottom: 0;
-}
-
-/* Tablet Styles */
+/* ---- Tablet and below: head → image → text ---------------------------- */
 @media (max-width: 968px) {
-  .about-title {
-    font-size: 36px;
-    margin-bottom: 10px;
-  }
-
-  .about-subtitle {
-    font-size: 16px;
-    margin-bottom: 40px;
-  }
-
-  .about-content {
-    gap: 40px;
-  }
-
-  .about-text {
-    font-size: 16px;
-  }
-}
-
-/* Mobile Styles */
-@media (max-width: 768px) {
-  .about-section {
-    padding: 50px 15px;
-  }
-
-  .about-title {
-    font-size: 32px;
-    margin-bottom: 10px;
-  }
-
-  .about-subtitle {
-    font-size: 15px;
-    margin-bottom: 30px;
-  }
-
-  .about-content {
+  .about-layout {
     grid-template-columns: 1fr;
-    gap: 30px;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "head"
+      "media"
+      "text";
+    row-gap: clamp(18px, 3.5vw, 28px);
+    max-width: 620px;
   }
 
-  .about-image-wrapper {
-    order: 1;
-  }
-
-  .about-content-wrapper {
-    order: 2;
-  }
-
-  .about-text {
-    font-size: 15px;
-    text-align: center;
-  }
+  .about-media img,
+  .about-media-placeholder { max-width: 100%; }
 }
 
-@media (max-width: 480px) {
-  .about-section {
-    padding: 30px 15px;
+/* ---- Mobile ----------------------------------------------------------- */
+/* The image is capped rather than left at 100% — on a phone a full-width
+   4:3 card swallows most of the fold before any copy appears. */
+@media (max-width: 640px) {
+  .about-section { padding: clamp(28px, 7vw, 44px) 28px; }
+
+  .about-media img,
+  .about-media-placeholder {
+    aspect-ratio: 16 / 10;
+    max-width: 320px;
   }
 
-  .about-title {
-    font-size: 28px;
-    margin-bottom: 8px;
-  }
-
-  .about-subtitle {
-    font-size: 14px;
-    margin-bottom: 25px;
-  }
-
-  .about-content {
-    gap: 25px;
-  }
-
-  .about-text {
-    font-size: 14px;
-  }
+  .about-text { line-height: 1.7; }
 }
 
+@media (max-width: 400px) {
+  .about-section { padding: clamp(24px, 6vw, 36px) 24px; }
+
+  .about-media img,
+  .about-media-placeholder { max-width: 262px; }
+}

@@ -1,65 +1,109 @@
 /* ============================================
-   GLOBAL THEME COLORS - Change colors here to update entire project
+   GLOBAL THEME — Deep Blue & Gold
+   Change colours here to update the entire project.
+
+   The palette follows the committee logo: a navy field with gold lettering.
+   Blue carries every surface; gold stays the single accent, which keeps it
+   consistent with the title artwork and the emblem.
    ============================================ */
 
 :root {
-  /* Header Colors - Matching Home Section Theme */
-  --header-bg: #2a3441; /* Dark blue-grey matching home section */
-  --header-text: #ffffff; /* White */
-  --header-logo-bg: #ffd700; /* Yellow/Gold */
-  --header-logo-symbol: #9c27b0; /* Purple for Om symbol */
-  --header-link-hover: #ffd700; /* Gold on hover */
-  
-  /* Background Colors */
-  --bg-primary: #2a3441; /* Dark blue-grey (center) */
-  --bg-secondary: #1e2835; /* Darker blue-grey */
-  --bg-tertiary: #1a2330; /* Even darker */
-  --bg-darkest: #000000; /* Black (corners) */
-  
-  /* Card/Container Colors */
-  --card-bg: #3a3a3a; /* Dark grey card background */
-  --card-border: rgba(255, 255, 255, 0.1); /* Subtle border */
-  --card-shadow: rgba(0, 0, 0, 0.5); /* Card shadow */
-  
-  /* Text Colors */
-  --text-primary: #ffffff; /* White */
-  --text-secondary: rgba(255, 255, 255, 0.9); /* Slightly transparent white */
-  --text-muted: rgba(255, 255, 255, 0.7); /* Muted white */
-  
-  /* Accent Colors */
-  --accent-gold: #ffd700;
-  --accent-purple: #9c27b0;
-  --accent-yellow: #ffd700;
-  
-  /* Button Colors */
-  --btn-primary: #4CAF50;
-  --btn-primary-hover: #45a049;
-  --btn-secondary: #1976d2;
-  --btn-secondary-hover: #1565c0;
-  
-  /* Table Colors */
-  --table-header-bg: #f8f9fa;
-  --table-border: #dee2e6;
-  --table-row-hover: #f8f9fa;
-  
-  /* Section Colors */
-  --section-bg: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
-  
-  /* Spacing */
+  /* --- Navy base ------------------------------------------------------- */
+  --blue-950: #050a14; /* deepest — page edges, footer */
+  --blue-900: #0a1424; /* header bar */
+  --blue-800: #102038; /* section background centre */
+  --blue-700: #172c4d; /* cards / surfaces */
+  --blue-600: #213c66; /* raised surfaces, borders */
+  --blue-500: #2d5088; /* hairlines on navy */
+
+  /* --- Gold accents ---------------------------------------------------- */
+  --gold-100: #fbeec6; /* highlight / shine */
+  --gold-300: #f4d68e; /* bright gold text — main accent on navy */
+  --gold-500: #dfae4d; /* primary gold */
+  --gold-700: #ab7a28; /* deep gold, shadowed edges */
+  --gold-900: #6b4713; /* darkest gold */
+
+  /* --- Header ---------------------------------------------------------- */
+  --header-bg: var(--blue-900);
+  --header-text: #eef4ff;
+  --header-logo-bg: var(--gold-500);
+  --header-logo-symbol: var(--blue-900);
+  --header-link-hover: var(--gold-300);
+
+  /* --- Backgrounds ----------------------------------------------------- */
+  --bg-primary: var(--blue-800);
+  --bg-secondary: var(--blue-900);
+  --bg-tertiary: #080f1c;
+  --bg-darkest: var(--blue-950);
+
+  /* --- Cards / containers ---------------------------------------------- */
+  --card-bg: var(--blue-700);
+  --card-border: rgba(223, 174, 77, 0.22);
+  --card-shadow: rgba(0, 0, 0, 0.55);
+
+  /* --- Text ------------------------------------------------------------ */
+  /* Cool white rather than pure white — sits better on navy and cuts glare. */
+  --text-primary: #eef4ff;
+  --text-secondary: rgba(238, 244, 255, 0.9);
+  --text-muted: rgba(238, 244, 255, 0.68);
+
+  /* --- Accents (legacy names kept so every section keeps working) ------- */
+  --accent-gold: var(--gold-500);
+  --accent-purple: var(--blue-500);
+  --accent-yellow: var(--gold-300);
+
+  /* --- Buttons --------------------------------------------------------- */
+  --btn-primary: var(--gold-500);
+  --btn-primary-hover: var(--gold-300);
+  --btn-secondary: var(--blue-600);
+  --btn-secondary-hover: var(--blue-500);
+
+  /* --- Tables (the fund table stays light for legibility + print) ------- */
+  --table-header-bg: #eef2f8;
+  --table-border: #d4dde9;
+  --table-row-hover: #f5f8fc;
+
+  /* --- Sections -------------------------------------------------------- */
+  --section-bg: linear-gradient(135deg, #eef2f8 0%, #d8e2ef 100%);
+
+  /* --- Section headings ------------------------------------------------ */
+  /* Every section title/subtitle reads from these, so the whole site
+     rescales from one place. */
+  --section-title-size: clamp(1.45rem, 3.2vw, 2.15rem);
+  --section-subtitle-size: clamp(0.85rem, 1.6vw, 1rem);
+
+  /* Section rhythm — shared so every section's heading sits at the same
+     height and the same distance above its content. */
+  --section-pad-top: clamp(24px, 3vw, 44px);
+  --section-pad-bottom: clamp(44px, 6vw, 80px);
+  --section-head-gap: clamp(20px, 3vw, 32px);
+
+  /* --- Spacing --------------------------------------------------------- */
   --spacing-xs: 8px;
   --spacing-sm: 16px;
   --spacing-md: 24px;
   --spacing-lg: 32px;
   --spacing-xl: 48px;
-  
-  /* Border Radius */
+
+  /* --- Radius ---------------------------------------------------------- */
   --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 20px;
-  
-  /* Shadows */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.6);
+
+  /* --- Shadows --------------------------------------------------------- */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.7);
+  --shadow-gold: 0 0 18px rgba(223, 174, 77, 0.35);
+
+  /* --- Header height, shared by the hero so the two always agree -------- */
+  --header-h: 72px;
 }
 
+@media (max-width: 968px) {
+  :root { --header-h: 66px; }
+}
+
+@media (max-width: 640px) {
+  :root { --header-h: 60px; }
+}

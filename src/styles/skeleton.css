@@ -1,0 +1,63 @@
+/* ============================================
+   Shared skeleton placeholder — a soft block with a shimmer sweep.
+   Every section builds its skeleton from these, shaped to match its real
+   layout so nothing jumps when the content arrives.
+   ============================================ */
+
+.skeleton {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.14) 50%,
+    transparent 100%
+  );
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeletonShimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* A shimmer that never stops is a poor experience for motion-sensitive
+   visitors — hold it still and rely on the block alone. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after { animation: none; }
+}
+
+/* ---- Shared shapes ---------------------------------------------------- */
+.skeleton-line { height: 13px; border-radius: 5px; }
+.skeleton-line.is-short { width: 62%; }
+.skeleton-line.is-mid { width: 82%; }
+
+/* Centred title + subtitle used by every section head */
+.skeleton-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--section-head-gap);
+}
+
+.skeleton-title {
+  height: clamp(26px, 3.4vw, 38px);
+  width: min(58%, 320px);
+  border-radius: 8px;
+}
+
+.skeleton-subtitle {
+  height: 15px;
+  width: min(42%, 260px);
+  border-radius: 6px;
+}

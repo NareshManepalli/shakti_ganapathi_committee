@@ -1,4 +1,5 @@
 @import './styles/theme.css';
+@import './styles/skeleton.css';
 
 * {
   margin: 0;
@@ -50,5 +51,20 @@ code {
 
 html {
   scroll-behavior: smooth;
+}
+
+/* Hide the scrollbar chrome without disabling scrolling — wheel, touch,
+   keyboard and the scroll-spy nav all keep working. */
+html,
+body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* legacy Edge / IE */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
