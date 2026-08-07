@@ -70,6 +70,13 @@ var GALLERY_FOLDER_ID = '1OuWdBCnuMdw5Ese6R925mMARc5x3HsQO';
 // Run makeUploadSecret() once and it is created and saved for you.
 var UPLOAD_SECRET_KEY = 'UPLOAD_SECRET';
 
+// Writes may also be authorised by a session token issued by the Auth Web App,
+// which is how the admin portal uploads without ever holding the shared secret.
+// Put the SAME value the auth script generated into this project's Script
+// Properties under this key — Project Settings -> Script Properties. Without
+// it, only the shared secret works and the portal cannot upload.
+var SIGNING_KEY_PROP = 'SESSION_SIGNING_KEY';
+
 // Refuse anything larger, so one oversized file can't exhaust the Drive quota.
 var MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
 
@@ -159,16 +166,67 @@ function getOrCreateChildFolder(parent, name) {
   return findChildFolder(parent, wanted) || parent.createFolder(wanted);
 }
 
+/**
+ * A write is allowed two ways:
+ *
+ *   1. the shared UPLOAD_SECRET — for scripts and one-off maintenance
+ *   2. a session token signed by the Auth Web App, carrying adm_in = 1
+ *
+ * The second is what the admin portal uses. It means the browser never holds
+ * the shared secret: it holds a token that expires in an hour, is tied to one
+ * member, and cannot be edited without breaking its signature.
+ */
 function requireToken(body) {
+  var supplied = String(body.token || '');
   var secret = getUploadSecret();
-  // No secret configured means refuse everything, rather than quietly letting
-  // every write through — a half-finished setup must not be an open door.
-  if (!secret) {
-    throw new Error('Server is not configured: run makeUploadSecret() once.');
+
+  if (secret && supplied === secret) return { via: 'secret' };
+
+  var claims = verifySessionToken(supplied);
+  if (claims) {
+    // Only full-access members may change the gallery. adm_in = 0 sees the
+    // funds screens and nothing else.
+    if (Number(claims.adm) !== 1) throw new Error('You do not have permission to change the gallery.');
+    return { via: 'session', memberId: claims.mid, name: claims.nm };
   }
-  if (String(body.token || '') !== secret) {
-    throw new Error('Unauthorized.');
-  }
+
+  if (!secret) throw new Error('Server is not configured: run makeUploadSecret() once.');
+  throw new Error('Unauthorized.');
+}
+
+/**
+ * Verifies a token minted by the Auth Web App. Same HMAC, same key — the key
+ * lives in Script Properties in both projects, never in either file.
+ * Returns the claims, or null if the signature or the expiry fails.
+ */
+function verifySessionToken(token) {
+  var key = PropertiesService.getScriptProperties().getProperty(SIGNING_KEY_PROP);
+  if (!key) return null;
+
+  var parts = String(token || '').split('.');
+  if (parts.length !== 2) return null;
+
+  var expected = Utilities.base64EncodeWebSafe(
+    Utilities.computeHmacSha256Signature(parts[0], key)
+  ).replace(/=+$/, '');
+  if (expected !== parts[1]) return null;
+
+  var payload;
+  try {
+    payload = JSON.parse(
+      Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[0])).getDataAsString()
+    );
+  } catch (e) { return null; }
+
+  if (!payload || !payload.exp || Date.now() > payload.exp) return null;
+  return payload;
+}
+
+/** Run once, pasting in the value the auth project's initAuth() created. */
+function setSigningKey(key) {
+  if (!key) { Logger.log("Pass the auth project's signing key as the argument."); return; }
+  PropertiesService.getScriptProperties().setProperty(SIGNING_KEY_PROP, key);
+  Logger.log('Signing key stored. The admin portal can now upload with a session token.');
 }
 
 /**

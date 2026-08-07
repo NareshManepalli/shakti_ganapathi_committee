@@ -92,7 +92,8 @@
 }
 
 .brand-line-1,
-.brand-line-2 {
+.brand-line-2,
+.brand-single {
   font-family: Georgia, 'Times New Roman', serif;
   letter-spacing: 0.055em;
   white-space: nowrap;
@@ -116,11 +117,16 @@
   letter-spacing: 0.085em;
 }
 
-/* Telugu needs a roomier line box so the matras aren't cramped against
-   each other, and a touch more size to stay legible at this scale. */
+/* Telugu is one line, so it can carry more size than either English line.
+   The roomier line box keeps the matras above and below the baseline from
+   being cramped; the tighter tracking keeps the conjuncts reading as words. */
 body.lang-te .brand-wordmark { line-height: 1.45; }
-body.lang-te .brand-line-1 { font-size: calc(var(--brand-size) * 0.40); }
-body.lang-te .brand-line-2 { font-size: calc(var(--brand-size) * 0.27); letter-spacing: 0.03em; }
+
+.brand-single {
+  font-size: calc(var(--brand-size) * 0.38);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
 
 /* ---- Desktop nav ----------------------------------------------------- */
 .header-nav {

@@ -190,14 +190,14 @@
     <div class="progress-hero">
       <div class="progress-hero-top">
         <span class="progress-hero-label">Overall completion</span>
-        <span class="progress-hero-pct">66%</span>
+        <span class="progress-hero-pct">68%</span>
       </div>
-      <div class="progress-hero-track" role="img" aria-label="31 of 47 deliverables complete, 0 more in progress">
-        <span class="progress-hero-fill" style="width: 66%"></span>
+      <div class="progress-hero-track" role="img" aria-label="32 of 47 deliverables complete, 0 more in progress">
+        <span class="progress-hero-fill" style="width: 68%"></span>
         <span class="progress-hero-part" style="width: 0%"></span>
       </div>
       <div class="progress-hero-legend">
-        <span><span class="dot c"></span><b>31 of 47</b> complete</span>
+        <span><span class="dot c"></span><b>32 of 47</b> complete</span>
         <span><span class="dot p"></span><b>0</b> in progress</span>
         <span>Phases 2, 3 &amp; 4 complete · Phase 1 half done · Phase 0 two-thirds</span>
       </div>
@@ -205,16 +205,16 @@
   </header>
 
   <div class="summary">
-    <div class="stat done"><div class="n">31</div><div class="l">Done</div></div>
+    <div class="stat done"><div class="n">32</div><div class="l">Done</div></div>
     <div class="stat prog"><div class="n">0</div><div class="l">In progress</div></div>
     <div class="stat rework"><div class="n">0</div><div class="l">Untouched — needs rework</div></div>
-    <div class="stat todo"><div class="n">16</div><div class="l">To build from scratch</div></div>
+    <div class="stat todo"><div class="n">15</div><div class="l">To build from scratch</div></div>
   </div>
-  <div class="bar" role="img" aria-label="31 done, 0 in progress, 0 rework, 16 to build">
-    <span class="s-done" style="flex: 31"></span>
+  <div class="bar" role="img" aria-label="32 done, 0 in progress, 0 rework, 15 to build">
+    <span class="s-done" style="flex: 32"></span>
     <span class="s-prog" style="flex: 0"></span>
     <span class="s-rework" style="flex: 0"></span>
-    <span class="s-todo" style="flex: 16"></span>
+    <span class="s-todo" style="flex: 15"></span>
   </div>
 
   <div class="legend">
@@ -384,8 +384,8 @@
         login and dashboard, then About, Members, Gallery uploads, the 9-day Schedule, Mandapam
         details, Transactions, the Fund access code, profile and site settings.
       </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 22%"></span></div>
-      <div class="phase-foot"><span><b>2 / 9</b> deliverables</span><span>22%</span></div>
+      <div class="phase-track"><span class="phase-fill" style="width: 33%"></span></div>
+      <div class="phase-foot"><span><b>3 / 9</b> deliverables</span><span>33%</span></div>
     </div>
 
     <div class="phase">
@@ -466,10 +466,10 @@
     <thead><tr><th>Screen</th><th>What it does</th><th>Source</th><th>Phase</th><th>Status</th></tr></thead>
     <tbody>
       <tr><td><span class="name">Login</span></td><td class="use">Done as part of the funds gate — mobile + captcha + emailed OTP, no passwords anywhere. The signed token carries <code>adm_in</code>, so the portal knows on arrival which screens to offer. Logging out returns to the sign-in page and re-arms the guard</td><td class="src">Auth Web App</td><td class="ph">P5</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Portal shell &amp; Dashboard</span></td><td class="use">Sidebar, topbar and profile menu in the same navy and gold as the public site. Routes are <code>/admin</code>, <code>/admin/about</code>, <code>/admin/members</code>, <code>/admin/gallery</code>, <code>/admin/schedule</code>, <code>/admin/mandapam</code>, <code>/admin/transactions</code>, <code>/admin/monthly-funds</code>, <code>/admin/profile</code>. The menu is filtered by <code>adm_in</code> — verified live at <b>8 items for an admin, 3 for a funds-only member</b>. Screens not yet built render a <i>work in progress</i> card rather than an empty table that looks broken. <b>English only</b>, by decision: the public site is bilingual because visitors are, the portal is a tool for a handful of people</td><td class="src">session</td><td class="ph">P6</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Portal shell &amp; Dashboard</span></td><td class="use">Dark navy sidebar and topbar with gold icons, over a light working area &mdash; the chrome ties it to the public site, the content area is light because this is where people read tables and fill in forms for long stretches. Routes are <code>/admin</code>, <code>/admin/about</code>, <code>/admin/members</code>, <code>/admin/gallery</code>, <code>/admin/schedule</code>, <code>/admin/mandapam</code>, <code>/admin/transactions</code>, <code>/admin/monthly-funds</code>, <code>/admin/profile</code>. The menu is filtered by <code>adm_in</code> — verified live at <b>8 items for an admin, 3 for a funds-only member</b>. Screens not yet built render a <i>work in progress</i> card rather than an empty table that looks broken. <b>English only</b>, by decision: the public site is bilingual because visitors are, the portal is a tool for a handful of people</td><td class="src">session</td><td class="ph">P6</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">About editor</span></td><td class="use">Bilingual paragraph editor + section image</td><td class="src">about sheet</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Committee Members</span></td><td class="use">Add / edit / soft-delete — name &amp; position EN+TE, mobile, photo upload, order. The same mobile list the Fund gate verifies against</td><td class="src">committee sheet · Drive</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Gallery manager</span></td><td class="use">Folder browser — years → photos; create / remove folders, upload, delete, preview. Holds the write secret and enforces the 30-per-year cap in the UI</td><td class="src">Drive (script)</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">Gallery manager</span></td><td class="use">Folder browser over Drive: year folders, then the photos inside. Create and bin a year, upload (multi-select, one file at a time with a progress bar), preview, and delete. Refuses non-images, files over 10&nbsp;MB and anything past the 30-per-year cap <i>before</i> uploading, so nobody waits on files the server will reject. Deletes go to the Drive bin, recoverable for 30 days. <b>Writes are authorised by the member's session token, not the shared upload secret</b> &mdash; the gallery script verifies the same HMAC the auth script signs, so the browser never holds a permanent credential and a funds-only member is refused</td><td class="src">Drive (script)</td><td class="ph">P6</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Schedule manager</span></td><td class="use">Insert and update the nine days for a chosen year, with <i>copy last year forward</i></td><td class="src">schedule sheet</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Mandapam details</span></td><td class="use">Address EN/TE, map link, with a live preview of the public card</td><td class="src">mandapam sheet</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Transactions manager</span></td><td class="use">Insert and update ledger rows; balance auto-computed, with search, paging and soft-delete</td><td class="src">transactions sheet</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>

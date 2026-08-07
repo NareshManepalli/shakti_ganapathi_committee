@@ -1,0 +1,185 @@
+/* Gallery manager — folder browser over the Drive gallery. */
+
+.gal-years {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 13px;
+}
+
+.gal-year {
+  display: flex;
+  align-items: center;
+  background: var(--a-surface);
+  border: 1px solid var(--a-border);
+  border-radius: var(--a-radius);
+  box-shadow: var(--a-shadow-sm);
+  overflow: hidden;
+  transition: border-color 0.18s, transform 0.18s;
+}
+
+.gal-year:hover { border-color: var(--a-gold); transform: translateY(-2px); }
+
+.gal-year-open {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 15px;
+  background: none;
+  border: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.gal-year-icon {
+  width: 40px; height: 40px; flex: none;
+  border-radius: 11px;
+  display: grid; place-items: center;
+  background: linear-gradient(140deg, var(--a-navy-2), var(--a-navy));
+}
+
+.gal-year-icon svg { width: 21px; height: 21px; color: var(--a-gold); }
+
+.gal-year-text { display: flex; flex-direction: column; min-width: 0; }
+.gal-year-text b { font-family: var(--font-display, inherit); font-size: 17px; color: var(--a-heading); }
+.gal-year-text i { font-style: normal; font-size: 12px; color: var(--a-muted); }
+
+/* --------------------------------------------------------------- photos */
+
+.gal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 13px;
+}
+
+.gal-item {
+  margin: 0;
+  background: var(--a-surface);
+  border: 1px solid var(--a-border);
+  border-radius: var(--a-radius);
+  box-shadow: var(--a-shadow-sm);
+  overflow: hidden;
+}
+
+.gal-thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  padding: 0;
+  border: none;
+  background: var(--a-surface-2);
+  cursor: zoom-in;
+}
+
+.gal-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.gal-item figcaption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 11px;
+  border-top: 1px solid var(--a-border-soft);
+}
+
+.gal-item figcaption span {
+  flex: 1;
+  min-width: 0;
+  font-size: 11.8px;
+  color: var(--a-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gal-del {
+  flex: none;
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--a-muted-2);
+  cursor: pointer;
+  margin-right: 6px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.gal-del svg { width: 16px; height: 16px; }
+.gal-del:hover:not(:disabled) { background: var(--a-red-bg); color: var(--a-red); border-color: rgba(209, 67, 95, 0.3); }
+.gal-del:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.gal-skel {
+  aspect-ratio: 4 / 3;
+  border-radius: var(--a-radius);
+  background: linear-gradient(100deg, var(--a-surface-2) 30%, #eaeef4 50%, var(--a-surface-2) 70%);
+  background-size: 200% 100%;
+  animation: gal-shimmer 1.3s linear infinite;
+}
+
+@keyframes gal-shimmer { to { background-position: -200% 0; } }
+
+/* -------------------------------------------------------- new year form */
+
+.gal-newyear {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+/* --------------------------------------------------------- upload state */
+
+.gal-progress {
+  background: var(--a-surface);
+  border: 1px solid var(--a-border);
+  border-radius: var(--a-radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  box-shadow: var(--a-shadow-sm);
+}
+
+.gal-progress p { margin: 8px 0 0; font-size: 12.5px; color: var(--a-muted); }
+
+.gal-progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--a-surface-2);
+  overflow: hidden;
+}
+
+.gal-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--a-gold), var(--a-gold-soft));
+  transition: width 0.3s ease;
+}
+
+/* -------------------------------------------------------------- modals */
+
+.gal-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(8, 19, 38, 0.72);
+}
+
+.gal-confirm { max-width: 400px; text-align: center; }
+
+.gal-preview {
+  max-width: min(94vw, 1100px);
+  max-height: 88vh;
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+@media (max-width: 520px) {
+  .gal-grid { grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 10px; }
+  .gal-years { grid-template-columns: 1fr; }
+}

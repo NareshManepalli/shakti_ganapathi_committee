@@ -2,6 +2,10 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import logoImg from '../assets/logo.png';
+import {
+  IconDashboard, IconAbout, IconMembers, IconGallery, IconSchedule,
+  IconMandapam, IconLedger, IconFunds, IconProfile, IconLogout,
+} from './icons';
 import './Admin.css';
 
 // The portal shell: a fixed sidebar on desktop, a drawer on phones, and a
@@ -17,14 +21,14 @@ import './Admin.css';
 // courtesy so they aren't shown doors they cannot open — the real check is the
 // signed token, which the server reads on every write.
 const NAV = [
-  { to: '/admin',               label: 'Dashboard',     admin: false, end: true },
-  { to: '/admin/about',         label: 'About',         admin: true },
-  { to: '/admin/members',       label: 'Members',       admin: true },
-  { to: '/admin/gallery',       label: 'Gallery',       admin: true },
-  { to: '/admin/schedule',      label: 'Schedule',      admin: true },
-  { to: '/admin/mandapam',      label: 'Mandapam',      admin: true },
-  { to: '/admin/transactions',  label: 'Transactions',  admin: false },
-  { to: '/admin/monthly-funds', label: 'Monthly Funds', admin: false },
+  { to: '/admin',               label: 'Dashboard',     Icon: IconDashboard, admin: false, end: true },
+  { to: '/admin/about',         label: 'About',         Icon: IconAbout,     admin: true },
+  { to: '/admin/members',       label: 'Members',       Icon: IconMembers,   admin: true },
+  { to: '/admin/gallery',       label: 'Gallery',       Icon: IconGallery,   admin: true },
+  { to: '/admin/schedule',      label: 'Schedule',      Icon: IconSchedule,  admin: true },
+  { to: '/admin/mandapam',      label: 'Mandapam',      Icon: IconMandapam,  admin: true },
+  { to: '/admin/transactions',  label: 'Transactions',  Icon: IconLedger,    admin: false },
+  { to: '/admin/monthly-funds', label: 'Monthly Funds', Icon: IconFunds,     admin: false },
 ];
 
 const AdminLayout = () => {
@@ -87,10 +91,25 @@ const AdminLayout = () => {
               className={({ isActive }) => `admin-nav-link${isActive ? ' is-active' : ''}`}
               onClick={() => setDrawer(false)}
             >
+              <item.Icon />
               {item.label}
             </NavLink>
           ))}
+          <span className="admin-nav-sep" />
+          <NavLink
+            to="/admin/profile"
+            className={({ isActive }) => `admin-nav-link${isActive ? ' is-active' : ''}`}
+            onClick={() => setDrawer(false)}
+          >
+            <IconProfile />
+            My Profile
+          </NavLink>
         </nav>
+
+        <button className="admin-nav-logout" onClick={leave}>
+          <IconLogout />
+          Log out
+        </button>
 
         <p className="admin-role">
           {isAdmin
@@ -125,9 +144,11 @@ const AdminLayout = () => {
             {menu && (
               <div className="admin-profile-menu" role="menu">
                 <button role="menuitem" onClick={() => { setMenu(false); navigate('/admin/profile'); }}>
+                  <IconProfile />
                   My Profile
                 </button>
                 <button role="menuitem" className="is-danger" onClick={leave}>
+                  <IconLogout />
                   Log out
                 </button>
               </div>

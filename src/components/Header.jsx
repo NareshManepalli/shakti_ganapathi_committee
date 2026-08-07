@@ -156,8 +156,17 @@ const Header = () => {
               <img src={logoImg} alt="" />
             </span>
             <span className="brand-wordmark">
-              <span className="brand-line-1">{t.brandLine1}</span>
-              <span className="brand-line-2">{t.brandLine2}</span>
+              {language === 'te' ? (
+                /* Telugu reads as one phrase — broken over two lines it looks
+                   wrong, so the wordmark carries the full name on one line.
+                   Same treatment as the committee ID card. */
+                <span className="brand-single">{t.committeeName}</span>
+              ) : (
+                <>
+                  <span className="brand-line-1">{t.brandLine1}</span>
+                  <span className="brand-line-2">{t.brandLine2}</span>
+                </>
+              )}
             </span>
           </a>
 
