@@ -92,7 +92,15 @@ const OtpPage = () => {
       return;
     }
 
-    signIn({ token: res.token, member: res.member, expiresInMin: res.expiresInMin });
+    signIn({
+      token: res.token,
+      member: res.member,
+      expiresInMin: res.expiresInMin,
+      // Set when the server accepted a development bypass rather than an
+      // emailed code. Carried through so the portal can say so on every screen
+      // — a bypass that reaches production must be impossible to miss.
+      devBypass: Boolean(res.devBypass),
+    });
     navigate('/admin', { replace: true });
   }, [busy, state, signIn, navigate, t]);
 

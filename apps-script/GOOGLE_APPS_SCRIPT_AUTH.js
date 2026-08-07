@@ -46,6 +46,27 @@ var SESSION_TTL_MINUTES  = 60;
 
 var SIGNING_KEY_PROP = 'SESSION_SIGNING_KEY';
 
+/* ---------------------------------------------------------------------------
+ * DEVELOPMENT BYPASS
+ *
+ * While building the portal, waiting for an email on every sign-in is slow and
+ * burns the daily send quota. enableDevBypass() lets one fixed code stand in.
+ *
+ * It is deliberately awkward to leave switched on:
+ *   - it is NOT in this file, so it cannot reach the public repo
+ *   - it lives in Script Properties and is off unless explicitly enabled
+ *   - it EXPIRES BY ITSELF after a set number of days, so a forgotten bypass
+ *     closes on its own rather than sitting open forever
+ *   - the health endpoint reports it, so `curl <exec>` shows whether it is live
+ *   - every use is written to the log
+ *
+ * With it on, ANYONE who knows the code can sign in as ANY member on the list,
+ * including an admin. Run disableDevBypass() before the site goes public.
+ * ------------------------------------------------------------------------- */
+var DEV_BYPASS_PROP = 'DEV_OTP_BYPASS';
+var DEV_BYPASS_UNTIL_PROP = 'DEV_OTP_BYPASS_UNTIL';
+var DEV_BYPASS_MAX_DAYS = 7;
+
 // Shown as the sender in the member's inbox. The underlying address is the
 // Google account this script is deployed under — deploy it on the committee's
 // account, not a personal one, so the quota and the address belong to the
@@ -72,6 +93,49 @@ function initAuth() {
   Logger.log('Rows with an email address: ' + withEmail);
   var canSignIn = members.filter(function (m) { return m.accessIn && m.email; }).length;
   Logger.log('Rows that can actually sign in (access_in = 1 AND an email): ' + canSignIn);
+}
+
+/**
+ * Turn the bypass on. Defaults to 111111 for 7 days; both are overridable.
+ *
+ * Note that this default is written in a file that lives in a PUBLIC repo, so
+ * "111111" is public knowledge. That costs nothing while the bypass is off,
+ * but it means an enabled-and-forgotten bypass is open to anyone who has read
+ * the repo. Pass your own code if that matters:  enableDevBypass('482913', 2)
+ */
+function enableDevBypass(code, days) {
+  var props = PropertiesService.getScriptProperties();
+  var value = String(code || '111111');
+  var span = Math.min(Number(days) || DEV_BYPASS_MAX_DAYS, DEV_BYPASS_MAX_DAYS);
+  var until = Date.now() + span * 24 * 60 * 60 * 1000;
+  props.setProperty(DEV_BYPASS_PROP, value);
+  props.setProperty(DEV_BYPASS_UNTIL_PROP, String(until));
+  Logger.log('DEV BYPASS ON. Code "' + value + '" signs in as any member.');
+  Logger.log('It expires on ' + new Date(until) + ' — or run disableDevBypass() now.');
+}
+
+/** Turn it off. Run this before the site goes public. */
+function disableDevBypass() {
+  var props = PropertiesService.getScriptProperties();
+  props.deleteProperty(DEV_BYPASS_PROP);
+  props.deleteProperty(DEV_BYPASS_UNTIL_PROP);
+  Logger.log('DEV BYPASS OFF. Only emailed codes are accepted.');
+}
+
+/** The active bypass code, or '' when off or lapsed. */
+function devBypassCode() {
+  var props = PropertiesService.getScriptProperties();
+  var code = props.getProperty(DEV_BYPASS_PROP);
+  if (!code) return '';
+  var until = Number(props.getProperty(DEV_BYPASS_UNTIL_PROP) || 0);
+  if (!until || Date.now() > until) {
+    // Lapsed: clear it so it cannot be revived by accident.
+    props.deleteProperty(DEV_BYPASS_PROP);
+    props.deleteProperty(DEV_BYPASS_UNTIL_PROP);
+    Logger.log('DEV BYPASS expired and has been cleared.');
+    return '';
+  }
+  return String(code);
 }
 
 /* ------------------------------------------------------------------ utils */
@@ -332,6 +396,28 @@ function handleVerifyOtp(body) {
   var entered = String(body.otp || '').replace(/\D/g, '');
   var cache = sheetCache();
 
+  // Development bypass, if one is switched on and has not lapsed. Checked
+  // before the cache so a member can sign in without requesting a code at all.
+  var bypass = devBypassCode();
+  if (bypass && entered === bypass) {
+    var devMember = findMemberByMobile(mobile);
+    if (!devMember) return fail('NOT_A_MEMBER', 'This mobile number is not on the committee list.');
+    if (!devMember.accessIn) {
+      return fail('NO_PERMISSION', 'You do not have permission to sign in. Please contact the committee admin.');
+    }
+    Logger.log('DEV BYPASS USED for ' + mobile + ' (' + devMember.name + ')');
+    cache.remove(otpKey(mobile));
+    return jsonOut({
+      ok: true,
+      devBypass: true,               // so the browser can say so out loud
+      token: issueToken(devMember),
+      member: {
+        id: devMember.id, name: devMember.name, nameTe: devMember.nameTe, isAdmin: devMember.admIn,
+      },
+      expiresInMin: SESSION_TTL_MINUTES,
+    });
+  }
+
   var raw = cache.get(otpKey(mobile));
   if (!raw) {
     return fail('OTP_EXPIRED', 'That code has expired. Please request a new one.');
@@ -506,5 +592,16 @@ function handleUpdateProfile(body) {
 /** A plain GET is only ever a health check — it exposes nothing. */
 function doGet() {
   var configured = !!PropertiesService.getScriptProperties().getProperty(SIGNING_KEY_PROP);
-  return jsonOut({ ok: true, service: 'ssgc-auth', configured: configured });
+  var bypass = devBypassCode();
+  return jsonOut({
+    ok: true,
+    service: 'ssgc-auth',
+    configured: configured,
+    // Reported on purpose: a single GET shows whether the bypass is live, so it
+    // cannot sit open unnoticed. The code itself is never included.
+    devBypass: bypass ? true : false,
+    devBypassUntil: bypass
+      ? new Date(Number(PropertiesService.getScriptProperties().getProperty(DEV_BYPASS_UNTIL_PROP))).toISOString()
+      : null,
+  });
 }

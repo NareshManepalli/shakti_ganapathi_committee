@@ -33,7 +33,7 @@ const NAV = [
 
 const AdminLayout = () => {
   const navigate = useNavigate();
-  const { member, signOut } = useAuth();
+  const { member, signOut, devBypass } = useAuth();
 
   const [drawer, setDrawer] = useState(false);
   const [menu, setMenu] = useState(false);
@@ -155,6 +155,14 @@ const AdminLayout = () => {
             )}
           </div>
         </header>
+
+        {devBypass && (
+          <p className="admin-devbanner" role="alert">
+            <b>Development sign-in.</b> You are signed in with the bypass code, not an
+            emailed one. Run <code>disableDevBypass()</code> in the Auth Apps Script
+            project before this site goes public.
+          </p>
+        )}
 
         <main className="admin-content">
           <Outlet />

@@ -34,10 +34,11 @@ const readStored = () => {
 export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(readStored);
 
-  const signIn = useCallback(({ token, member, expiresInMin }) => {
+  const signIn = useCallback(({ token, member, expiresInMin, devBypass }) => {
     const s = {
       token,
       member,
+      devBypass: Boolean(devBypass),
       expiresAt: Date.now() + (Number(expiresInMin) || 60) * 60 * 1000,
     };
     sessionStorage.setItem(KEY, JSON.stringify(s));
@@ -61,6 +62,7 @@ export const AuthProvider = ({ children }) => {
   const value = useMemo(() => ({
     member: session ? session.member : null,
     token: session ? session.token : null,
+    devBypass: Boolean(session && session.devBypass),
     isAuthed: Boolean(session),
     signIn,
     signOut,
