@@ -1,13 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
-import { committeeMembers } from '../data/committeeMembers';
+import { useSectionContent } from '../contexts/ContentContext';
 import logoImg from '../assets/logo.png';
-// Two cutouts stand in until real photos arrive — alternated per member so
-// the cards don't all look identical.
-import memberPhotoA from '../assets/naresh.png';
-import memberPhotoB from '../assets/naresh2.png';
-import { useSectionReady } from '../hooks/useSectionReady';
 import './Committee.css';
 
 // How many members show before "View All Members" is needed.
@@ -37,6 +32,7 @@ const Committee = () => {
   const t = translations[language];
   const [selectedMember, setSelectedMember] = useState(null);
   const [showAll, setShowAll] = useState(false);
+  const [cardPhotoFailed, setCardPhotoFailed] = useState(false);
   const [visibleCount, setVisibleCount] = useState(getVisibleCount);
 
   useEffect(() => {
@@ -90,7 +86,10 @@ const Committee = () => {
     return () => observer.disconnect();
   }, []);
 
-  const openModal = (member) => setSelectedMember(member);
+  const openModal = (member) => {
+    setCardPhotoFailed(false);
+    setSelectedMember(member);
+  };
   const closeModal = () => setSelectedMember(null);
 
   // Prevent body scroll when the modal is open.
@@ -111,10 +110,12 @@ const Committee = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, [selectedMember]);
 
-  const loading = useSectionReady();
+  const { data: memberRows, loading } = useSectionContent('members');
+  const allMembers = memberRows || [];
 
-  const executives = committeeMembers.slice(0, 2);
-  const members = committeeMembers.slice(2);
+  // is_executive puts a member in the left column; everyone else fills the grid.
+  const executives = allMembers.filter((m) => m.isExecutive);
+  const members = allMembers.filter((m) => !m.isExecutive);
   const hasMore = members.length > visibleCount;
   const shownMembers = showAll ? members : members.slice(0, visibleCount);
 
@@ -137,11 +138,14 @@ const Committee = () => {
       tabIndex={0}
     >
       <div className="member-image-wrapper">
-        {member.image ? (
+        {member.photo ? (
           <img
-            src={member.image}
+            src={member.photo}
             alt={getMemberName(member)}
             className="member-image"
+            /* Drive only serves these when the request carries no Referer —
+               otherwise Chrome drops them with ERR_BLOCKED_BY_ORB. */
+            referrerPolicy="no-referrer"
             onError={(e) => {
               e.target.style.display = 'none';
               e.target.nextElementSibling.style.display = 'flex';
@@ -150,7 +154,7 @@ const Committee = () => {
         ) : null}
         <div
           className="member-placeholder"
-          style={{ display: member.image ? 'none' : 'flex' }}
+          style={{ display: member.photo ? 'none' : 'flex' }}
         >
           <span className="plus-icon">+</span>
         </div>
@@ -274,10 +278,17 @@ const Committee = () => {
             </header>
 
             <div className="idcard-photo">
-              <img
-                src={selectedMember.id % 2 === 1 ? memberPhotoA : memberPhotoB}
-                alt=""
-              />
+              {selectedMember.profilePhoto && !cardPhotoFailed ? (
+                <img
+                  src={selectedMember.profilePhoto}
+                  alt=""
+                  referrerPolicy="no-referrer"
+                  onError={() => setCardPhotoFailed(true)}
+                />
+              ) : (
+                /* No prfle_photo in the sheet, or it failed to load */
+                <span className="idcard-photo-placeholder" aria-hidden="true">+</span>
+              )}
             </div>
 
             <span className="idcard-smoke" aria-hidden="true" />
@@ -286,7 +297,11 @@ const Committee = () => {
               <h3 className="idcard-name">{getMemberName(selectedMember)}</h3>
               <div className="idcard-meta">
                 <p className="idcard-line">{getMemberPosition(selectedMember)}</p>
-                <p className="idcard-line">{selectedMember.mobile}</p>
+                {/* Blank mobile cells are common while the sheet fills up —
+                    leave the line out rather than printing an empty row. */}
+                {selectedMember.mobile && (
+                  <p className="idcard-line idcard-mobile">{selectedMember.mobile}</p>
+                )}
               </div>
             </div>
           </div>

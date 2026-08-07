@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
-import { scheduleDays } from '../data/schedule';
-import { useSectionReady } from '../hooks/useSectionReady';
+import { useSectionContent } from '../contexts/ContentContext';
 import './Schedule.css';
 
 // Weekday, month and time all come from the stored ISO date + 24h time, so a
@@ -13,11 +12,14 @@ const parseDate = (isoDate, time) => {
   return new Date(y, m - 1, d, hh, mm);
 };
 
-const ScheduleCard = ({ item, locale, atWord, dayWord }) => {
+const ScheduleCard = ({ item, locale, atWord, dayWord, isTelugu }) => {
   const [imageFailed, setImageFailed] = useState(false);
   const when = parseDate(item.date, item.time);
 
-  const weekday = when.toLocaleDateString(locale, { weekday: 'long' });
+  // The sheet may supply a weekday; blank means derive it from the date, which
+  // keeps it from contradicting the date sitting beside it.
+  const override = isTelugu ? item.dayTe : item.dayEn;
+  const weekday = override || when.toLocaleDateString(locale, { weekday: 'long' });
   // hour12 is forced — the locale default would render 18:30 as "18:30"
   const clock = when.toLocaleTimeString(locale, {
     hour: 'numeric',
@@ -25,20 +27,22 @@ const ScheduleCard = ({ item, locale, atWord, dayWord }) => {
     hour12: true,
   });
   const month = when.toLocaleDateString(locale, { month: 'short' });
-  const title = locale.startsWith('te') ? item.titleTe : item.titleEn;
+  const title = isTelugu ? item.titleTe : item.titleEn;
 
   return (
     <article className="sd-card">
       <div className="sd-media">
-        {imageFailed ? (
-          <span className="sd-media-placeholder" aria-hidden="true">+</span>
-        ) : (
+        {item.image && !imageFailed ? (
           <img
             src={item.image}
             alt=""
             loading="lazy"
+            referrerPolicy="no-referrer"
             onError={() => setImageFailed(true)}
           />
+        ) : (
+          /* No image in the sheet, or it failed to load */
+          <span className="sd-media-placeholder" aria-hidden="true">+</span>
         )}
       </div>
 
@@ -68,11 +72,14 @@ const ScheduleCard = ({ item, locale, atWord, dayWord }) => {
 const Schedule = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const loading = useSectionReady();
+  const { data: schedule, loading } = useSectionContent('schedule');
   const locale = language === 'te' ? 'te-IN' : 'en-US';
-  // Phase 3 should take this from the year the schedule rows belong to, so the
-  // heading and the dates below it can never disagree.
-  const year = new Date().getFullYear();
+  const isTelugu = language === 'te';
+
+  const days = (schedule && schedule.days) || [];
+  // Taken from the rows themselves, so the heading can never disagree with the
+  // dates underneath it.
+  const year = (schedule && schedule.year) || new Date().getFullYear();
 
   if (loading) {
     return (
@@ -83,8 +90,8 @@ const Schedule = () => {
             <span className="skeleton skeleton-subtitle" />
           </div>
           <div className="schedule-grid">
-            {scheduleDays.map((d) => (
-              <div className="sd-card" key={d.day}>
+            {Array.from({ length: 9 }, (_, i) => (
+              <div className="sd-card" key={i}>
                 <span className="skeleton sd-skel-media" />
                 <span className="sd-sep" aria-hidden="true" />
                 <div className="sd-body">
@@ -109,11 +116,12 @@ const Schedule = () => {
         <p className="schedule-subtitle">{t.scheduleSubtitle}</p>
 
         <div className="schedule-grid">
-          {scheduleDays.map((item) => (
+          {days.map((item) => (
             <ScheduleCard
               key={item.day}
               item={item}
               locale={locale}
+              isTelugu={isTelugu}
               atWord={t.scheduleAt}
               dayWord={t.scheduleDay}
             />

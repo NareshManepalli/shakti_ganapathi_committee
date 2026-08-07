@@ -1,23 +1,31 @@
 import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
-import { useSectionReady } from '../hooks/useSectionReady';
+import { useSectionContent } from '../contexts/ContentContext';
 import './MandapamLocation.css';
 
-// Phase 2 moves these to the `mandapam` sheet so the committee can edit them.
-const ADDRESS_LINES = [
-  'Sri Shakthi Nilayam',
-  'D.No: 44-13-101, Annapurnamma Peta,',
-  'Pedda Veedhi, Beside Nayi Brahmin Seva Sangam',
-  'Rajamahendravaram - 533101',
-];
+// The sheet holds the address as one field, and the committee decides where it
+// breaks: put each line on its own row inside the cell (Alt+Enter in Sheets) or
+// separate them with a "|". Only when the cell has neither do we fall back to
+// splitting on commas, which keeps a plain one-line address readable.
+const toLines = (address) => {
+  const raw = String(address || '').trim();
+  if (!raw) return [];
+  const explicit = raw.split(/\s*(?:\r?\n|\|)\s*/).map((p) => p.trim()).filter(Boolean);
+  if (explicit.length > 1) return explicit;
+  return raw.split(',').map((p) => p.trim()).filter(Boolean);
+};
 
-// One source of truth for the location string — the embed, the directions link
-// and the "open in maps" link all resolve from it, so they can never disagree.
-const ADDRESS_QUERY = encodeURIComponent(ADDRESS_LINES.join(', '));
-const MAP_EMBED = `https://www.google.com/maps?q=${ADDRESS_QUERY}&output=embed`;
-const MAP_LINK = `https://www.google.com/maps/search/?api=1&query=${ADDRESS_QUERY}`;
-const DIRECTIONS_LINK = `https://www.google.com/maps/dir/?api=1&destination=${ADDRESS_QUERY}`;
+// Maps wants one flat line whatever shape the cell is in — otherwise the line
+// breaks end up as %0A inside the query and the pin drifts. Trailing commas and
+// full stops are trimmed off each line first, so a cell punctuated for display
+// doesn't reach Maps as "Pedda Veedhi,, Annapurnamma Peta,,".
+const toQuery = (address) =>
+  toLines(address)
+    .map((line) => line.replace(/[,.\s]+$/, ''))
+    .join(', ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 const TempleIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -39,7 +47,19 @@ const PinIcon = () => (
 const MandapamLocation = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const loading = useSectionReady();
+  const { data: content, loading } = useSectionContent('content');
+
+  const mandapam = (content && content.mandapam) || {};
+  const address = (language === 'te' ? mandapam.te : mandapam.en) || mandapam.en || '';
+  const lines = toLines(address);
+
+  // Every link resolves from the same address string, so the embed, the
+  // directions and "open in maps" can never point at different places.
+  const query = encodeURIComponent(toQuery(address));
+  const mapEmbed = `https://www.google.com/maps?q=${query}&output=embed`;
+  const mapLink = mandapam.mapUrl
+    || `https://www.google.com/maps/search/?api=1&query=${query}`;
+  const directionsLink = `https://www.google.com/maps/dir/?api=1&destination=${query}`;
 
   if (loading) {
     return (
@@ -87,14 +107,14 @@ const MandapamLocation = () => {
             </div>
 
             <address className="mandapam-address">
-              {ADDRESS_LINES.map((line) => (
-                <span key={line}>{line}</span>
+              {lines.map((line, i) => (
+                <span key={`${line}-${i}`}>{line}</span>
               ))}
             </address>
 
             <a
               className="mandapam-btn"
-              href={DIRECTIONS_LINK}
+              href={directionsLink}
               target="_blank"
               rel="noreferrer noopener"
             >
@@ -106,7 +126,7 @@ const MandapamLocation = () => {
           {/* Right — map */}
           <div className="mandapam-card mandapam-map-card">
             <iframe
-              src={MAP_EMBED}
+              src={mapEmbed}
               title={t.mandapamName}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
@@ -114,7 +134,7 @@ const MandapamLocation = () => {
             />
             <a
               className="mandapam-btn mandapam-btn-overlay"
-              href={MAP_LINK}
+              href={mapLink}
               target="_blank"
               rel="noreferrer noopener"
             >

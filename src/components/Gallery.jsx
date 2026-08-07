@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
-import { FESTIVAL_START, GALLERY_START_YEAR } from '../config/festival';
-import { useSectionReady } from '../hooks/useSectionReady';
+import { GALLERY_START_YEAR, getFestivalState } from '../config/festival';
+import { useSectionContent } from '../contexts/ContentContext';
+import { SHEETS_CONFIG } from '../config/sheetsConfig';
+import { fetchGalleryTree } from '../utils/sheetService';
+import { useRevalidate } from '../hooks/useRevalidate';
 import './Gallery.css';
 
 // Same split as the Peetam gallery: two scrolling rows on large screens,
@@ -10,31 +13,8 @@ import './Gallery.css';
 const getRowCount = () =>
   (typeof window === 'undefined' ? 2 : window.innerWidth >= 1025 ? 2 : 3);
 
-// PLACEHOLDER photos until Phase 4 reads the real media from Drive.
-// Keyed by year so swapping in the Drive response is a drop-in change.
-const PLACEHOLDER_BY_YEAR = {
-  2025: 12,
-};
-
-const imagesForYear = (year) => {
-  const count = PLACEHOLDER_BY_YEAR[year] || 0;
-  return Array.from({ length: count }, (_, i) => ({
-    id: `${year}-${i + 1}`,
-    year,
-    url: `https://picsum.photos/480/320?random=${year}${i + 1}`,
-  }));
-};
-
-// The newest year that actually has photos. Until this year's festival
-// pictures are uploaded the gallery opens on the previous year, so visitors
-// land on real photos rather than an empty state. The moment the current
-// year has any, it becomes the default on its own.
-const latestYearWithPhotos = (currentYear) => {
-  for (let y = currentYear; y >= GALLERY_START_YEAR; y -= 1) {
-    if (imagesForYear(y).length > 0) return y;
-  }
-  return currentYear;
-};
+// The Drive gallery Web App, or null while it is still being set up.
+const GALLERY_API = (SHEETS_CONFIG.media && SHEETS_CONFIG.media.gallery) || null;
 
 const Gallery = () => {
   const { language } = useLanguage();
@@ -42,19 +22,58 @@ const Gallery = () => {
 
   const currentYear = new Date().getFullYear();
 
-  // 2025 → current year, newest first. Grows on its own each January.
+  // 2025 → current year, newest first; grows on its own each January. Any year
+  // folder Drive reports outside that span is merged in, so a 2024 folder is
+  // still selectable rather than leaving the dropdown showing a blank value.
+  const [tree, setTree] = useState(null);
   const years = useMemo(() => {
-    const list = [];
-    for (let y = currentYear; y >= GALLERY_START_YEAR; y -= 1) list.push(y);
-    return list;
-  }, [currentYear]);
+    const set = new Set();
+    for (let y = currentYear; y >= GALLERY_START_YEAR; y -= 1) set.add(y);
+    if (tree) tree.years.forEach((y) => { const n = Number(y); if (n) set.add(n); });
+    return [...set].sort((a, b) => b - a);
+  }, [currentYear, tree]);
 
-  const [selectedYear, setSelectedYear] = useState(() =>
-    latestYearWithPhotos(currentYear)
-  );
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  // Set once the visitor picks a year themselves, so photos arriving from Drive
+  // never yank them off the year they are looking at.
+  const [yearPicked, setYearPicked] = useState(false);
   const [rowCount, setRowCount] = useState(getRowCount);
   const [selectedImage, setSelectedImage] = useState(null);
-  const loading = useSectionReady();
+  const { data: content, loading: contentLoading } = useSectionContent('content');
+  const festivalState = getFestivalState(
+    (content && content.festival && content.festival.en) || ''
+  );
+
+  // Photos live in Drive, read through the gallery Web App. Until it is
+  // deployed GALLERY_API is null and every year shows its empty state.
+  const [galleryLoading, setGalleryLoading] = useState(Boolean(GALLERY_API));
+  const loading = contentLoading || galleryLoading;
+
+  const loadGallery = useCallback(() => fetchGalleryTree(GALLERY_API).then((data) => {
+    // null means the call failed — keep whatever is on screen rather than
+    // replacing it with an error the committee can do nothing about.
+    if (data) {
+      setTree((cur) => (JSON.stringify(cur) === JSON.stringify(data) ? cur : data));
+    }
+    setGalleryLoading(false);
+  }), []);
+
+  useEffect(() => {
+    if (!GALLERY_API) return;
+    loadGallery();
+  }, [loadGallery]);
+
+  // Photos uploaded since the visitor last looked are simply there when they
+  // come back to the tab. Silent by design: no skeleton, and the same object is
+  // kept when nothing changed, so an unchanged refresh re-renders nothing.
+  useRevalidate(() => { if (GALLERY_API) loadGallery(); });
+
+  // Open on the newest year that actually has photos, so the gallery shows
+  // last year's celebrations until this year's are uploaded.
+  useEffect(() => {
+    if (yearPicked || !tree || !tree.years.length) return;
+    setSelectedYear(Number(tree.years[0]));
+  }, [tree, yearPicked]);
 
   useEffect(() => {
     const onResize = () => setRowCount(getRowCount());
@@ -62,11 +81,19 @@ const Gallery = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const images = useMemo(() => imagesForYear(selectedYear), [selectedYear]);
+  const images = useMemo(
+    () => (tree && tree.byYear[String(selectedYear)]) || [],
+    [tree, selectedYear]
+  );
 
-  // The current year has nothing to show until the festival actually starts.
+  // Before this year's festival there is normally nothing to show. If photos
+  // have already been uploaded, though, they win — the notice is for an empty
+  // year, not a rule about the date. Same date the hero counts down to, so the
+  // two can never disagree.
   const notBegunYet =
-    selectedYear === currentYear && Date.now() < FESTIVAL_START.getTime();
+    images.length === 0
+    && selectedYear === currentYear
+    && festivalState && festivalState.phase === 'upcoming';
 
   // Spread the photos evenly across the rows, each row scrolling on its own.
   const perRow = Math.max(1, Math.ceil(images.length / rowCount));
@@ -108,8 +135,11 @@ const Gallery = () => {
   }, [selectedImage]);
 
   const navigate = (dir) => {
-    if (!selectedImage) return;
-    const i = images.findIndex((im) => im.id === selectedImage.id);
+    if (!selectedImage || !images.length) return;
+    // Position, not id: the same Drive file can legitimately appear twice.
+    const i = typeof selectedImage.index === 'number'
+      ? selectedImage.index
+      : images.findIndex((im) => im.id === selectedImage.id);
     const next = dir === 'next'
       ? (i + 1) % images.length
       : (i - 1 + images.length) % images.length;
@@ -168,7 +198,7 @@ const Gallery = () => {
               id="gallery-year-select"
               className="gallery-year-select"
               value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              onChange={(e) => { setYearPicked(true); setSelectedYear(Number(e.target.value)); }}
             >
               {years.map((y) => (
                 <option key={y} value={y}>{y}</option>
@@ -196,11 +226,11 @@ const Gallery = () => {
                     <button
                       type="button"
                       className="gallery-item"
-                      key={img.id}
+                      key={`${img.id}-${img.index}`}
                       onClick={() => setSelectedImage(img)}
                       aria-label={`${t.galleryTitle} ${img.index + 1}`}
                     >
-                      <img src={img.url} alt="" loading="lazy" />
+                      <img src={img.thumb || img.url} alt="" loading="lazy" referrerPolicy="no-referrer" />
                     </button>
                   ))}
                 </div>
@@ -232,9 +262,9 @@ const Gallery = () => {
             ‹
           </button>
           <figure className="gallery-lb-figure" onClick={(e) => e.stopPropagation()}>
-            <img src={selectedImage.url} alt="" />
+            <img src={selectedImage.url} alt="" referrerPolicy="no-referrer" />
             <figcaption className="gallery-lb-count">
-              {images.findIndex((im) => im.id === selectedImage.id) + 1} / {images.length}
+              {(selectedImage.index ?? 0) + 1} / {images.length}
             </figcaption>
           </figure>
           <button

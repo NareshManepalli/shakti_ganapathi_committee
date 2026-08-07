@@ -525,6 +525,17 @@ body.lang-te .committee-section-subtitle { font-size: 0.85rem; }
   justify-content: center;
 }
 
+/* Shown when the member has no prfle_photo yet — same + as the grid cards */
+.idcard-photo-placeholder {
+  align-self: center;
+  margin-bottom: 22%;
+  font-size: clamp(56px, 16vw, 84px);
+  font-weight: 300;
+  line-height: 1;
+  color: var(--gold-500);
+  opacity: 0.5;
+}
+
 .idcard-photo img {
   max-width: 100%;
   max-height: 100%;

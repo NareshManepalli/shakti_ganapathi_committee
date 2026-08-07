@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
-import { useSectionReady } from '../hooks/useSectionReady';
+import { useSectionContent } from '../contexts/ContentContext';
 import './About.css';
-
-// Drop a file at public/assets/about-image.jpg and it appears here.
-// Until then the framed placeholder below stands in its place.
-// Phase 2 replaces this with the image field from the `about` sheet.
-const ABOUT_IMAGE = '/assets/about-image.jpg';
 
 const About = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const [imageFailed, setImageFailed] = useState(false);
-  const loading = useSectionReady();
+  const { data: content, loading } = useSectionContent('content');
+
+  const about = (content && content.about) || {};
+  // The sheet is the only source for this text — there is no built-in copy to
+  // fall back on, so an unreachable sheet leaves the paragraph out rather than
+  // showing something the committee never wrote.
+  const body = (language === 'te' ? about.te : about.en) || '';
+  const image = about.image || '';
+  const showImage = image && !imageFailed;
 
   if (loading) {
     return (
@@ -49,20 +52,22 @@ const About = () => {
         </header>
 
         <div className="about-media">
-          {imageFailed ? (
+          {showImage ? (
+            <img
+              src={image}
+              alt={t.aboutTitle}
+              referrerPolicy="no-referrer"
+              onError={() => setImageFailed(true)}
+            />
+          ) : (
+            /* No image in the sheet, or it failed to load */
             <div className="about-media-placeholder" role="img" aria-label={t.aboutTitle}>
               <span className="plus-icon" aria-hidden="true">+</span>
             </div>
-          ) : (
-            <img
-              src={ABOUT_IMAGE}
-              alt={t.aboutTitle}
-              onError={() => setImageFailed(true)}
-            />
           )}
         </div>
 
-        <p className="about-text">{t.aboutContent}</p>
+        {body && <p className="about-text">{body}</p>}
       </div>
     </section>
   );

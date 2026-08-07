@@ -183,38 +183,38 @@
     <p class="eyebrow">Sri Shakthi Ganapathi Committee</p>
     <h1>Plan of <em>Action</em> &amp; Status Board</h1>
     <p class="updated">
-      Updated 05 Aug 2026 · rebuild to a dynamic, Sheets &amp; Drive-bound application
+      Updated 07 Aug 2026 · rebuild to a dynamic, Sheets &amp; Drive-bound application
       with an Admin Portal and a committee-only Transactions page
     </p>
 
     <div class="progress-hero">
       <div class="progress-hero-top">
         <span class="progress-hero-label">Overall completion</span>
-        <span class="progress-hero-pct">11%</span>
+        <span class="progress-hero-pct">42%</span>
       </div>
-      <div class="progress-hero-track" role="img" aria-label="5 of 44 deliverables complete, 7 more in progress">
-        <span class="progress-hero-fill" style="width: 11%"></span>
-        <span class="progress-hero-part" style="width: 16%"></span>
+      <div class="progress-hero-track" role="img" aria-label="19 of 45 deliverables complete, 0 more in progress">
+        <span class="progress-hero-fill" style="width: 42%"></span>
+        <span class="progress-hero-part" style="width: 0%"></span>
       </div>
       <div class="progress-hero-legend">
-        <span><span class="dot c"></span><b>5 of 44</b> complete</span>
-        <span><span class="dot p"></span><b>7</b> built, awaiting data binding</span>
-        <span>Phase 0 underway · Phase 1 not started</span>
+        <span><span class="dot c"></span><b>19 of 45</b> complete</span>
+        <span><span class="dot p"></span><b>0</b> in progress</span>
+        <span>Phases 2, 3 &amp; 4 complete · Phase 1 half done · Phase 0 two-thirds</span>
       </div>
     </div>
   </header>
 
   <div class="summary">
-    <div class="stat done"><div class="n">5</div><div class="l">Done</div></div>
-    <div class="stat prog"><div class="n">7</div><div class="l">In progress</div></div>
+    <div class="stat done"><div class="n">19</div><div class="l">Done</div></div>
+    <div class="stat prog"><div class="n">0</div><div class="l">In progress</div></div>
     <div class="stat rework"><div class="n">0</div><div class="l">Untouched — needs rework</div></div>
-    <div class="stat todo"><div class="n">32</div><div class="l">To build from scratch</div></div>
+    <div class="stat todo"><div class="n">26</div><div class="l">To build from scratch</div></div>
   </div>
-  <div class="bar" role="img" aria-label="5 done, 7 in progress, 0 rework, 32 to build">
-    <span class="s-done" style="flex: 5"></span>
-    <span class="s-prog" style="flex: 7"></span>
+  <div class="bar" role="img" aria-label="19 done, 0 in progress, 0 rework, 26 to build">
+    <span class="s-done" style="flex: 19"></span>
+    <span class="s-prog" style="flex: 0"></span>
     <span class="s-rework" style="flex: 0"></span>
-    <span class="s-todo" style="flex: 32"></span>
+    <span class="s-todo" style="flex: 26"></span>
   </div>
 
   <div class="legend">
@@ -225,11 +225,12 @@
   </div>
 
   <p class="lede" style="margin-top:14px">
-    <b>Why 9% when the site looks finished?</b> Every public section has been rebuilt to its
-    final design — including skeleton loading states — but they all still read from
-    <code>translations.js</code> and placeholder files rather than from Sheets or Drive. The goal is a site the committee can
-    edit without a developer — none of that exists yet. Phase&nbsp;1 is what converts the
-    blue bar into the green one.
+    <b>The public site is now live-bound.</b> About, Committee Members, the 9-day Schedule
+    and Mandapam all read from Google Sheets, so the committee can edit them without a
+    developer — the point of the whole rebuild. Gallery is live too: its Web App is deployed
+    and the site reads photos straight out of the Drive folder. <b>Every public section now
+    has a real source behind it.</b> What remains is the Committee Fund gate and the admin
+    portal.
   </p>
 
   <!-- ============ BLOCKERS ============ -->
@@ -238,15 +239,27 @@
   <div class="callout warnbox">
     <ul class="checklist">
       <li>
-        <b>Title artwork — the one real blocker.</b> <code>title_eng.png</code> and
-        <code>title_tel.png</code> are the <b>Peetam</b> wordmarks, so the homepage currently
-        shows another organisation's name. Supply gold SSGC artwork in both languages on a
+        <b>Title artwork — still the one real blocker.</b> <code>title_eng.png</code> and
+        <code>title_tel.png</code> are the <b>Peetam</b> wordmarks, so the homepage shows
+        another organisation's name. Supply gold SSGC artwork in both languages on a
         transparent background — padding does not matter, it is cropped automatically.
       </li>
-      <li><b>About photo</b> — drop a file at <code>public/assets/about-image.jpg</code> and it replaces the "+" placeholder.</li>
-      <li><b>Committee roster</b> — real names, positions and photos. The mobile numbers become the Fund-gate whitelist, so they must be the numbers members will actually type.</li>
-      <li><b>Festival photos</b> for the gallery, ideally already sorted into year / event folders.</li>
-      <li><b>Google account, Drive folder and domain</b> — needed before Phase&nbsp;1 can begin.</li>
+      <li>
+        <b>Real photos for the gallery.</b> The folder, the Web App and the site are all
+        working &mdash; <code>2025</code> currently holds two test images and <code>2026</code>
+        is empty. Drop the real celebration photos into the year folders and they appear;
+        <b>up to 30 per year</b>.
+      </li>
+      <li>
+        <b>Real content in the sheets.</b> The three sheets are live and bound, but still hold
+        seeded rows — real member names, roles, photos and the actual About text just need
+        typing in. Paste an image link in a <code>photo</code>, <code>prfle_photo</code> or
+        <code>image</code> cell and it appears; leave it blank and the card shows a
+        <code>+</code>.
+      </li>
+      <li>
+        <b>A domain</b>, when you are ready to put it in front of the committee.
+      </li>
     </ul>
   </div>
 
@@ -259,15 +272,15 @@
       <tr><td><span class="name">Admin roles</span></td><td class="use"><b>Single role — admin</b></td><td class="src">No role column, no permission matrix, no per-screen gating</td></tr>
       <tr><td><span class="name">Hosting</span></td><td class="use"><b>Separate domain</b></td><td class="src">Own Google account, own Drive folder, own Apps Script deployments — nothing shared with Peetam</td></tr>
       <tr><td><span class="name">9-day schedule</span></td><td class="use"><b>Per festival year</b></td><td class="src">Keyed by <code>year</code> + <code>day_no</code>; the admin screen can copy a previous year forward</td></tr>
-      <tr><td><span class="name">Festival start</span></td><td class="use"><b>14 September 2026</b></td><td class="src">Drives the hero countdown and the gallery's "not begun" state. Lives in <code>src/config/festival.js</code>; Phase&nbsp;3 repoints it at the schedule sheet</td></tr>
-      <tr><td><span class="name">Home section</span></td><td class="use"><b>Stays static</b></td><td class="src">Artwork plus a countdown — nothing for the committee to edit</td></tr>
+      <tr><td><span class="name">Festival start</span></td><td class="use"><b>14 September 2026</b></td><td class="src">Drives the hero countdown and the gallery's "not begun" state. Held as the <code>festival</code> row of the <code>content</code> sheet, so the admin moves it each year without a developer; <code>src/config/festival.js</code> keeps it only as a fallback</td></tr>
+      <tr><td><span class="name">Home section</span></td><td class="use"><b>Stays static</b></td><td class="src">Artwork plus a countdown. The only editable part is the festival date, which lives in the content sheet so the admin can move it each year</td></tr>
       <tr><td><span class="name">Fund on the public site</span></td><td class="use"><b>Removed entirely</b></td><td class="src">No ledger, no table, not in the nav. Reached only through the gated flow below</td></tr>
       <tr><td><span class="name">Image assets</span></td><td class="use"><b>Originals only (PNG / JPEG)</b></td><td class="src">The WebP conversions were removed at the committee's request. Costs ~14&nbsp;MB of images per visit — see the note in Foundation</td></tr>
     </tbody>
   </table></div></div>
 
   <!-- ============ PHASES ============ -->
-  <h2>Phased Roadmap <span class="count">8 phases · 44 deliverables · est. 5–7 weeks</span></h2>
+  <h2>Phased Roadmap <span class="count">8 phases · 45 deliverables · est. 5–7 weeks</span></h2>
   <p class="lede">Phase&nbsp;1 is the gate: nothing can be bound to live data until the Sheets, Drive folders and Apps Script Web Apps are deployed.</p>
 
   <div class="phases">
@@ -278,41 +291,43 @@
         <div class="phase-meta">est. 2–3 days<br><span class="dep">depends on: <b>—</b></span></div>
       </div>
       <p class="phase-goal">
-        Theme system, title-artwork pipeline and the hero rebuild are done. Outstanding:
-        routing (needed before the Transactions page and Admin Portal can exist as routes),
-        <code>.env</code> config, finishing the dummy-data purge, an error boundary with shared
-        loading / empty states, and re-solving image weight without WebP files in the repo.
+        Theme system, title-artwork pipeline, the hero rebuild, the dummy-data purge and
+        secrets handling are done. Outstanding: routing (needed before the Transactions page
+        and Admin Portal can exist as routes), an error boundary with shared loading / empty
+        states, and re-solving image weight without WebP files in the repo.
       </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 33%"></span></div>
-      <div class="phase-foot"><span><b>3 / 9</b> deliverables</span><span>33%</span></div>
+      <div class="phase-track"><span class="phase-fill" style="width: 67%"></span></div>
+      <div class="phase-foot"><span><b>6 / 9</b> deliverables</span><span>67%</span></div>
     </div>
 
     <div class="phase">
       <div class="phase-head">
-        <div><div class="phase-no">Phase 1</div><div class="phase-title">Google Backend — Sheets, Drive &amp; Apps Script</div></div>
+        <div><div class="phase-no">Phase 1 · half done</div><div class="phase-title">Google Backend — Sheets, Drive &amp; Apps Script</div></div>
         <div class="phase-meta">est. 6–8 days<br><span class="dep">depends on: <b>Phase 0</b></span></div>
       </div>
       <p class="phase-goal">
-        One workbook with a tab per section, a Drive folder tree for the gallery, and four Apps
-        Script Web Apps written fresh for SSGC and deployed as the committee's own account so the
-        sheets stay Restricted. <b>This phase unblocks everything else.</b>
+        The three sheets exist and the public site reads them directly &mdash; Google serves the
+        CSV export with CORS headers, so <b>no Apps Script is needed for reads at all</b>, which
+        removed two Web Apps from this phase. The Drive folder and the gallery Web App are now
+        deployed and serving. What is left is the write + OTP auth side the admin portal needs.
       </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 0%"></span></div>
-      <div class="phase-foot"><span><b>0 / 8</b> deliverables</span><span>0%</span></div>
+      <div class="phase-track"><span class="phase-fill" style="width: 50%"></span></div>
+      <div class="phase-foot"><span><b>4 / 8</b> deliverables</span><span>50%</span></div>
     </div>
 
     <div class="phase">
       <div class="phase-head">
-        <div><div class="phase-no">Phase 2 · built ahead</div><div class="phase-title">Public Site — Dynamic Binding</div></div>
+        <div><div class="phase-no">Phase 2 · complete</div><div class="phase-title">Public Site — Dynamic Binding</div></div>
         <div class="phase-meta">est. 3–4 days<br><span class="dep">depends on: <b>Phase 1</b></span></div>
       </div>
       <p class="phase-goal">
-        Header, About, Committee Members and Mandapam are rebuilt to their final design and now need
-        their content wired to the sheets. The Footer is complete — it is translation-driven with
-        nothing for the committee to edit.
+        Done. About (paragraph + image), Committee Members (names, roles, both photo columns)
+        and Mandapam (address + map) all read from their sheets, with the <code>+</code>
+        placeholder standing in wherever an image cell is empty. Header and Footer are
+        translation-driven with nothing for the committee to edit.
       </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 20%"></span></div>
-      <div class="phase-foot"><span><b>1 / 5</b> deliverables · <b>4</b> built, awaiting Phase 1</span><span>20%</span></div>
+      <div class="phase-track"><span class="phase-fill" style="width: 100%"></span></div>
+      <div class="phase-foot"><span><b>6 / 6</b> deliverables</span><span>100%</span></div>
     </div>
 
     <div class="phase">
@@ -321,11 +336,10 @@
         <div class="phase-meta">est. 2–3 days<br><span class="dep">depends on: <b>Phase 1</b></span></div>
       </div>
       <p class="phase-goal">
-        Built. Nine ticket-style cards — image, day count, event name and day + time, with the date
-        on the right — 3 per row on large screens, 2 on medium, 1 on small. Bilingual, with the
-        weekday, month and clock all derived from one stored date so the two languages can't drift.
-        Still on dummy data; Phase 1 binds it to the schedule sheet, which then also feeds the
-        hero countdown.
+        Done and live-bound. Nine ticket cards — image, day count, event name, day + time, date —
+        3 per row on large screens, 2 on medium, 1 on small. Reads the schedule sheet, and the
+        &ldquo;2026 Events&rdquo; heading takes its year from the rows themselves, so it can
+        never disagree with the dates below it.
       </p>
       <div class="phase-track"><span class="phase-fill" style="width: 100%"></span></div>
       <div class="phase-foot"><span><b>1 / 1</b> deliverable</span><span>100%</span></div>
@@ -333,16 +347,17 @@
 
     <div class="phase">
       <div class="phase-head">
-        <div><div class="phase-no">Phase 4 · built ahead</div><div class="phase-title">Gallery — Drive-driven</div></div>
+        <div><div class="phase-no">Phase 4 · complete</div><div class="phase-title">Gallery — Drive-driven</div></div>
         <div class="phase-meta">est. 2–3 days<br><span class="dep">depends on: <b>Phase 1</b></span></div>
       </div>
       <p class="phase-goal">
-        The gallery shell is built — year selector, alternating scroll rows, lightbox and the
-        "celebrations haven't begun" state. What remains is swapping the placeholder photos for
-        real media read from Drive.
+        The only public section not yet live. The shell is built — year selector, alternating
+        scroll rows, lightbox and the not-yet-begun state — but the photos are still
+        photos. Needs the Drive folder created and
+        <code>GOOGLE_APPS_SCRIPT_GALLERY.js</code> deployed.
       </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 0%"></span></div>
-      <div class="phase-foot"><span><b>0 / 1</b> deliverable</span><span>0%</span></div>
+      <div class="phase-track"><span class="phase-fill" style="width: 100%"></span></div>
+      <div class="phase-foot"><span><b>1 / 1</b> deliverable</span><span>100%</span></div>
     </div>
 
     <div class="phase">
@@ -382,8 +397,8 @@
         Accessibility pass across every modal, SEO and WhatsApp link previews, CSS Modules
         migration to end the class-name collisions, full device testing, and deploy.
       </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 0%"></span></div>
-      <div class="phase-foot"><span><b>0 / 5</b> deliverables</span><span>0%</span></div>
+      <div class="phase-track"><span class="phase-fill" style="width: 20%"></span></div>
+      <div class="phase-foot"><span><b>1 / 5</b> deliverables</span><span>20%</span></div>
     </div>
 
   </div>
@@ -408,17 +423,17 @@
   </div>
 
   <!-- ============ PUBLIC ============ -->
-  <h2>Public Website <span class="count">10 deliverables · in display order</span></h2>
+  <h2>Public Website <span class="count">11 deliverables · in display order</span></h2>
   <div class="tablecard"><div class="scroll"><table>
     <thead><tr><th>Section</th><th>State</th><th>Source</th><th>Phase</th><th>Status</th></tr></thead>
     <tbody>
-      <tr><td><span class="name">Header / Nav</span></td><td class="use">Rebuilt — circular emblem with the wordmark locked to its height, six links (Home · About Us · Committee · Events · Gallery · Mandapam), scroll-spy, gold language switch, mobile drawer. Still to add: Admin Login entry</td><td class="src">translations · settings sheet</td><td class="ph">P2</td><td><span class="pill prog">In progress</span></td></tr>
-      <tr><td><span class="name">Home — Intro</span></td><td class="use">Rebuilt. Background artwork, language-swapped title, Ganesha anchored to the stage, live countdown to day&nbsp;1. <b>Static by design</b></td><td class="src">static assets</td><td class="ph">P0</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">About</span></td><td class="use">Rebuilt on the Peetam History layout — image left, heading + subtext + justified copy right, reordering to heading → image → copy on small screens</td><td class="src">about sheet</td><td class="ph">P2</td><td><span class="pill prog">In progress</span></td></tr>
-      <tr><td><span class="name">Committee Members</span></td><td class="use">Rebuilt — executives in the first two columns beside a 4×3 member grid, fixed card widths, View All (2 rows on phones), keyboard-accessible cards. Still placeholder names and photos</td><td class="src">committee sheet · Drive</td><td class="ph">P2</td><td><span class="pill prog">In progress</span></td></tr>
-      <tr><td><span class="name">9-Day Schedule</span></td><td class="use">Built — ticket cards (image · day count · event · day and time · date), 3/2/1 per row by screen. Heading reads "{year} Events" from the clock. Dummy data until the sheet lands</td><td class="src">schedule sheet</td><td class="ph">P3</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Gallery</span></td><td class="use">Rebuilt — year selector (2025 → current), alternating scroll rows (2 large / 3 small), lightbox with keys and counter, and a "celebrations haven't begun" state for the current year. Photos still placeholders</td><td class="src">Drive (script)</td><td class="ph">P4</td><td><span class="pill prog">In progress</span></td></tr>
-      <tr><td><span class="name">Mandapam Location</span></td><td class="use">Rebuilt — address card left, map right, no contact details. Real address wired to the embed, Get Directions and Open in Maps from one string</td><td class="src">mandapam sheet</td><td class="ph">P2</td><td><span class="pill prog">In progress</span></td></tr>
+      <tr><td><span class="name">Header / Nav</span></td><td class="use">Circular emblem with the wordmark locked to its height, six links, scroll-spy, gold language switch, mobile drawer. Labels are translation-driven &mdash; there is no settings sheet, every section is simply visible</td><td class="src">translations</td><td class="ph">P2</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Home — Intro</span></td><td class="use">Background artwork, language-swapped title, Ganesha seated on the stage. The festival strip has three states driven by one sheet date: counting down, &ldquo;Celebrations Started&rdquo; with the day number through days 1&ndash;9, then hidden until the admin sets next year&rsquo;s date</td><td class="src">static art · content sheet</td><td class="ph">P0</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">About</span></td><td class="use">Live from the <code>content</code> sheet &mdash; paragraph and image, both languages. Image left, heading + copy right, reordering to heading &rarr; image &rarr; copy on small screens. An empty image cell shows the <code>+</code> placeholder</td><td class="src">content sheet</td><td class="ph">P2</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Committee Members</span></td><td class="use">Live from the <code>members</code> sheet &mdash; <code>is_executive</code> picks the left column, <code>display_order</code> sorts the grid. <code>photo</code> drives the thumbnail, <code>prfle_photo</code> the identity card, and the identity card also shows the member's <code>mobile</code>. Email and the access flags are still never sent to the browser</td><td class="src">members sheet</td><td class="ph">P2</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">9-Day Schedule</span></td><td class="use">Live from the <code>schedule</code> sheet &mdash; ticket cards (image &middot; day count &middot; event &middot; day and time &middot; date), 3/2/1 per row. The heading year comes from the rows. <code>day_en</code>/<code>day_te</code> are optional overrides; blank derives the weekday from the date</td><td class="src">schedule sheet</td><td class="ph">P3</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Gallery</span></td><td class="use">Year selector (2025 &rarr; current), alternating scroll rows (2 large / 3 small), lightbox with keys and counter, and a not-yet-begun state for the current year. Photos come from the Drive folder through the gallery Web App &mdash; the year folders are the data, and a year with no photos is not offered at all</td><td class="src">Drive (script)</td><td class="ph">P4</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Mandapam Location</span></td><td class="use">Live from the <code>content</code> sheet &mdash; one address field. The committee decides where it breaks &mdash; line breaks inside the cell are honoured, falling back to splitting on commas. The embed, Get Directions and Open in Maps all resolve from that same string flattened back to one line, so they cannot point at different places</td><td class="src">content sheet</td><td class="ph">P2</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Committee Fund button</span></td><td class="use">The last thing on the public page — a single button, no figures</td><td class="src">static</td><td class="ph">P5</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Fund Access modal</span></td><td class="use">Mobile number + secret code, verified server-side, with attempt rate-limiting</td><td class="src">Auth Web App</td><td class="ph">P5</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Footer</span></td><td class="use">Rebuilt as a compact 72px band — the shloka <b>|| Om Gam Ganapathaye Namaha ||</b> above the copyright. Emblem and committee title removed; the header already carries the brand. Translation-driven, nothing to bind</td><td class="src">translations</td><td class="ph">P2</td><td><span class="pill done">Done</span></td></tr>
@@ -444,7 +459,7 @@
       <tr><td><span class="name">Dashboard</span></td><td class="use">Fund balance, member count, photo count, next schedule day, shortcuts to every screen</td><td class="src">all sheets</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">About editor</span></td><td class="use">Bilingual paragraph editor + section image</td><td class="src">about sheet</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Committee Members</span></td><td class="use">Add / edit / soft-delete — name &amp; position EN+TE, mobile, photo upload, order. The same mobile list the Fund gate verifies against</td><td class="src">committee sheet · Drive</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Gallery manager</span></td><td class="use">Folder browser — years → events → images; create / remove folders, upload with a size cap, delete, preview</td><td class="src">Drive (script)</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">Gallery manager</span></td><td class="use">Folder browser — years → photos; create / remove folders, upload, delete, preview. Holds the write secret and enforces the 30-per-year cap in the UI</td><td class="src">Drive (script)</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Schedule manager</span></td><td class="use">Insert and update the nine days for a chosen year, with <i>copy last year forward</i></td><td class="src">schedule sheet</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Mandapam details</span></td><td class="use">Address EN/TE, map link, with a live preview of the public card</td><td class="src">mandapam sheet</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Transactions manager</span></td><td class="use">Insert and update ledger rows; balance auto-computed, with search, paging and soft-delete</td><td class="src">transactions sheet</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
@@ -460,14 +475,14 @@
   <div class="tablecard"><div class="scroll"><table>
     <thead><tr><th>Deliverable</th><th>What it holds / does</th><th>Where</th><th>Phase</th><th>Status</th></tr></thead>
     <tbody>
-      <tr><td><span class="name">Workbook &amp; tab schema</span></td><td class="use">One spreadsheet, one tab per section — <code>about</code>, <code>committee</code>, <code>schedule</code>, <code>mandapam</code>, <code>transactions</code>, <code>settings</code>. Every tab carries <code>id</code>, <code>order</code>, <code>active</code>; schedule and transactions also carry <code>year</code></td><td class="src">Google Sheets</td><td class="ph">P1</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Users sheet (Restricted)</span></td><td class="use">Admin accounts with hashed passwords — single role. Only the Apps Script running as the owner can read it</td><td class="src">Google Sheets</td><td class="ph">P1</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Drive folder tree</span></td><td class="use"><code>/SSGC/gallery/&lt;year&gt;/&lt;event&gt;/</code>, plus folders for member photos and section images</td><td class="src">Google Drive</td><td class="ph">P1</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Content Web App</span></td><td class="use">Read + write for About, Committee, Schedule and Mandapam</td><td class="src">Apps Script</td><td class="ph">P1</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Gallery Web App</span></td><td class="use">List / upload / delete media and folders, returning direct image URLs</td><td class="src">Apps Script</td><td class="ph">P1</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">Workbook &amp; tab schema</span></td><td class="use">Three sheets &mdash; <code>content</code> (about, mandapam, festival date), <code>schedule</code>, <code>members</code>. Each carries an <code>id</code> for row-level editing and closes with <code>a_in</code> / <code>i_ts</code> / <code>u_ts</code> / <code>d_ts</code>; only <code>a_in = 1</code> rows render</td><td class="src">Google Sheets</td><td class="ph">P1</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Users sheet (Restricted)</span></td><td class="use">Folded into <code>members</code>. No passwords: <code>access_in</code> allows sign-in at all, <code>adm_in</code> decides full access vs the transactions and monthly-amount screens only. Sign-in will be OTP + a committee secret code</td><td class="src">members sheet</td><td class="ph">P1</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">Drive folder tree</span></td><td class="use"><code>/Gallery/&lt;year&gt;/</code> with the photos directly inside; event subfolders are optional and are folded into the same year. Created and shared <i>Anyone with the link &rarr; Viewer</i>, holding <code>2025</code> and <code>2026</code></td><td class="src">Google Drive</td><td class="ph">P1</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Content Web App</span></td><td class="use">Written and read-only. <b>Not needed for the public site</b> &mdash; Google serves the CSV export with CORS headers, so the browser reads the sheets directly. It returns when the admin portal needs writes</td><td class="src">Apps Script</td><td class="ph">P1</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">Gallery Web App</span></td><td class="use">Deployed and verified live: folder tree on GET; upload / delete / create-folder / delete-folder on POST, every write refused without the secret. 10&nbsp;MB per file, <b>30 photos per year</b>, deletes go to the bin so they are recoverable. The write secret lives in Script Properties &mdash; never in the repo, never in the bundle</td><td class="src">Apps Script</td><td class="ph">P1</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Users &amp; Auth Web App</span></td><td class="use">Admin login, member management, <b>and</b> the Fund-gate check (mobile exists + code matches), with rate-limiting. Passwords and codes never leave the script</td><td class="src">Apps Script</td><td class="ph">P1</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Transactions Web App</span></td><td class="use">Read + write the ledger, balances computed server-side, gated on a valid session token</td><td class="src">Apps Script</td><td class="ph">P1</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">React service layer</span></td><td class="use">One client per Web App with caching, retry, timeouts and consistent error shapes</td><td class="src">src/services</td><td class="ph">P1</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">React service layer</span></td><td class="use">Done, in the Peetam shape: <code>sheetsConfig.js</code> &rarr; <code>sheetService.js</code> (CSV then gviz, cache-busted, quote/newline-safe parser) &rarr; <code>ContentContext</code> exposing <code>useSectionContent</code>. Drive links are rewritten to <code>thumbnail?id=…</code> &mdash; the <code>uc?export=view</code> form is blocked by Chrome as <code>ERR_BLOCKED_BY_ORB</code>, and every such <code>&lt;img&gt;</code> needs <code>referrerPolicy="no-referrer"</code> or Drive refuses it. The grid is served 600px files and only the lightbox 1600px, which cuts a full 30-photo year from ~42&nbsp;MB to ~14&nbsp;MB</td><td class="src">src/utils · src/contexts</td><td class="ph">P1</td><td><span class="pill done">Done</span></td></tr>
     </tbody>
   </table></div></div>
 
@@ -478,14 +493,15 @@
     <tbody>
       <tr><td><span class="name">Blue &amp; gold theme system</span></td><td class="use">Navy scale matched to the committee emblem with gold as the single accent. Colours and the section-heading scale are centralised in <code>theme.css</code>, so a restyle is one file</td><td class="ph">P0</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Bilingual title artwork</span></td><td class="use">Language-swapped title image with automatic cropping. Mechanism complete — <b>the supplied files are still the Peetam wordmarks</b></td><td class="ph">P0</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Dummy-data purge</span></td><td class="use">Obsolete docs, dead code, a real personal mobile number and a fake ₹9,500 transaction removed; the public fund table is gone. Still outstanding: <code>committeeMembers.js</code> and the placeholder gallery photos</td><td class="ph">P0</td><td><span class="pill prog">In progress</span></td></tr>
+      <tr><td><span class="name">Dummy-data purge</span></td><td class="use">Complete. Obsolete docs, a real personal mobile number and a fake &#8377;9,500 transaction removed; <code>committeeMembers.js</code> / <code>schedule.js</code> deleted now the sheets replace them; the <code>picsum.photos</code> gallery photos, the stand-in member cutouts, the built-in About paragraph, the 550&nbsp;ms skeleton timer and the orphaned Fund files all gone. <b>Nothing on the page is invented any more</b> &mdash; every value is either from a sheet or an honest empty state</td><td class="ph">P0</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Image weight</span></td><td class="use">WebP conversions cut assets to 698&nbsp;KB but were removed in favour of the original PNG/JPEG files, taking them back to <b>14.5&nbsp;MB</b> — roughly 9&nbsp;MB downloaded before the hero paints. A build-time optimiser (e.g. <code>vite-plugin-image-optimizer</code>) would keep only originals in the repo while shipping small files</td><td class="ph">P0</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Skeleton loading states</span></td><td class="use">Every section except Home renders a skeleton shaped to its own layout, so nothing shifts when content arrives. Shimmer respects <code>prefers-reduced-motion</code>. Currently driven by a placeholder timer in <code>useSectionReady.js</code> — Phase&nbsp;1 swaps it for the real request state and the markup stays as-is</td><td class="ph">P0</td><td><span class="pill prog">In progress</span></td></tr>
+      <tr><td><span class="name">Auto-refresh on return</span></td><td class="use">Sheets and the Drive gallery are re-read when the visitor comes back to the tab, so an edit or a new photo is simply there without pressing reload. Silent by design &mdash; no skeleton over content already on screen, and an unchanged result re-renders nothing. Event-driven rather than a timer, throttled to once per 30&nbsp;s, so an idle tab costs nothing</td><td class="ph">P2</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Skeleton loading states</span></td><td class="use">Every section except Home renders a skeleton shaped to its own layout, so nothing shifts when content arrives. Now driven by the real sheet fetch &mdash; the placeholder timer is gone, and all sheets load in parallel so one slow sheet cannot hold up the page</td><td class="ph">P0</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Routing</span></td><td class="use">React Router so <code>/</code>, <code>/transactions</code> and <code>/admin/*</code> are real routes with guards — the single-page scroll can't host a gated page</td><td class="ph">P0</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Env config</span></td><td class="use">Web App URLs out of source and into <code>.env</code>, with separate dev / prod deployments</td><td class="ph">P0</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">Env config</span></td><td class="use">Resolved without <code>.env</code>. Sheet URLs and the gallery <code>/exec</code> URL sit in <code>sheetsConfig.js</code> &mdash; all read-only, so publishing them costs nothing. The one real secret, the gallery write token, is held in Apps Script <b>Script Properties</b>: not in the repo (which is public) and not in the bundle (which every visitor downloads)</td><td class="ph">P0</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Error boundary + states</span></td><td class="use">Shared loading / empty / error components so a failed fetch degrades gracefully</td><td class="ph">P0</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Accessibility pass</span></td><td class="use">Drawer, member modal and lightbox already have Escape and <code>aria-modal</code>, and member cards are keyboard-operable. Remaining: the fund modal, focus rings site-wide, and a reduced-motion audit</td><td class="ph">P7</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Bundle size</span></td><td class="use">Dropping the public fund table removed <code>xlsx</code>, <code>jspdf</code>, <code>html2canvas</code> and <code>axios</code> — JS fell from <b>769&nbsp;KB to 167&nbsp;KB</b>. When the PDF export returns in Phase&nbsp;5 it must be lazy-imported so it stays off the public bundle</td><td class="ph">P5 · P7</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">Bundle size</span></td><td class="use">Dropping the public fund table took <code>xlsx</code>, <code>jspdf</code> and <code>axios</code> out of <code>package.json</code> entirely — only <code>react</code>, <code>react-dom</code> and <code>html2canvas</code> remain, and <code>html2canvas</code> is lazy-imported so it sits in its own chunk off the initial load. Entry JS is <b>177&nbsp;KB</b> (56&nbsp;KB gzipped), down from 769&nbsp;KB. When the PDF export returns in Phase&nbsp;5 it must be lazy-imported the same way</td><td class="ph">P5 · P7</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">SEO &amp; link previews</span></td><td class="use">Meta description, favicon, Open Graph image — the site is shared over WhatsApp and previews as a blank card</td><td class="ph">P7</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">CSS Modules migration</span></td><td class="use"><code>.plus-icon</code> and other names are defined in more than one stylesheet — load order decides the winner. Scoping ends it permanently</td><td class="ph">P7</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Deploy</span></td><td class="use">Its own domain and deployment, separate from Peetam. Device testing across the committee's phones</td><td class="ph">P7</td><td><span class="pill todo">To build</span></td></tr>

@@ -174,6 +174,31 @@
   color: transparent;
 }
 
+/* Ongoing state — one line, so it doesn't need the four unit columns */
+.home-countdown-inner.is-ongoing {
+  gap: clamp(10px, 2vw, 20px);
+}
+
+.countdown-dayof {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(15px, 1.6vw, 20px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--gold-300);
+  font-variant-numeric: tabular-nums;
+  padding-left: clamp(10px, 2vw, 20px);
+  border-left: 1px solid rgba(223, 174, 77, 0.28);
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .countdown-dayof {
+    font-size: 15px;
+    padding-left: 0;
+    border-left: none;
+  }
+}
+
 body.lang-te .countdown-label {
   text-transform: none;
   letter-spacing: 0.02em;
@@ -243,7 +268,32 @@ body.lang-te .countdown-unit-label {
   }
 
   .countdown-label { font-size: 12.5px; }
-  body.lang-te .countdown-label { font-size: 12px; }
+  /* Ongoing state — one line, so it doesn't need the four unit columns */
+.home-countdown-inner.is-ongoing {
+  gap: clamp(10px, 2vw, 20px);
+}
+
+.countdown-dayof {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(15px, 1.6vw, 20px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--gold-300);
+  font-variant-numeric: tabular-nums;
+  padding-left: clamp(10px, 2vw, 20px);
+  border-left: 1px solid rgba(223, 174, 77, 0.28);
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .countdown-dayof {
+    font-size: 15px;
+    padding-left: 0;
+    border-left: none;
+  }
+}
+
+body.lang-te .countdown-label { font-size: 12px; }
   .countdown-value { font-size: clamp(20px, 5.2vw, 30px); }
   .countdown-unit { min-width: clamp(54px, 15vw, 78px); }
   .countdown-unit-label { font-size: 10px; }
@@ -261,7 +311,32 @@ body.lang-te .countdown-unit-label {
   }
 
   .countdown-label { font-size: 10.5px; letter-spacing: 0.04em; }
-  body.lang-te .countdown-label { font-size: 10px; }
+  /* Ongoing state — one line, so it doesn't need the four unit columns */
+.home-countdown-inner.is-ongoing {
+  gap: clamp(10px, 2vw, 20px);
+}
+
+.countdown-dayof {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(15px, 1.6vw, 20px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--gold-300);
+  font-variant-numeric: tabular-nums;
+  padding-left: clamp(10px, 2vw, 20px);
+  border-left: 1px solid rgba(223, 174, 77, 0.28);
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .countdown-dayof {
+    font-size: 15px;
+    padding-left: 0;
+    border-left: none;
+  }
+}
+
+body.lang-te .countdown-label { font-size: 10px; }
   .countdown-value { font-size: clamp(16px, 4.4vw, 21px); }
   .countdown-unit { min-width: clamp(42px, 12vw, 56px); padding: 0 7px; }
   .countdown-unit-label { font-size: 8.5px; letter-spacing: 0.03em; }
@@ -270,7 +345,32 @@ body.lang-te .countdown-unit-label {
 /* Narrow phones */
 @media (max-width: 380px) {
   .countdown-label { font-size: 9.5px; }
-  body.lang-te .countdown-label { font-size: 9px; }
+  /* Ongoing state — one line, so it doesn't need the four unit columns */
+.home-countdown-inner.is-ongoing {
+  gap: clamp(10px, 2vw, 20px);
+}
+
+.countdown-dayof {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(15px, 1.6vw, 20px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--gold-300);
+  font-variant-numeric: tabular-nums;
+  padding-left: clamp(10px, 2vw, 20px);
+  border-left: 1px solid rgba(223, 174, 77, 0.28);
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .countdown-dayof {
+    font-size: 15px;
+    padding-left: 0;
+    border-left: none;
+  }
+}
+
+body.lang-te .countdown-label { font-size: 9px; }
   .countdown-value { font-size: 15px; }
   .countdown-unit { min-width: 40px; padding: 0 5px; }
   .countdown-unit-label { font-size: 8px; }

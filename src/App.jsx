@@ -1,5 +1,6 @@
 import React from 'react'
 import { LanguageProvider } from './contexts/LanguageContext'
+import { ContentProvider } from './contexts/ContentContext'
 import Header from './components/Header'
 import Home from './components/Home'
 import About from './components/About'
@@ -13,18 +14,20 @@ import './App.css'
 function App() {
   return (
     <LanguageProvider>
-      <div className="App">
-        <Header />
-        <Home />
-        <About />
-        <Committee />
-        <Schedule />
-        <Gallery />
-        {/* The fund ledger is not public. Phase 5 replaces it with a
-            Committee Fund button that gates access to /transactions. */}
-        <MandapamLocation />
-        <Footer />
-      </div>
+      <ContentProvider>
+        <div className="App">
+          <Header />
+          <Home />
+          <About />
+          <Committee />
+          <Schedule />
+          <Gallery />
+          {/* The fund ledger is not public. Phase 5 replaces it with a
+              Committee Fund button that gates access to /transactions. */}
+          <MandapamLocation />
+          <Footer />
+        </div>
+      </ContentProvider>
     </LanguageProvider>
   )
 }
