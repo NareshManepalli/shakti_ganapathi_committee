@@ -190,14 +190,14 @@
     <div class="progress-hero">
       <div class="progress-hero-top">
         <span class="progress-hero-label">Overall completion</span>
-        <span class="progress-hero-pct">60%</span>
+        <span class="progress-hero-pct">62%</span>
       </div>
-      <div class="progress-hero-track" role="img" aria-label="28 of 47 deliverables complete, 0 more in progress">
-        <span class="progress-hero-fill" style="width: 60%"></span>
+      <div class="progress-hero-track" role="img" aria-label="29 of 47 deliverables complete, 0 more in progress">
+        <span class="progress-hero-fill" style="width: 62%"></span>
         <span class="progress-hero-part" style="width: 0%"></span>
       </div>
       <div class="progress-hero-legend">
-        <span><span class="dot c"></span><b>28 of 47</b> complete</span>
+        <span><span class="dot c"></span><b>29 of 47</b> complete</span>
         <span><span class="dot p"></span><b>0</b> in progress</span>
         <span>Phases 2, 3 &amp; 4 complete · Phase 1 half done · Phase 0 two-thirds</span>
       </div>
@@ -205,16 +205,16 @@
   </header>
 
   <div class="summary">
-    <div class="stat done"><div class="n">28</div><div class="l">Done</div></div>
+    <div class="stat done"><div class="n">29</div><div class="l">Done</div></div>
     <div class="stat prog"><div class="n">0</div><div class="l">In progress</div></div>
     <div class="stat rework"><div class="n">0</div><div class="l">Untouched — needs rework</div></div>
-    <div class="stat todo"><div class="n">19</div><div class="l">To build from scratch</div></div>
+    <div class="stat todo"><div class="n">18</div><div class="l">To build from scratch</div></div>
   </div>
-  <div class="bar" role="img" aria-label="28 done, 0 in progress, 0 rework, 19 to build">
-    <span class="s-done" style="flex: 28"></span>
+  <div class="bar" role="img" aria-label="29 done, 0 in progress, 0 rework, 18 to build">
+    <span class="s-done" style="flex: 29"></span>
     <span class="s-prog" style="flex: 0"></span>
     <span class="s-rework" style="flex: 0"></span>
-    <span class="s-todo" style="flex: 19"></span>
+    <span class="s-todo" style="flex: 18"></span>
   </div>
 
   <div class="legend">
@@ -370,8 +370,8 @@
         modal, server-side verification, and the gated Transactions page with totals, filters,
         PDF export and a Back button.
       </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 67%"></span></div>
-      <div class="phase-foot"><span><b>4 / 6</b> deliverables</span><span>67%</span></div>
+      <div class="phase-track"><span class="phase-fill" style="width: 83%"></span></div>
+      <div class="phase-foot"><span><b>5 / 6</b> deliverables</span><span>83%</span></div>
     </div>
 
     <div class="phase">
@@ -456,7 +456,7 @@
     <thead><tr><th>Screen</th><th>What it does</th><th>Source</th><th>Phase</th><th>Status</th></tr></thead>
     <tbody>
       <tr><td><span class="name">Transactions</span></td><td class="use">The ledger — Date, Notes, Cash In, Cash Out, Balance — with running totals, year filter, ₹ formatting, colour-coded in&nbsp;/&nbsp;out, a text-based PDF export and a <b>Back</b> button</td><td class="src">transactions sheet</td><td class="ph">P5</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Route guard</span></td><td class="use">Wraps <code>/transactions</code> — checks the token, expires on inactivity, bounces to the public site if absent or stale</td><td class="src">session</td><td class="ph">P5</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">Route guard</span></td><td class="use">Built as <code>RequireAuth</code> and already wrapping <code>/admin</code>; <code>/transactions</code> slots into the same guard when it exists. Checks the session, sends anyone without one to the sign-in page, and the session is held in <code>sessionStorage</code> so it dies with the tab and lapses after 60 minutes. Verified: <code>/admin</code> bounces when signed out, survives a reload when signed in, and is guarded again the moment the member signs out</td><td class="src">session</td><td class="ph">P5</td><td><span class="pill done">Done</span></td></tr>
     </tbody>
   </table></div></div>
 
