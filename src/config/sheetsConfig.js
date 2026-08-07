@@ -52,4 +52,30 @@ export const SHEETS_CONFIG = {
   media: {
     gallery: 'https://script.google.com/macros/s/AKfycbwoAlxupP-zkEi7CtehvZgZ1yztNe450F_t6Iq7vfGjMF_tGXKVzvROp36qSeiFd6pVJQ/exec',
   },
+
+  // Committee-member sign-in, served by the Auth Web App
+  // (apps-script/GOOGLE_APPS_SCRIPT_AUTH.js). Paste its /exec URL here.
+  // Leave null until it is deployed — the Funds card then says so plainly
+  // instead of opening a login that cannot work.
+  //
+  // Safe to publish, like the gallery URL: the script decides everything. The
+  // one-time code is generated, emailed and checked inside Apps Script and is
+  // never sent to the browser, and the session token is signed with a key that
+  // lives in Script Properties.
+  auth: {
+    url: 'https://script.google.com/macros/s/AKfycbzu0ocShGl1JzZCvGtyV8KMV3u0r5RXAu-X1YOObj8x0SQ2wigTYmruAjK957frGZkg/exec',
+  },
+
+  // Web Apps that serve a sheet instead of the browser reading its CSV export.
+  //
+  // members: deploy apps-script/GOOGLE_APPS_SCRIPT_MEMBERS.js and paste the
+  //   /exec URL here, then set the members workbook back to *Restricted*.
+  //   Reading it as CSV requires the whole sheet to be public, which exposes
+  //   `email`, `access_in` and `adm_in` — and `email` is where the funds gate
+  //   sends its one-time code. The Web App returns only the public columns.
+  //   While this is null the site falls back to the CSV export, so the sheet
+  //   must stay public until it is set.
+  api: {
+    members: 'https://script.google.com/macros/s/AKfycbzB_4OcL26B4SbVkfb1byNV8ZLzqPMHXc0t18hs1ZnlO7iVx7W6jqio6QTGGar-dUdHuw/exec',
+  },
 };

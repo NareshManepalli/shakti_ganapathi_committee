@@ -3,7 +3,7 @@ import React, {
 } from 'react';
 import { useRevalidate } from '../hooks/useRevalidate';
 import { SHEETS_CONFIG } from '../config/sheetsConfig';
-import { fetchSheetRows, toMediaUrl } from '../utils/sheetService';
+import { fetchSheetRows, fetchMembersApi, toMediaUrl } from '../utils/sheetService';
 
 // ---------------------------------------------------------------------------
 // Loads every section sheet once on mount and hands the shaped result to the
@@ -54,7 +54,10 @@ const transformMembers = (rows) => rows
     photo: toMediaUrl(r.photo, 600),
     profilePhoto: toMediaUrl(r.prfle_photo, 1000),
     order: Number(r.display_order) || 0,
-    isExecutive: String(r.is_executive).trim() === '1',
+    // The two sources type this differently: the CSV export gives the string
+    // "1", the Members Web App gives a real boolean. Accept both, or switching
+    // source silently drops every executive into the grid.
+    isExecutive: r.is_executive === true || String(r.is_executive).trim() === '1',
   }))
   .sort((a, b) => a.order - b.order);
 
@@ -113,9 +116,17 @@ export const ContentProvider = ({ children }) => {
 
     const entries = await Promise.all(names.map(async (name) => {
       const url = SHEETS_CONFIG.sections[name];
-      if (!url) return [name, null];
+      const apiUrl = (SHEETS_CONFIG.api || {})[name];
+      if (!url && !apiUrl) return [name, null];
       try {
-        const rows = await fetchSheetRows(url);
+        // Prefer a Web App where one is configured: it serves only the public
+        // columns, so the sheet behind it can stay Restricted. The CSV export
+        // is the fallback, and it requires the sheet to be public.
+        let rows = apiUrl ? await fetchMembersApi(apiUrl) : null;
+        if (!rows) {
+          if (apiUrl) console.warn(`"${name}" Web App unavailable — falling back to the CSV export.`);
+          rows = await fetchSheetRows(url);
+        }
         const shape = TRANSFORMERS[name] || ((x) => x);
         return [name, shape(rows)];
       } catch (err) {

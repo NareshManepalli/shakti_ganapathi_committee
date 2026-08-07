@@ -1,0 +1,87 @@
+/* Committee-only doorway, below Mandapam Location.
+   Deliberately understated: the whole card is one button, so the emblem and
+   the wording are a single target on a phone. */
+
+.funds-gate {
+  padding: 0 20px 54px;
+  display: flex;
+  justify-content: center;
+}
+
+.funds-gate-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 26px 14px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(229, 185, 78, 0.26);
+  background: linear-gradient(180deg, rgba(19, 34, 62, 0.92), rgba(12, 23, 44, 0.92));
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: border-color 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.funds-gate-card:hover,
+.funds-gate-card:focus-visible {
+  border-color: rgba(229, 185, 78, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.34);
+}
+
+.funds-gate-card:focus-visible {
+  outline: 2px solid var(--gold-500);
+  outline-offset: 3px;
+}
+
+.funds-gate-emblem {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border-radius: 50%;
+  overflow: hidden;
+  /* logo.png carries transparent padding; the same scale-and-clip the header
+     uses, so the emblem fills its circle without exposing square corners. */
+  clip-path: circle(50%);
+  display: grid;
+  place-items: center;
+  background: #0a1428;
+}
+
+.funds-gate-emblem img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.106);
+}
+
+.funds-gate-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.funds-gate-name {
+  font-family: var(--font-display, inherit);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--gold-400, #e5b94e);
+  line-height: 1.25;
+}
+
+.funds-gate-action {
+  font-size: 12.5px;
+  color: var(--text-muted, #96a6c2);
+  letter-spacing: 0.01em;
+}
+
+body.lang-te .funds-gate-name { line-height: 1.5; }
+
+@media (max-width: 560px) {
+  .funds-gate { padding-bottom: 42px; }
+  .funds-gate-card { gap: 12px; padding: 12px 20px 12px 13px; }
+  .funds-gate-emblem { width: 40px; height: 40px; flex-basis: 40px; }
+  .funds-gate-name { font-size: 13.5px; }
+  .funds-gate-action { font-size: 11.5px; }
+}

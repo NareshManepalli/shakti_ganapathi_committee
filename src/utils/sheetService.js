@@ -194,3 +194,36 @@ export const fetchGalleryTree = async (webAppUrl) => {
     return null;
   }
 };
+
+/**
+ * Reads the committee list from the Members Web App instead of the sheet's CSV
+ * export.
+ *
+ * This is what lets the members workbook be Restricted. Reading it as CSV needs
+ * the whole sheet shared publicly, which also exposes `email`, `access_in` and
+ * `adm_in` — and `email` is the address the funds gate sends its one-time code
+ * to. The Web App runs as the sheet's owner and returns only the public
+ * columns, so nothing sensitive is served.
+ *
+ * Rows come back with the same keys the CSV had, so transformMembers needs no
+ * knowledge of which source was used. Returns null on any failure, letting the
+ * caller fall back rather than blanking the section.
+ */
+export const fetchMembersApi = async (webAppUrl) => {
+  if (!webAppUrl) return null;
+  try {
+    const url = webAppUrl + (webAppUrl.includes('?') ? '&' : '?') + 'action=members';
+    const res = await fetch(url, { cache: 'no-store', redirect: 'follow' });
+    if (!res.ok) return null;
+    const text = await res.text();
+    // An undeployed or unauthorised Web App answers with an HTML page.
+    if (/^\s*</.test(text)) return null;
+    const data = JSON.parse(text);
+    const rows = Array.isArray(data) ? data : (data.members || data.rows);
+    if (!Array.isArray(rows)) return null;
+    return rows;
+  } catch (err) {
+    console.error('Could not read the members Web App:', err);
+    return null;
+  }
+};

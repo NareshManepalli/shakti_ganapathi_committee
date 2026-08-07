@@ -8,10 +8,19 @@
  * Only rows with a_in = 1 are returned, sorted by display_order.
  *
  * WHAT IS DELIBERATELY NOT RETURNED
- *  mobile, email, access_in and adm_in never leave this script. The public
- *  site does not need them, and the mobile numbers in particular become the
- *  whitelist for the Committee Fund gate later — publishing them would hand
- *  out half of that check for free.
+ *  email, access_in and adm_in never leave this script.
+ *
+ *  `email` matters most: the funds gate emails a one-time code to that
+ *  address, so publishing it would tell an attacker exactly which inbox to go
+ *  after. `access_in` and `adm_in` say who may sign in and who is an admin —
+ *  nothing a visitor needs, and a map of who to target.
+ *
+ *  `mobile` IS returned: the identity card shows it, which the committee
+ *  asked for. That is a decision, not an oversight — it is no longer part of
+ *  any check, because sign-in is a code emailed to the member.
+ *
+ *  This is the whole reason the members workbook can go back to Restricted:
+ *  the site reads it through here, so the private columns are never served.
  *
  * THE TWO ACCESS FLAGS  (for the admin phase, not used yet)
  *  access_in = 1, adm_in = 1  -> full access: add and edit content, upload
@@ -20,21 +29,27 @@
  *                                monthly amount screen, nothing else
  *  access_in = 0              -> appears on the public site, cannot sign in
  *
- *  There are no passwords in the sheet. Sign-in will be OTP to the member's
- *  mobile, plus a secret code the committee sets — designed in the admin
- *  phase. Until then this script is read-only: with no way to authenticate a
+ *  There are no passwords in the sheet. Sign-in is a 6-digit code emailed to
+ *  the member (see GOOGLE_APPS_SCRIPT_AUTH.js), which reads this same sheet
+ *  privately. This script stays read-only: with no way to authenticate a
  *  caller, any write endpoint on a public URL would be open to everyone.
  *
  * SETUP
- *  1. Open the SSGC workbook -> Extensions -> Apps Script.
- *  2. Paste this file. Save.
+ *  1. script.google.com -> New project -> paste this file -> Save.
+ *     (Standalone, like the gallery and auth scripts — nothing to bind.)
+ *  2. Check MEMBERS_SHEET_ID below points at the members workbook.
  *  3. Deploy -> New deployment -> Web app
- *       Execute as:     Me
+ *       Execute as:     Me       (its access is what keeps the sheet private)
  *       Who has access: Anyone
- *  4. Put the /exec URL in the site's .env as VITE_MEMBERS_API.
+ *  4. Put the /exec URL in src/config/sheetsConfig.js -> api.members,
+ *     then set the members workbook itself to *Restricted*.
  * ---------------------------------------------------------------------------
  */
 
+var MEMBERS_SHEET_ID = '1nzynJzTm72i7C0lmfR50VZ6lONArSrh7ncbejMSiYyc';
+
+// Tab name. Left as a hint rather than a requirement: if no tab matches, the
+// first one is used, so renaming the tab cannot break the public site.
 var MEMBERS_SHEET = 'members';
 
 function jsonOut(obj) {
@@ -44,9 +59,20 @@ function jsonOut(obj) {
 }
 
 function membersSheet() {
-  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(MEMBERS_SHEET);
-  if (!sh) throw new Error('Sheet not found: ' + MEMBERS_SHEET);
+  var ss = SpreadsheetApp.openById(MEMBERS_SHEET_ID);
+  var sh = MEMBERS_SHEET ? ss.getSheetByName(MEMBERS_SHEET) : null;
+  if (!sh) sh = ss.getSheets()[0];
+  if (!sh) throw new Error('No tabs found in the members workbook.');
   return sh;
+}
+
+/** Run once from the editor to check access before deploying. */
+function checkMembers() {
+  var sh = membersSheet();
+  var rows = publicMembers();
+  Logger.log('Tab read: ' + sh.getName());
+  Logger.log('Public rows returned: ' + rows.length);
+  Logger.log('Keys per row: ' + Object.keys(rows[0] || {}).join(', '));
 }
 
 function readMembers() {
@@ -88,7 +114,11 @@ function publicMembers() {
         name_te: String(r.name_te || ''),
         position_en: String(r.position_en || ''),
         position_te: String(r.position_te || ''),
+        // Shown on the identity card, so it is public by decision, not by
+        // accident. Everything omitted below is what must stay private.
+        mobile: String(r.mobile || ''),
         photo: String(r.photo || ''),
+        prfle_photo: String(r.prfle_photo || ''),
         display_order: Number(r.display_order || 0),
         is_executive: isOne(r.is_executive),
       };

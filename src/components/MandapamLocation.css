@@ -3,7 +3,11 @@
    No contact details by design; the address is the only content.
    ============================================ */
 
-.mandapam-section {
+/* The gradient lives on the wrapper, not the section, so Mandapam and the
+   committee-funds card below it share ONE background. Painting them
+   separately left a seam: the section fades to near-black at its edges while
+   the card fell through to the page colour, which is the lightest navy. */
+.page-tail {
   background: radial-gradient(
     circle at center,
     var(--bg-primary) 0%,
@@ -14,6 +18,9 @@
     var(--blue-950) 90%,
     var(--bg-darkest) 100%
   );
+}
+
+.mandapam-section {
   padding: var(--section-pad-top) 20px var(--section-pad-bottom);
   scroll-margin-top: var(--header-h);
 }
