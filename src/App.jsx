@@ -14,7 +14,10 @@ import FundsGate from './components/FundsGate'
 import Footer from './components/Footer'
 import LoginPage from './pages/LoginPage'
 import OtpPage from './pages/OtpPage'
-import AdminDashboard from './pages/AdminDashboard'
+import AdminLayout from './admin/AdminLayout'
+import Dashboard from './admin/pages/Dashboard'
+import Profile from './admin/pages/Profile'
+import WorkInProgress from './admin/pages/WorkInProgress'
 import './App.css'
 
 // The public scroll page. Everything a visitor sees lives here.
@@ -54,10 +57,20 @@ function App() {
               <Route path="/" element={<PublicSite />} />
               <Route path="/funds" element={<LoginPage />} />
               <Route path="/funds/verify" element={<OtpPage />} />
-              <Route
-                path="/admin"
-                element={<RequireAuth><AdminDashboard /></RequireAuth>}
-              />
+              {/* Everything under /admin shares the portal shell. The menu is
+                  filtered by adm_in, but the server checks the signed token on
+                  every write, so hiding a link is convenience, not security. */}
+              <Route path="/admin" element={<RequireAuth><AdminLayout /></RequireAuth>}>
+                <Route index element={<Dashboard />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="about" element={<WorkInProgress title="About" description="Section text and image, in both languages." />} />
+                <Route path="members" element={<WorkInProgress title="Members" description="Add, edit and order committee members." />} />
+                <Route path="gallery" element={<WorkInProgress title="Gallery" description="Upload and remove festival photos." />} />
+                <Route path="schedule" element={<WorkInProgress title="Schedule" description="The nine festival days, per year." />} />
+                <Route path="mandapam" element={<WorkInProgress title="Mandapam" description="Address and map location." />} />
+                <Route path="transactions" element={<WorkInProgress title="Transactions" description="The committee ledger." />} />
+                <Route path="monthly-funds" element={<WorkInProgress title="Monthly Funds" description="Monthly contributions by member." />} />
+              </Route>
               {/* Anything unknown goes back to the public page rather than a
                   blank screen. */}
               <Route path="*" element={<Navigate to="/" replace />} />

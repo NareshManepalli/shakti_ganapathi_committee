@@ -258,6 +258,8 @@ function doPost(e) {
 
     if (action === 'requestOtp') return handleRequestOtp(body);
     if (action === 'verifyOtp') return handleVerifyOtp(body);
+    if (action === 'getProfile') return handleGetProfile(body);
+    if (action === 'updateProfile') return handleUpdateProfile(body);
     return fail('UNKNOWN_ACTION', 'Unknown action: ' + action);
   } catch (err) {
     return fail('SERVER_ERROR', String(err && err.message ? err.message : err));
@@ -377,6 +379,126 @@ function handleVerifyOtp(body) {
     },
     expiresInMin: SESSION_TTL_MINUTES,
   });
+}
+
+/* ---------------------------------------------------------------- profile */
+
+/**
+ * The signed-in member's own record, including the email address the public
+ * API deliberately withholds. Identified by the id inside the signed token,
+ * never by anything the caller sends — a member can only ever read themselves.
+ */
+function handleGetProfile(body) {
+  var claims = verifyToken(body.token);
+  if (!claims) return fail('UNAUTHORIZED', 'Your session has ended. Please sign in again.');
+
+  var members = readMembers();
+  var me = null;
+  for (var i = 0; i < members.length; i++) {
+    if (String(members[i].id) === String(claims.mid)) { me = members[i]; break; }
+  }
+  if (!me) return fail('NOT_A_MEMBER', 'This member is no longer on the committee list.');
+  if (!me.accessIn) return fail('NO_PERMISSION', 'You do not have permission to sign in.');
+
+  return jsonOut({ ok: true, profile: profileOf(me) });
+}
+
+/** Also returns position and photos, so the profile screen needs one call. */
+function profileOf(m) {
+  var row = rawRowFor(m.id) || {};
+  return {
+    id: m.id,
+    name: m.name,
+    nameTe: m.nameTe,
+    position: row.position_en || '',
+    positionTe: row.position_te || '',
+    mobile: m.mobile,
+    email: m.email,
+    photo: row.photo || '',
+    profilePhoto: row.prfle_photo || '',
+    isAdmin: m.admIn,
+  };
+}
+
+/** The columns readMembers() does not carry, fetched by id. */
+function rawRowFor(id) {
+  var sheet = membersTab();
+  var values = sheet.getDataRange().getValues();
+  var header = values[0].map(function (h) { return String(h || '').trim().toLowerCase(); });
+  var iId = header.indexOf('id');
+  for (var r = 1; r < values.length; r++) {
+    if (String(values[r][iId]) === String(id)) {
+      var out = {};
+      for (var c = 0; c < header.length; c++) out[header[c]] = values[r][c];
+      return out;
+    }
+  }
+  return null;
+}
+
+function membersTab() {
+  var ss = SpreadsheetApp.openById(MEMBERS_SHEET_ID);
+  var sheet = MEMBERS_TAB_NAME ? ss.getSheetByName(MEMBERS_TAB_NAME) : ss.getSheets()[0];
+  if (!sheet) throw new Error('Members tab not found.');
+  return sheet;
+}
+
+/**
+ * Updates the signed-in member's own name, mobile and email. Nothing else is
+ * writable here: position and the access flags are the committee's business,
+ * not the member's, and letting a member set adm_in would hand out the portal.
+ *
+ * Changing the mobile changes how they sign in next time, so it must stay
+ * unique across the sheet — otherwise two rows would answer to one number.
+ */
+function handleUpdateProfile(body) {
+  var claims = verifyToken(body.token);
+  if (!claims) return fail('UNAUTHORIZED', 'Your session has ended. Please sign in again.');
+
+  var name = String(body.name || '').trim();
+  var mobile = normaliseMobile(body.mobile);
+  var email = String(body.email || '').trim();
+
+  if (!name) return fail('BAD_NAME', 'Please enter a name.');
+  if (mobile.length !== 10) return fail('BAD_MOBILE', 'Enter a 10-digit mobile number.');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    return fail('BAD_EMAIL', 'Enter a valid email address — this is where your sign-in code is sent.');
+  }
+
+  var members = readMembers();
+  for (var i = 0; i < members.length; i++) {
+    if (members[i].mobile === mobile && String(members[i].id) !== String(claims.mid)) {
+      return fail('MOBILE_TAKEN', 'Another committee member already uses that mobile number.');
+    }
+  }
+
+  var sheet = membersTab();
+  var values = sheet.getDataRange().getValues();
+  var header = values[0].map(function (h) { return String(h || '').trim().toLowerCase(); });
+  var col = function (nm) { return header.indexOf(nm); };
+  var iId = col('id'), iName = col('name_en'), iMobile = col('mobile'),
+      iEmail = col('email'), iUts = col('u_ts');
+
+  for (var r = 1; r < values.length; r++) {
+    if (String(values[r][iId]) !== String(claims.mid)) continue;
+    if (iName >= 0)   sheet.getRange(r + 1, iName + 1).setValue(name);
+    if (iMobile >= 0) sheet.getRange(r + 1, iMobile + 1).setValue(mobile);
+    if (iEmail >= 0)  sheet.getRange(r + 1, iEmail + 1).setValue(email);
+    // Same audit convention as the rest of the workbook.
+    if (iUts >= 0) {
+      sheet.getRange(r + 1, iUts + 1)
+        .setValue(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss'));
+    }
+    SpreadsheetApp.flush();
+    var fresh = readMembers();
+    for (var k = 0; k < fresh.length; k++) {
+      if (String(fresh[k].id) === String(claims.mid)) {
+        return jsonOut({ ok: true, profile: profileOf(fresh[k]) });
+      }
+    }
+    return jsonOut({ ok: true });
+  }
+  return fail('NOT_A_MEMBER', 'This member is no longer on the committee list.');
 }
 
 /* -------------------------------------------------------------------- GET */

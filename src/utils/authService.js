@@ -25,6 +25,10 @@ const MESSAGES = {
   OTP_EXPIRED: 'That code has expired. Please request a new one.',
   OTP_INVALID: 'That code is not correct.',
   TOO_MANY_ATTEMPTS: 'Too many wrong codes. Please request a new one.',
+  UNAUTHORIZED: 'Your session has ended. Please sign in again.',
+  BAD_NAME: 'Please enter a name.',
+  BAD_EMAIL: 'Enter a valid email address — this is where your sign-in code is sent.',
+  MOBILE_TAKEN: 'Another committee member already uses that mobile number.',
   NOT_CONFIGURED: 'Sign-in is not set up yet. Please try again later.',
   NETWORK: 'Could not reach the committee server. Check your connection and try again.',
 };
@@ -73,3 +77,22 @@ export const verifyOtp = (mobile, otp) => post({ action: 'verifyOtp', mobile, ot
  * wrong codes and the code is burned — and those cannot be edited from here.
  */
 export const makeCaptcha = () => String(Math.floor(1000 + Math.random() * 9000));
+
+/* ------------------------------------------------------- signed-in member */
+
+/**
+ * The signed-in member's own record, including the email address the public
+ * members API deliberately withholds.
+ *
+ * The server identifies them from the id inside the signed token, never from
+ * anything sent with the request, so a member can only ever read themselves.
+ */
+export const getProfile = (token) => post({ action: 'getProfile', token });
+
+/**
+ * Updates the member's own name, mobile and email. Position and the access
+ * flags are not writable — those are the committee's to set, and letting a
+ * member edit adm_in would hand out the portal.
+ */
+export const updateProfile = (token, { name, mobile, email }) =>
+  post({ action: 'updateProfile', token, name, mobile, email });

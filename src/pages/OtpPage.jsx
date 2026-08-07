@@ -96,10 +96,9 @@ const OtpPage = () => {
     navigate('/admin', { replace: true });
   }, [busy, state, signIn, navigate, t]);
 
-  // Submit as soon as the sixth digit lands — nobody wants to hunt for a button.
-  useEffect(() => {
-    if (code.length === 6 && !busy && !expired) submit(code);
-  }, [code, busy, expired, submit]);
+  // Enter submits, so the keyboard flow still works without reaching for the
+  // mouse — but nothing is sent until the member says so.
+  const onSubmit = (e) => { e.preventDefault(); submit(code); };
 
   const resend = async () => {
     if (resendIn > 0 || busy) return;
@@ -138,6 +137,7 @@ const OtpPage = () => {
           {t.authSentTo} <b className="auth-email">{state.maskedEmail}</b>
         </p>
 
+        <form className="auth-otp-form" onSubmit={onSubmit}>
         <div className="auth-otp-row" role="group" aria-label={t.authOtpLabel}>
           {digits.map((d, i) => (
             <input
@@ -156,6 +156,15 @@ const OtpPage = () => {
             />
           ))}
         </div>
+
+        <button
+          className="auth-submit"
+          type="submit"
+          disabled={busy || expired || code.length !== 6}
+        >
+          {busy ? t.authVerifying : t.authVerifyCode}
+        </button>
+        </form>
 
         {error && <p className="auth-error" role="alert">{error}</p>}
         {notice && !error && <p className="auth-notice" role="status">{notice}</p>}

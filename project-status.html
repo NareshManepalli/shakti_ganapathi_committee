@@ -190,31 +190,31 @@
     <div class="progress-hero">
       <div class="progress-hero-top">
         <span class="progress-hero-label">Overall completion</span>
-        <span class="progress-hero-pct">62%</span>
+        <span class="progress-hero-pct">64%</span>
       </div>
-      <div class="progress-hero-track" role="img" aria-label="29 of 47 deliverables complete, 0 more in progress">
-        <span class="progress-hero-fill" style="width: 62%"></span>
-        <span class="progress-hero-part" style="width: 0%"></span>
+      <div class="progress-hero-track" role="img" aria-label="30 of 47 deliverables complete, 1 more in progress">
+        <span class="progress-hero-fill" style="width: 64%"></span>
+        <span class="progress-hero-part" style="width: 2%"></span>
       </div>
       <div class="progress-hero-legend">
-        <span><span class="dot c"></span><b>29 of 47</b> complete</span>
-        <span><span class="dot p"></span><b>0</b> in progress</span>
+        <span><span class="dot c"></span><b>30 of 47</b> complete</span>
+        <span><span class="dot p"></span><b>1</b> in progress</span>
         <span>Phases 2, 3 &amp; 4 complete · Phase 1 half done · Phase 0 two-thirds</span>
       </div>
     </div>
   </header>
 
   <div class="summary">
-    <div class="stat done"><div class="n">29</div><div class="l">Done</div></div>
-    <div class="stat prog"><div class="n">0</div><div class="l">In progress</div></div>
+    <div class="stat done"><div class="n">30</div><div class="l">Done</div></div>
+    <div class="stat prog"><div class="n">1</div><div class="l">In progress</div></div>
     <div class="stat rework"><div class="n">0</div><div class="l">Untouched — needs rework</div></div>
-    <div class="stat todo"><div class="n">18</div><div class="l">To build from scratch</div></div>
+    <div class="stat todo"><div class="n">16</div><div class="l">To build from scratch</div></div>
   </div>
-  <div class="bar" role="img" aria-label="29 done, 0 in progress, 0 rework, 18 to build">
-    <span class="s-done" style="flex: 29"></span>
-    <span class="s-prog" style="flex: 0"></span>
+  <div class="bar" role="img" aria-label="30 done, 1 in progress, 0 rework, 16 to build">
+    <span class="s-done" style="flex: 30"></span>
+    <span class="s-prog" style="flex: 1"></span>
     <span class="s-rework" style="flex: 0"></span>
-    <span class="s-todo" style="flex: 18"></span>
+    <span class="s-todo" style="flex: 16"></span>
   </div>
 
   <div class="legend">
@@ -311,8 +311,8 @@
         removed two Web Apps from this phase. The Drive folder and the gallery Web App are now
         deployed and serving. What is left is the write + OTP auth side the admin portal needs.
       </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 78%"></span></div>
-      <div class="phase-foot"><span><b>7 / 9</b> deliverables</span><span>78%</span></div>
+      <div class="phase-track"><span class="phase-fill" style="width: 67%"></span></div>
+      <div class="phase-foot"><span><b>6 / 9</b> deliverables</span><span>67%</span></div>
     </div>
 
     <div class="phase">
@@ -384,8 +384,8 @@
         login and dashboard, then About, Members, Gallery uploads, the 9-day Schedule, Mandapam
         details, Transactions, the Fund access code, profile and site settings.
       </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 0%"></span></div>
-      <div class="phase-foot"><span><b>0 / 9</b> deliverables</span><span>0%</span></div>
+      <div class="phase-track"><span class="phase-fill" style="width: 22%"></span></div>
+      <div class="phase-foot"><span><b>2 / 9</b> deliverables</span><span>22%</span></div>
     </div>
 
     <div class="phase">
@@ -445,7 +445,7 @@
       <tr><td><span class="name">Mandapam Location</span></td><td class="use">Live from the <code>content</code> sheet &mdash; one address field. The committee decides where it breaks &mdash; line breaks inside the cell are honoured, falling back to splitting on commas. The embed, Get Directions and Open in Maps all resolve from that same string flattened back to one line, so they cannot point at different places</td><td class="src">content sheet</td><td class="ph">P2</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Committee Funds card</span></td><td class="use">Logo + committee name under Mandapam Location, the whole card one button so it is a single target on a phone. Not in the nav</td><td class="src">static</td><td class="ph">P5</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Sign-in page</span></td><td class="use"><code>/funds</code> — emblem, committee name, <b>Committee Funds</b>, the members-only line, mobile field and a 4-digit captcha. The captcha is checked before anything leaves the browser and is regenerated on every failure</td><td class="src">Auth Web App</td><td class="ph">P5</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">OTP page</span></td><td class="use"><code>/funds/verify</code> — greeting with 🤝, the masked address the code went to, six boxes that auto-advance and auto-submit, a 5-minute validity clock and a 1-minute resend clock. Opening it directly bounces back to the sign-in page</td><td class="src">Auth Web App</td><td class="ph">P5</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">OTP page</span></td><td class="use"><code>/funds/verify</code> — greeting with 🤝, the masked address the code went to, six boxes that auto-advance, then a <b>Verify code</b> button — nothing is sent until the member says so, because auto-submitting spent an attempt on a mistyped digit before they could look at it, a 5-minute validity clock and a 1-minute resend clock. Opening it directly bounces back to the sign-in page</td><td class="src">Auth Web App</td><td class="ph">P5</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Footer</span></td><td class="use">Rebuilt as a compact 72px band — the shloka <b>|| Om Gam Ganapathaye Namaha ||</b> above the copyright. Emblem and committee title removed; the header already carries the brand. Translation-driven, nothing to bind</td><td class="src">translations</td><td class="ph">P2</td><td><span class="pill done">Done</span></td></tr>
     </tbody>
   </table></div></div>
@@ -465,15 +465,15 @@
   <div class="tablecard"><div class="scroll"><table>
     <thead><tr><th>Screen</th><th>What it does</th><th>Source</th><th>Phase</th><th>Status</th></tr></thead>
     <tbody>
-      <tr><td><span class="name">Login</span></td><td class="use">Done as part of the funds gate — mobile + captcha + emailed OTP, no passwords anywhere. The signed token carries <code>adm_in</code>, so the portal knows on arrival which screens to offer</td><td class="src">Auth Web App</td><td class="ph">P5</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Dashboard</span></td><td class="use">Fund balance, member count, photo count, next schedule day, shortcuts to every screen</td><td class="src">all sheets</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">Login</span></td><td class="use">Done as part of the funds gate — mobile + captcha + emailed OTP, no passwords anywhere. The signed token carries <code>adm_in</code>, so the portal knows on arrival which screens to offer. Logging out returns to the sign-in page and re-arms the guard</td><td class="src">Auth Web App</td><td class="ph">P5</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Portal shell &amp; Dashboard</span></td><td class="use">Sidebar, topbar and profile menu in the same navy and gold as the public site. Routes are <code>/admin</code>, <code>/admin/about</code>, <code>/admin/members</code>, <code>/admin/gallery</code>, <code>/admin/schedule</code>, <code>/admin/mandapam</code>, <code>/admin/transactions</code>, <code>/admin/monthly-funds</code>, <code>/admin/profile</code>. The menu is filtered by <code>adm_in</code> — verified live at <b>8 items for an admin, 3 for a funds-only member</b>. Screens not yet built render a <i>work in progress</i> card rather than an empty table that looks broken. <b>English only</b>, by decision: the public site is bilingual because visitors are, the portal is a tool for a handful of people</td><td class="src">session</td><td class="ph">P6</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">About editor</span></td><td class="use">Bilingual paragraph editor + section image</td><td class="src">about sheet</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Committee Members</span></td><td class="use">Add / edit / soft-delete — name &amp; position EN+TE, mobile, photo upload, order. The same mobile list the Fund gate verifies against</td><td class="src">committee sheet · Drive</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Gallery manager</span></td><td class="use">Folder browser — years → photos; create / remove folders, upload, delete, preview. Holds the write secret and enforces the 30-per-year cap in the UI</td><td class="src">Drive (script)</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Schedule manager</span></td><td class="use">Insert and update the nine days for a chosen year, with <i>copy last year forward</i></td><td class="src">schedule sheet</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Mandapam details</span></td><td class="use">Address EN/TE, map link, with a live preview of the public card</td><td class="src">mandapam sheet</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Transactions manager</span></td><td class="use">Insert and update ledger rows; balance auto-computed, with search, paging and soft-delete</td><td class="src">transactions sheet</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Profile</span></td><td class="use">Admin details + change password</td><td class="src">session · Users</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">Profile</span></td><td class="use">The member's own record — photo, name, position, mobile, email and access level — with <b>Edit</b> for name, mobile and email. Position and the access flags are read-only: those are the committee's to set, and a member who could edit <code>adm_in</code> could hand themselves the portal. <b>The email comes from the auth endpoint, not the public members API</b>, which withholds it — the server identifies the member from the id inside their signed token, so nobody can read or edit anyone else. Changing the mobile changes what they sign in with next time, so it is checked for collisions against the whole sheet</td><td class="src">Auth Web App</td><td class="ph">P6</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Settings</span></td><td class="use">Section visibility, default language, festival year</td><td class="src">settings sheet</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
     </tbody>
   </table></div></div>
@@ -490,7 +490,7 @@
       <tr><td><span class="name">Drive folder tree</span></td><td class="use"><code>/Gallery/&lt;year&gt;/</code> with the photos directly inside; event subfolders are optional and are folded into the same year. Created and shared <i>Anyone with the link &rarr; Viewer</i>, holding <code>2025</code> and <code>2026</code></td><td class="src">Google Drive</td><td class="ph">P1</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Content Web App</span></td><td class="use">Written and read-only. <b>Not needed for the public site</b> &mdash; Google serves the CSV export with CORS headers, so the browser reads the sheets directly. It returns when the admin portal needs writes</td><td class="src">Apps Script</td><td class="ph">P1</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">Gallery Web App</span></td><td class="use">Deployed and verified live: folder tree on GET; upload / delete / create-folder / delete-folder on POST, every write refused without the secret. 10&nbsp;MB per file, <b>30 photos per year</b>, deletes go to the bin so they are recoverable. The write secret lives in Script Properties &mdash; never in the repo, never in the bundle</td><td class="src">Apps Script</td><td class="ph">P1</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Auth Web App</span></td><td class="use"><b>Deployed and proven end-to-end against a real inbox.</b> The code is generated, cached for 5 minutes and emailed; <code>access_in</code> is checked <i>before</i> any mail goes out; <code>adm_in</code> is baked into an HMAC-signed token. Reads the sheet with <code>SpreadsheetApp</code>, which is what lets that sheet be Restricted. Verified live: real code accepted, replay refused, blocked member refused with no email sent, resend throttled, wrong code counting down attempts, tampered token rejected</td><td class="src">Apps Script</td><td class="ph">P1</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Auth Web App</span></td><td class="use"><b>Deployed and proven end-to-end against a real inbox.</b> The code is generated, cached for 5 minutes and emailed; <code>access_in</code> is checked <i>before</i> any mail goes out; <code>adm_in</code> is baked into an HMAC-signed token. Reads the sheet with <code>SpreadsheetApp</code>, which is what lets that sheet be Restricted. Verified live: real code accepted, replay refused, blocked member refused with no email sent, resend throttled, wrong code counting down attempts, tampered token rejected. Also serves the signed-in member's own profile and saves edits to it, both behind the token. <b>Needs re-deploying</b> — the deployed copy predates those two actions</td><td class="src">Apps Script</td><td class="ph">P1</td><td><span class="pill prog">In progress</span></td></tr>
       <tr><td><span class="name">Transactions Web App</span></td><td class="use">Read + write the ledger, balances computed server-side, gated on a valid session token</td><td class="src">Apps Script</td><td class="ph">P1</td><td><span class="pill todo">To build</span></td></tr>
       <tr><td><span class="name">React service layer</span></td><td class="use">Done, in the Peetam shape: <code>sheetsConfig.js</code> &rarr; <code>sheetService.js</code> (CSV then gviz, cache-busted, quote/newline-safe parser) &rarr; <code>ContentContext</code> exposing <code>useSectionContent</code>. Drive links are rewritten to <code>thumbnail?id=…</code> &mdash; the <code>uc?export=view</code> form is blocked by Chrome as <code>ERR_BLOCKED_BY_ORB</code>, and every such <code>&lt;img&gt;</code> needs <code>referrerPolicy="no-referrer"</code> or Drive refuses it. The grid is served 600px files and only the lightbox 1600px, which cuts a full 30-photo year from ~42&nbsp;MB to ~14&nbsp;MB</td><td class="src">src/utils · src/contexts</td><td class="ph">P1</td><td><span class="pill done">Done</span></td></tr>
     </tbody>
