@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "//": "Everything except /assets goes to the single page, so /funds and /admin survive a refresh. /assets is excluded on purpose: a missing bundle should 404 honestly rather than be answered with HTML, which surfaces as a confusing MIME error instead of a broken deploy.",
+      "source": "/((?!assets/).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

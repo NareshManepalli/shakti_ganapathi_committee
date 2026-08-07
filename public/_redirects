@@ -1,0 +1,4 @@
+# Single-page app: the server has only index.html. React Router invents
+# /funds, /funds/verify and /admin in the browser, so any path the host does
+# not recognise must still be answered with index.html or a refresh 404s.
+/*    /index.html   200
