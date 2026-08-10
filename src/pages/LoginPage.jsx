@@ -5,10 +5,14 @@ import { translations } from '../utils/translations';
 import { requestOtp, makeCaptcha, isAuthConfigured } from '../utils/authService';
 import logoImg from '../assets/logo.png';
 import './AuthPages.css';
+import { useCopyGuard } from '../components/useCopyGuard';
 
 // Step 1 of the funds gate: prove you are human, then prove the mobile is on
 // the committee list. Only after both does the server email a code.
 const LoginPage = () => {
+  // The sign-in screens are public too — see useCopyGuard.
+  useCopyGuard();
+
   const { language } = useLanguage();
   const t = translations[language];
   const navigate = useNavigate();

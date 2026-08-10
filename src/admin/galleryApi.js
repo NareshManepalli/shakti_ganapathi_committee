@@ -47,18 +47,63 @@ export const fetchTree = async () => {
         year: String(y.year || '').trim(),
         used: Number(y.used) || (y.images || []).length,
         limit: Number(y.limit) || 30,
-        images: (y.images || []).map((im) => ({
-          id: im.id,
-          name: im.name || '',
-          // 600px for the grid; the preview asks for a bigger one separately
-          thumb: toMediaUrl(im.id, 600),
-          full: toMediaUrl(im.id, 1600),
-        })),
+        images: (y.images || []).map((im) => {
+          const mime = String(im.mime || '');
+          return {
+            id: im.id,
+            name: im.name || '',
+            mime,
+            isVideo: mime.indexOf('video/') === 0,
+            // 600px for the grid; the preview asks for a bigger one separately.
+            // Drive serves a poster frame from the same endpoint for a video.
+            thumb: toMediaUrl(im.id, 600),
+            full: toMediaUrl(im.id, 1600),
+            // A video cannot be played from the thumbnail endpoint — Drive's own
+            // player is the only thing that will stream it back.
+            play: `https://drive.google.com/file/d/${im.id}/preview`,
+          };
+        }),
       }))
       .filter((y) => y.year)
       .sort((a, b) => (parseInt(b.year, 10) || 0) - (parseInt(a.year, 10) || 0));
   } catch (err) {
     console.error('Could not read the gallery:', err);
+    return null;
+  }
+};
+
+/**
+ * The event photo folder, as pickable options for the schedule editor.
+ *
+ * `null` means the list could not be read — the folder is unset, the script has
+ * not been redeployed with the eventImages action, or the network is down. The
+ * caller shows a plain link box in that case rather than an empty dropdown,
+ * which would look like the folder was simply empty.
+ */
+export const fetchEventImages = async () => {
+  if (!API) return null;
+  try {
+    const res = await fetch(`${API}?action=eventImages`, { cache: 'no-store', redirect: 'follow' });
+    if (!res.ok) return null;
+    const text = await res.text();
+    if (/^\s*</.test(text)) return null;
+    const data = JSON.parse(text);
+    if (!data || !data.ok || !Array.isArray(data.images)) return null;
+
+    return data.images
+      .filter((im) => im && im.id)
+      .map((im) => {
+        const name = String(im.name || '').trim();
+        return {
+          id: im.id,
+          name,
+          // The extension is a fact about the file, not about the event.
+          label: name.replace(/\.[a-z0-9]{2,5}$/i, '') || im.id,
+          url: `https://drive.google.com/file/d/${im.id}/view?usp=sharing`,
+        };
+      });
+  } catch (err) {
+    console.error('Could not read the event images:', err);
     return null;
   }
 };

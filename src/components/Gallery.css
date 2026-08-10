@@ -137,6 +137,7 @@ body.lang-te .gallery-year-label {
 .gallery-row::-webkit-scrollbar { display: none; }
 
 .gallery-item {
+  position: relative;
   flex: 0 0 auto;
   width: 240px;
   aspect-ratio: 9 / 6;
@@ -160,6 +161,37 @@ body.lang-te .gallery-year-label {
 .gallery-item:focus-visible {
   outline: 2px solid var(--gold-300);
   outline-offset: 2px;
+}
+
+/* Drive hands back a poster frame for a video, so a video tile is a photo tile
+   until this says otherwise. */
+.gallery-play {
+  position: absolute;
+  right: 9px;
+  bottom: 9px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(8, 19, 38, 0.72);
+  border: 1px solid rgba(223, 174, 77, 0.5);
+  color: var(--gold-300);
+  font-size: 11px;
+  padding-left: 2px;   /* the glyph's own bearing sits it left of centre */
+  pointer-events: none;
+}
+
+/* An iframe has no intrinsic size for max-width to cap, so the player is given
+   one — 16:9, the shape almost every phone records in. */
+.gallery-lb-video {
+  width: min(92vw, 1000px);
+  aspect-ratio: 16 / 9;
+  max-height: 84vh;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: #000;
+  display: block;
 }
 
 .gallery-item img {
@@ -309,4 +341,34 @@ body.lang-te .gallery-year-label {
   border-color: transparent;
   box-shadow: none;
   cursor: default;
+}
+
+/* Download and close, grouped in one corner rather than each positioned
+   separately — two absolutely-placed buttons that have to sit beside each
+   other end up being nudged by hand every time one changes size. */
+.gallery-lb-actions {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 3;
+}
+
+/* The close button carries its own corner offsets; inside the group they would
+   push it back out again. */
+.gallery-lb-actions .gallery-lb-btn { position: static; top: auto; right: auto; }
+
+.gallery-lb-download {
+  text-decoration: none;
+  display: grid;
+  place-items: center;
+}
+
+.gallery-lb-download svg { width: 20px; height: 20px; }
+
+@media (max-width: 640px) {
+  .gallery-lb-actions { top: 12px; right: 12px; gap: 6px; }
+  .gallery-lb-download svg { width: 18px; height: 18px; }
 }

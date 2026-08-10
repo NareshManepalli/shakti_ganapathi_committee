@@ -20,6 +20,16 @@
 export const SHEETS_CONFIG = {
   FOLDER_URL: null,
 
+  // The Apps Script project's timezone, which is what a date or time cell is
+  // measured in. The Content Web App hands those cells back as instants —
+  // `2026-09-14T07:00:00.000Z` for a date, and a 1899-12-30 stamp for a
+  // time-only cell — and reading either without this would land on the wrong
+  // day, or an hour or two off the hour that was actually typed.
+  //
+  // It must match Extensions > Apps Script > Project Settings > Time zone.
+  // 'America/Los_Angeles' is the default a new project is created with.
+  sheetTimeZone: 'America/Los_Angeles',
+
   sections: {
     // About + Mandapam Location — two rows, keyed by `section`.
     // Columns: section | content_en | content_te | image | map_url |

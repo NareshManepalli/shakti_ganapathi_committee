@@ -7,24 +7,41 @@ import {
 import { IconUpload, IconFolderAdd, IconFolder, IconTrash } from '../icons';
 import { useToast } from '../ToastContext';
 import './Gallery.css';
+import Modal from '../../components/Modal';
 
-const MAX_MB = 10;                 // matches MAX_UPLOAD_BYTES in the script
+const MAX_MB = 100;                // matches MAX_UPLOAD_BYTES in the script
 const PER_YEAR = 30;               // matches MAX_PHOTOS_PER_YEAR
 
-// Folder browser over the Drive gallery: years on the way in, photos once a
-// year is open. Uploads go one file at a time on purpose — Apps Script has a
-// six-minute ceiling and a payload limit, and a failed batch would leave the
-// committee guessing which photos landed.
+// Apps Script caps a Web App POST at about 50 MB, and the file travels
+// base64-encoded, which inflates it by a third. So the real ceiling on this
+// route is around 35 MB whatever MAX_MB says — past that the request is
+// refused by the platform before the script ever runs, with nothing useful to
+// report back. Warn at the point of picking instead, and say what to do.
+const POST_SAFE_MB = 35;
+
+// Folder browser over the Drive gallery: years on the way in, photos and videos
+// once a year is open. Uploads go one file at a time on purpose — Apps Script
+// has a six-minute ceiling and a payload limit, and a failed batch would leave
+// the committee guessing which files landed.
+
 // Drive has no thumbnail for a very small image — it answers 404 rather than
 // resizing — so such a photo would render as a broken tile. Rare with real
 // committee photos (a 3 MB one is ready in about two seconds), but a blank
 // square with the filename is a better answer than a broken-image icon.
-const Thumb = ({ src, name }) => {
+//
+// It does hand back a poster frame for a video from that same endpoint, which
+// makes a video tile look exactly like a photo tile — the badge is what tells
+// them apart.
+const Thumb = ({ src, name, isVideo }) => {
   const [failed, setFailed] = useState(false);
-  if (failed) {
-    return <span className="gal-thumb-missing" title={name}>No preview</span>;
-  }
-  return <img src={src} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />;
+  return (
+    <>
+      {failed
+        ? <span className="gal-thumb-missing" title={name}>No preview</span>
+        : <img src={src} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />}
+      {isVideo && <span className="gal-play" aria-label="Video">▶</span>}
+    </>
+  );
 };
 
 const Gallery = () => {
@@ -37,7 +54,7 @@ const Gallery = () => {
   const [openYear, setOpenYear] = useState(null);
 
   const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState(null);   // { done, total, name }
+  const [progress, setProgress] = useState(null);   // { index, total, name }
 
   const [newYear, setNewYear] = useState('');
   const [adding, setAdding] = useState(false);
@@ -77,10 +94,10 @@ const Gallery = () => {
     e.target.value = '';                       // so the same file can be picked again
     if (!files.length || !year) return;
 
-    const images = files.filter((f) => f.type.startsWith('image/'));
-    const skippedType = files.length - images.length;
-    const small = images.filter((f) => f.size <= MAX_MB * 1024 * 1024);
-    const skippedSize = images.length - small.length;
+    const media = files.filter((f) => f.type.startsWith('image/') || f.type.startsWith('video/'));
+    const skippedType = files.length - media.length;
+    const small = media.filter((f) => f.size <= MAX_MB * 1024 * 1024);
+    const skippedSize = media.length - small.length;
 
     // The server refuses past the cap anyway; stopping here means the member
     // is told before waiting through uploads that will be rejected.
@@ -88,21 +105,35 @@ const Gallery = () => {
     const skippedFull = small.length - allowed.length;
 
     const skips = [];
-    if (skippedType) skips.push(`${skippedType} not an image`);
+    if (skippedType) skips.push(`${skippedType} not a photo or video`);
     if (skippedSize) skips.push(`${skippedSize} over ${MAX_MB} MB`);
     if (skippedFull) skips.push(`${skippedFull} over the ${PER_YEAR}-per-year limit`);
 
     if (!allowed.length) {
-      toast.error('Nothing uploaded', skips.length ? skips.join(', ') : 'No images were selected.');
+      toast.error('Nothing uploaded', skips.length ? skips.join(', ') : 'Nothing was selected.');
       return;
+    }
+
+    // Said up front, because the platform's own refusal comes back as a bare
+    // network failure with nothing to explain it.
+    const heavy = allowed.filter((f) => f.size > POST_SAFE_MB * 1024 * 1024);
+    if (heavy.length) {
+      toast.info(
+        `${heavy.length} file${heavy.length === 1 ? '' : 's'} may be too big to send`,
+        `Anything past about ${POST_SAFE_MB} MB is refused by Google before it reaches us. `
+        + `If one fails, drag it straight into the ${year.year} folder in Drive — the gallery reads it either way.`,
+      );
     }
 
     setBusy(true);
     let done = 0;
     const failed = [];
 
-    for (const file of allowed) {
-      setProgress({ done, total: allowed.length, name: file.name });
+    // Counted by position, not by successes: keyed to `done`, a file that
+    // failed left the sheet showing the same number twice while it moved on.
+    for (let i = 0; i < allowed.length; i += 1) {
+      const file = allowed[i];
+      setProgress({ index: i, total: allowed.length, name: file.name });
       try {
         const dataBase64 = await fileToBase64(file);
         const res = await uploadPhoto(token, {
@@ -125,7 +156,7 @@ const Gallery = () => {
       );
     } else {
       toast.success(
-        `${done} photo${done === 1 ? '' : 's'} uploaded`,
+        `${done} file${done === 1 ? '' : 's'} uploaded`,
         skips.length ? `Skipped: ${skips.join(', ')}.` : undefined,
       );
     }
@@ -191,19 +222,28 @@ const Gallery = () => {
       <input
         ref={fileRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         multiple
         hidden
         onChange={onFiles}
       />
 
+      {/* busy with no onClose: Modal's Escape and click-outside both go through
+          the same guard, so the sheet cannot be dismissed out from under an
+          upload — and it brings the scroll lock and focus handling with it. */}
       {progress && (
-        <div className="gal-progress" role="status">
-          <div className="gal-progress-bar">
-            <span style={{ width: `${Math.round((progress.done / progress.total) * 100)}%` }} />
+        <Modal busy label="Uploading files">
+          <div className="admin-card gal-upload">
+            <span className="gal-spinner" aria-hidden="true" />
+            <b className="gal-upload-count" aria-live="polite">
+              Uploading {progress.index + 1} of {progress.total}
+            </b>
+            <span className="gal-upload-name" title={progress.name}>{progress.name}</span>
+            <p className="gal-upload-note">
+              One file at a time. Keep this page open until it finishes.
+            </p>
           </div>
-          <p>Uploading {progress.done + 1} of {progress.total} — {progress.name}</p>
-        </div>
+        </Modal>
       )}
 
       {adding && !year && (
@@ -249,7 +289,7 @@ const Gallery = () => {
 
           {year ? (
             <button className="admin-btn" onClick={pick} disabled={busy || remaining === 0}>
-              <IconUpload /> {remaining === 0 ? 'Year is full' : 'Upload photos'}
+              <IconUpload /> {remaining === 0 ? 'Year is full' : 'Upload media'}
             </button>
           ) : (
             <button className="admin-btn" onClick={() => setAdding((v) => !v)} disabled={busy}>
@@ -262,14 +302,17 @@ const Gallery = () => {
             server refuses one. */}
         <p className="gal-limits">
           {year
-            ? <>Up to <b>{year.limit}</b> photos per year · images ≤ <b>{MAX_MB} MB</b></>
-            : <>One folder per year · up to <b>{PER_YEAR}</b> photos each</>}
+            ? <>
+                Up to <b>{year.limit}</b> files per year · photos and videos ≤ <b>{MAX_MB} MB</b>
+                {' '}· anything past <b>{POST_SAFE_MB} MB</b> goes straight into the Drive folder
+              </>
+            : <>One folder per year · up to <b>{PER_YEAR}</b> files each</>}
         </p>
 
         {/* A count only where it means something. Inside a year it is the room
             left against a cap; at the root it just restated the grid. */}
         {year && (
-          <p className="gal-count">{year.used} of {year.limit} photos · {remaining} left</p>
+          <p className="gal-count">{year.used} of {year.limit} files · {remaining} left</p>
         )}
 
         {loading ? (
@@ -297,7 +340,7 @@ const Gallery = () => {
               {year.images.map((img) => (
                 <figure className="gal-file" key={img.id}>
                   <button className="gal-thumb" onClick={() => setPreview(img)} title={img.name}>
-                    <Thumb src={img.thumb} name={img.name} />
+                    <Thumb src={img.thumb} name={img.name} isVideo={img.isVideo} />
                   </button>
                   <figcaption title={img.name}>{img.name}</figcaption>
                   <button
@@ -314,8 +357,8 @@ const Gallery = () => {
           ) : (
             <div className="gal-empty">
               <span className="gal-empty-icon" aria-hidden="true">📷</span>
-              <h2 className="gal-empty-title">No photos in {year.year}</h2>
-              <p className="gal-empty-text">Upload up to {year.limit} photos for this year.</p>
+              <h2 className="gal-empty-title">Nothing in {year.year} yet</h2>
+              <p className="gal-empty-text">Upload up to {year.limit} photos or videos for this year.</p>
             </div>
           )
         ) : (tree || []).length ? (
@@ -325,7 +368,7 @@ const Gallery = () => {
                 <button className="gal-folder" onClick={() => setOpenYear(y.year)}>
                   <IconFolder className="gal-folder-icon" />
                   <span className="gal-folder-name">{y.year}</span>
-                  <span className="gal-folder-meta">{y.used} photo{y.used === 1 ? '' : 's'}</span>
+                  <span className="gal-folder-meta">{y.used} file{y.used === 1 ? '' : 's'}</span>
                 </button>
                 <button
                   className="gal-del"
@@ -342,18 +385,18 @@ const Gallery = () => {
           <div className="gal-empty">
             <span className="gal-empty-icon" aria-hidden="true">📁</span>
             <h2 className="gal-empty-title">No year folders yet</h2>
-            <p className="gal-empty-text">Create one to start adding photos.</p>
+            <p className="gal-empty-text">Create one to start adding photos and videos.</p>
           </div>
         )}
       </div>
 
       {confirm && (
-        <div className="gal-modal" onClick={() => setConfirm(null)}>
-          <div className="admin-card gal-confirm" onClick={(e) => e.stopPropagation()}>
-            <h2 className="admin-wip-title">Delete {confirm.label}?</h2>
+        <Modal onClose={() => setConfirm(null)} busy={busy}>{(titleId) => (
+          <div className="admin-card gal-confirm">
+            <h2 id={titleId} className="admin-wip-title">Delete {confirm.label}?</h2>
             <p className="admin-wip-text">
               {confirm.kind === 'year'
-                ? 'The folder and every photo in it move to the Drive bin, and disappear from the public site.'
+                ? 'The folder and everything in it moves to the Drive bin, and disappears from the public site.'
                 : 'It moves to the Drive bin and disappears from the public site.'}
               {' '}You can restore it from Drive for 30 days.
             </p>
@@ -366,13 +409,26 @@ const Gallery = () => {
               </button>
             </div>
           </div>
-        </div>
+        )}</Modal>
       )}
 
       {preview && (
-        <div className="gal-modal" onClick={() => setPreview(null)}>
-          <img className="gal-preview" src={preview.full} alt="" referrerPolicy="no-referrer" />
-        </div>
+        <Modal onClose={() => setPreview(null)} label={preview.isVideo ? 'Video preview' : 'Photo preview'}>
+          {preview.isVideo ? (
+            /* Drive's own player, not a <video src>: the file is not served as
+               a plain stream, and a bare <video> pointed at Drive plays
+               nothing. The iframe is the only thing that works here. */
+            <iframe
+              className="gal-preview gal-preview-video"
+              src={preview.play}
+              title={preview.name}
+              allow="autoplay; fullscreen"
+              allowFullScreen
+            />
+          ) : (
+            <img className="gal-preview" src={preview.full} alt="" referrerPolicy="no-referrer" />
+          )}
+        </Modal>
       )}
     </>
   );

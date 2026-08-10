@@ -1,0 +1,62 @@
+<!doctype html>
+<!--
+  The source of public/og-image.png — the card WhatsApp, Facebook and X show
+  when somebody shares the site. It is not part of the app and is never served;
+  it exists so the card can be remade when the emblem or the wording changes.
+
+  To remake it:
+    1. Open this file in Chrome.
+    2. F12 → Ctrl+Shift+M (device toolbar) → set the size to exactly 1200 × 630.
+    3. Ctrl+Shift+P → "Capture screenshot".
+    4. Save over public/og-image.png.
+
+  Keep the result under ~600 KB. WhatsApp does not report an error above that —
+  it simply shows no preview at all, which is easy to miss. The current card is
+  440 KB.
+
+  1200×630 is the size every platform crops from; smaller gets upscaled and
+  looks soft.
+-->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>OG card — 1200×630</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;600;700&family=Anek+Telugu:wght@500&display=swap');
+      * { margin: 0; box-sizing: border-box; }
+      body {
+        width: 1200px; height: 630px; display: grid; place-items: center;
+        font-family: 'Josefin Sans', sans-serif; text-align: center;
+        background:
+          radial-gradient(120% 130% at 50% 0%, rgba(223,174,77,.20) 0%, transparent 55%),
+          linear-gradient(160deg, #16274a 0%, #0e1b33 45%, #060d1b 100%);
+        color: #eef4ff;
+      }
+      .card { display: flex; flex-direction: column; align-items: center; gap: 26px; padding: 0 80px; }
+      .emblem {
+        width: 168px; height: 168px; border-radius: 50%; overflow: hidden;
+        clip-path: circle(50%); background: #0a1428;
+        box-shadow: 0 0 0 3px rgba(223,174,77,.55), 0 24px 60px rgba(0,0,0,.6);
+      }
+      .emblem img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.106); }
+      h1 {
+        font-size: 66px; font-weight: 700; line-height: 1.08; letter-spacing: .01em;
+        background: linear-gradient(180deg, #f4d68e, #dfae4d);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      }
+      .te { font-family: 'Anek Telugu', sans-serif; font-size: 31px; font-weight: 500; color: #cbd8f0; }
+      .rule { width: 190px; height: 2px; background: linear-gradient(90deg, transparent, #dfae4d, transparent); }
+      .place { font-size: 24px; font-weight: 300; letter-spacing: .22em; text-transform: uppercase; color: #93a6c9; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <!-- relative, so opening this file straight from disk still shows it -->
+      <div class="emblem"><img src="../src/assets/logo.png" alt=""></div>
+      <h1>Sri Shakthi Ganapathi<br>Committee</h1>
+      <div class="te">శ్రీ శక్తి గణపతి కమిటీ</div>
+      <div class="rule"></div>
+      <div class="place">Annapurnamma Peta &middot; Rajamahendravaram</div>
+    </div>
+  </body>
+</html>

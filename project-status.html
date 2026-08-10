@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SSGC — Plan of Action</title>
+<title>SSGC — Project Status</title>
 <style>
   :root {
     --ground: #f5f7fb;
@@ -14,10 +14,8 @@
     --gold: #a87524;
 
     --done: #2f9e5f;   --done-bg: #e7f4ec;
-    --prog: #2f6fb0;   --prog-bg: #e6eff8;
-    --rework: #b4700a; --rework-bg: #fbf1de;
     --todo: #6f7a8a;   --todo-bg: #eceff4;
-    --block: #b3341f;
+    --warn: #c88a1b;   --warn-bg: #fdf3e0;
 
     --serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
     --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -30,6 +28,7 @@
   }
   .wrap { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
 
+  /* ---- header ---- */
   .masthead { border-bottom: 2px solid var(--line); padding-bottom: 26px; margin-bottom: 30px; }
   .eyebrow {
     font-family: var(--serif); font-size: 14px; letter-spacing: .16em; text-transform: uppercase;
@@ -42,13 +41,15 @@
     line-height: 1.05; margin: 0 0 8px; text-wrap: balance;
   }
   h1 em { font-style: italic; color: var(--accent); }
-  .updated { margin-top: 14px; font-size: 12.5px; color: var(--faint); }
+  .updated { margin-top: 14px; font-size: 12.5px; color: var(--faint); letter-spacing: .02em; }
+  .updated a { color: var(--accent); }
 
+  /* ---- overall progress ---- */
   .progress-hero { margin: 26px 0 4px; }
   .progress-hero-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 9px; }
   .progress-hero-label {
-    font-family: var(--serif); font-size: 15px; letter-spacing: .04em;
-    color: var(--muted); text-transform: uppercase;
+    font-family: var(--serif); font-size: 14px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted);
   }
   .progress-hero-pct { font-size: 32px; font-weight: 700; color: var(--done); font-variant-numeric: tabular-nums; line-height: 1; }
   .progress-hero-track {
@@ -56,582 +57,271 @@
     background: #e2e8f1; border: 1px solid var(--line); display: flex;
   }
   .progress-hero-fill { display: block; height: 100%; background: linear-gradient(90deg, #2f9e5f, #46b877); }
-  .progress-hero-part { display: block; height: 100%; background: repeating-linear-gradient(45deg, #2f6fb0, #2f6fb0 5px, #5a92cc 5px, #5a92cc 10px); }
-  .progress-hero-legend { display: flex; justify-content: space-between; gap: 12px; margin-top: 9px; font-size: 12.5px; color: var(--muted); flex-wrap: wrap; }
+  .progress-hero-legend {
+    display: flex; justify-content: space-between; gap: 12px; margin-top: 9px;
+    font-size: 12.5px; color: var(--muted); flex-wrap: wrap;
+  }
   .progress-hero-legend b { color: var(--ink); font-variant-numeric: tabular-nums; }
-  .progress-hero-legend .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
-  .progress-hero-legend .dot.c { background: var(--done); }
-  .progress-hero-legend .dot.p { background: var(--prog); }
 
-  .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 28px 0 14px; }
-  @media (max-width: 860px) { .summary { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 460px) { .summary { grid-template-columns: 1fr; } }
+  /* ---- summary ---- */
+  .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 28px 0 14px; }
+  @media (max-width: 720px) { .summary { grid-template-columns: 1fr; } }
   .stat {
     background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
     padding: 16px 18px; position: relative; overflow: hidden;
   }
   .stat::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
-  .stat.done::before   { background: var(--done); }
-  .stat.rework::before { background: var(--rework); }
-  .stat.todo::before   { background: var(--todo); }
-  .stat.prog::before   { background: var(--prog); }
+  .stat.done::before { background: var(--done); }
+  .stat.todo::before { background: var(--todo); }
+  .stat.warn::before { background: var(--warn); }
   .stat .n { font-size: 34px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
-  .stat.done .n   { color: var(--done); }
-  .stat.rework .n { color: var(--rework); }
-  .stat.todo .n   { color: var(--todo); }
-  .stat.prog .n   { color: var(--prog); }
+  .stat.done .n { color: var(--done); }
+  .stat.todo .n { color: var(--todo); }
+  .stat.warn .n { color: var(--warn); }
   .stat .l { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
 
   .bar { display: flex; height: 12px; border-radius: 999px; overflow: hidden; border: 1px solid var(--line); margin: 4px 0 30px; }
   .bar span { display: block; }
-  .bar .s-done   { background: var(--done); }
-  .bar .s-prog   { background: var(--prog); }
-  .bar .s-rework { background: var(--rework); }
-  .bar .s-todo   { background: var(--todo); }
+  .bar .s-done { background: var(--done); }
+  .bar .s-todo { background: var(--todo); }
+  .bar .s-warn { background: var(--warn); }
 
+  /* ---- tables ---- */
   h2 {
-    font-family: var(--serif); font-size: 24px; font-weight: 600; margin: 44px 0 4px;
-    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    font-family: var(--serif); font-size: clamp(19px, 3vw, 24px); font-weight: 600;
+    margin: 40px 0 4px; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
   }
-  h2 .count { font-family: var(--sans); font-size: 13px; color: var(--faint); font-weight: 500; }
-  .lede { color: var(--muted); font-size: 13.5px; margin: 0 0 12px; max-width: 80ch; }
+  .count { font-family: var(--sans); font-size: 12.5px; font-weight: 400; color: var(--faint); letter-spacing: .02em; }
 
-  .tablecard { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; box-shadow: 0 1px 2px rgba(20,40,70,.05); }
-  .scroll { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 700px; }
-  thead th {
-    text-align: left; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase;
-    color: var(--faint); font-weight: 600; padding: 13px 18px; background: #f7f9fc; border-bottom: 1px solid var(--line);
+  .tablecard {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 14px; overflow: hidden; margin-top: 14px;
   }
-  tbody td { padding: 14px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: #fafcfe; }
-  td .name { font-weight: 600; }
-  td .use { color: var(--muted); }
-  td .src { color: var(--faint); font-size: 12.5px; }
-  td code { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12px; background: #eef2f8; padding: 1px 5px; border-radius: 4px; color: var(--accent); }
-  .ph { font-size: 11.5px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 660px; }
+  th {
+    text-align: left; padding: 12px 16px; font-size: 11.5px; letter-spacing: .07em;
+    text-transform: uppercase; color: var(--muted); background: #f2f5fa;
+    border-bottom: 1px solid var(--line); white-space: nowrap;
+  }
+  td { padding: 13px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .name { font-weight: 600; }
+  .use { color: var(--muted); }
+  .src { color: var(--faint); font-size: 12.5px; white-space: nowrap; }
+  code { font-size: 12.5px; background: #eef2f8; padding: 1px 5px; border-radius: 4px; }
 
   .pill {
     display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
-    font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+    padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
   }
   .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; }
-  .pill.done   { background: var(--done-bg);   color: #1c6e40; } .pill.done::before   { background: var(--done); }
-  .pill.prog   { background: var(--prog-bg);   color: #1f4f80; } .pill.prog::before   { background: var(--prog); }
-  .pill.rework { background: var(--rework-bg); color: #8a5504; } .pill.rework::before { background: var(--rework); }
-  .pill.todo   { background: var(--todo-bg);   color: #4d5765; } .pill.todo::before   { background: var(--todo); }
+  .pill.done { background: var(--done-bg); color: #1c6e40; } .pill.done::before { background: var(--done); }
+  .pill.todo { background: var(--todo-bg); color: #4d5765; } .pill.todo::before { background: var(--todo); }
+  .pill.warn { background: var(--warn-bg); color: #8a5c07; } .pill.warn::before { background: var(--warn); }
 
-  .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0 0 8px; font-size: 12.5px; color: var(--muted); }
+  .legend { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
   .legend .pill { font-size: 11.5px; }
 
-  .phases { display: grid; gap: 12px; }
-  .phase {
-    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
-    padding: 16px 18px;
+  /* ---- what's left ---- */
+  .pending { margin-top: 16px; display: grid; gap: 14px; }
+  .item {
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 4px solid var(--todo); border-radius: 12px; padding: 16px 18px;
   }
-  .phase.active { border-color: #b9d2ee; box-shadow: 0 0 0 3px rgba(47,111,176,.09); }
-  .phase-head { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
-  .phase-no {
-    font-family: var(--serif); font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
-    color: var(--accent); font-weight: 700;
-  }
-  .phase-title { font-family: var(--serif); font-size: 19px; font-weight: 600; margin: 2px 0 0; }
-  .phase-meta { font-size: 12.5px; color: var(--faint); text-align: right; }
-  .phase-goal { color: var(--muted); font-size: 13.5px; margin: 8px 0 12px; max-width: 86ch; }
-  .phase-track { height: 10px; border-radius: 999px; overflow: hidden; background: #e6ebf3; border: 1px solid var(--line); display: flex; }
-  .phase-fill { display: block; height: 100%; background: linear-gradient(90deg, #2f9e5f, #46b877); }
-  .phase-part { display: block; height: 100%; background: repeating-linear-gradient(45deg, #2f6fb0, #2f6fb0 5px, #5a92cc 5px, #5a92cc 10px); }
-  .phase-foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; font-size: 12px; color: var(--faint); flex-wrap: wrap; }
-  .phase-foot b { color: var(--ink); font-variant-numeric: tabular-nums; }
-  .dep b { color: var(--muted); font-weight: 600; }
-
-  .callout {
-    background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent);
-    border-radius: 12px; padding: 18px 20px; margin-top: 14px;
-  }
-  .callout.warnbox { border-left-color: var(--block); }
-  .callout h3 { font-family: var(--serif); font-size: 17px; margin: 0 0 10px; font-weight: 600; }
-  .flow { list-style: none; counter-reset: step; margin: 0; padding: 0; }
-  .flow li {
-    counter-increment: step; position: relative; padding: 0 0 12px 34px; font-size: 13.5px; color: var(--muted);
-    border-left: 1px dashed var(--line); margin-left: 11px;
-  }
-  .flow li:last-child { border-left: 0; padding-bottom: 0; }
-  .flow li::before {
-    content: counter(step); position: absolute; left: -11px; top: 0;
-    width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff;
-    font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center;
-  }
-  .flow li b { color: var(--ink); }
-  .warn { margin-top: 12px; font-size: 13px; color: #8a5504; background: var(--rework-bg); border-radius: 10px; padding: 11px 14px; }
-  .warn b { color: #6e4303; }
-
-  .checklist { margin: 0; padding: 0; list-style: none; }
-  .checklist li {
-    position: relative; padding: 9px 0 9px 30px; font-size: 13.5px; color: var(--muted);
-    border-bottom: 1px solid var(--line);
-  }
-  .checklist li:last-child { border-bottom: none; }
-  .checklist li::before { content: "☐"; position: absolute; left: 4px; top: 8px; color: var(--block); font-size: 15px; }
-  .checklist li b { color: var(--ink); }
-
-  .foot-note { margin-top: 44px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--faint); }
+  .item.launch { border-left-color: var(--gold); }
+  .item h3 { margin: 0 0 6px; font-size: 15.5px; font-weight: 600; }
+  .item p { margin: 0; color: var(--muted); font-size: 13.5px; }
+  .item p + p { margin-top: 7px; }
+  .item .need { color: var(--ink); font-weight: 600; }
 </style>
 
 <div class="wrap">
   <header class="masthead">
     <p class="eyebrow">Sri Shakthi Ganapathi Committee</p>
-    <h1>Plan of <em>Action</em> &amp; Status Board</h1>
+    <h1>Project <em>Status</em> Board</h1>
     <p class="updated">
-      Updated 08 Aug 2026 · rebuild to a dynamic, Sheets &amp; Drive-bound application
-      with an Admin Portal and a committee-only Transactions page
+      Updated 11 Aug 2026 · Annapurnamma Peta, Rajamahendravaram · live at
+      <a href="https://srishaktiganapathicommittee.netlify.app">srishaktiganapathicommittee.netlify.app</a>
     </p>
 
     <div class="progress-hero">
       <div class="progress-hero-top">
-        <span class="progress-hero-label">Overall completion</span>
-        <span class="progress-hero-pct">82%</span>
+        <span class="progress-hero-label">Built &amp; live-bound</span>
+        <span class="progress-hero-pct">92%</span>
       </div>
-      <div class="progress-hero-track" role="img" aria-label="40 of 49 deliverables complete, 0 more in progress">
-        <span class="progress-hero-fill" style="width: 82%"></span>
-        <span class="progress-hero-part" style="width: 0%"></span>
+      <div class="progress-hero-track" role="img" aria-label="46 of 50 deliverables done">
+        <span class="progress-hero-fill" style="width: 92%"></span>
       </div>
       <div class="progress-hero-legend">
-        <span><span class="dot c"></span><b>40 of 49</b> complete</span>
-        <span><span class="dot p"></span><b>0</b> in progress</span>
-        <span>Phases 2, 3 &amp; 4 complete · every editable section is now editable from the portal</span>
+        <span><b>46 of 50</b> deliverables</span>
+        <span>every public section, and 9 of 11 portal screens, live on the sheets</span>
       </div>
     </div>
   </header>
 
   <div class="summary">
-    <div class="stat done"><div class="n">40</div><div class="l">Done</div></div>
-    <div class="stat prog"><div class="n">0</div><div class="l">In progress</div></div>
-    <div class="stat rework"><div class="n">0</div><div class="l">Untouched — needs rework</div></div>
-    <div class="stat todo"><div class="n">9</div><div class="l">To build from scratch</div></div>
+    <div class="stat done"><div class="n">46</div><div class="l">Done &amp; live-bound</div></div>
+    <div class="stat todo"><div class="n">4</div><div class="l">Still to build</div></div>
   </div>
-  <div class="bar" role="img" aria-label="40 done, 0 in progress, 0 rework, 9 to build">
-    <span class="s-done" style="flex: 40"></span>
-    <span class="s-prog" style="flex: 0"></span>
-    <span class="s-rework" style="flex: 0"></span>
-    <span class="s-todo" style="flex: 9"></span>
+  <div class="bar" role="img" aria-label="46 done, 4 to build">
+    <span class="s-done" style="flex: 46"></span>
+    <span class="s-todo" style="flex: 4"></span>
   </div>
 
   <div class="legend">
-    <span class="pill done">Done</span>
-    <span class="pill prog">In progress — built, not yet data-bound</span>
-    <span class="pill rework">Untouched — still on the original build</span>
-    <span class="pill todo">To build — does not exist yet</span>
+    <span class="pill done">Done — reading and writing live to the sheets</span>
+    <span class="pill todo">To build</span>
   </div>
 
-  <p class="lede" style="margin-top:14px">
-    <b>The committee can now edit the whole site themselves.</b> Every public section reads
-    from Google Sheets or the Drive folder, and with the Content Web App deployed, every one
-    of them is editable from the portal: About, Members, the 9-day Schedule, Mandapam, the
-    Gallery, and the festival date that drives the countdown. The fund gate in front of it is
-    done — mobile, captcha, an emailed code, and a signed token carrying the member's access
-    level, checked again by every script it reaches. <b>Nine of the eleven portal screens are
-    built and proven against the live services.</b> What is left is the money: Transactions
-    and Monthly Funds, which are one piece of work — both need the ledger designed and a
-    Transactions Web App written. The launch blockers are no longer code: the title artwork
-    is still Peetam's, and <code>bypass_in</code> must go back to 0 for every member.
-  </p>
-
-  <!-- ============ BLOCKERS ============ -->
-  <h2>Waiting on the committee <span class="count">blocks work already built</span></h2>
-  <p class="lede">Each of these is a file or a fact only the committee can supply. The code is in place; only the asset is missing.</p>
-  <div class="callout warnbox">
-    <ul class="checklist">
-      <li>
-
-      <li>
-        <b>Turn <code>bypass_in</code> back to 0 for every member before launch.</b> Any row
-        with it set signs in with a fixed code and no email at all. It is a development
-        shortcut, and the Members screen shows a red bar counting the rows that still have it.
-      </li>
-      <li>
-        <b>Title artwork — still the one real blocker on the public page.</b> <code>title_eng.png</code> and
-        <code>title_tel.png</code> are the <b>Peetam</b> wordmarks, so the homepage shows
-        another organisation's name. Supply gold SSGC artwork in both languages on a
-        transparent background — padding does not matter, it is cropped automatically.
-      </li>
-      <li>
-        <b>Real photos for the gallery.</b> The folder, the Web App and the site are all
-        working &mdash; <code>2025</code> currently holds two test images and <code>2026</code>
-        is empty. Drop the real celebration photos into the year folders and they appear;
-        <b>up to 30 per year</b>.
-      </li>
-      <li>
-        <b>Real content in the sheets.</b> The three sheets are live and bound, but still hold
-        seeded rows — real member names, roles, photos and the actual About text just need
-        typing in. Paste an image link in a <code>photo</code>, <code>prfle_photo</code> or
-        <code>image</code> cell and it appears; leave it blank and the card shows a
-        <code>+</code>.
-      </li>
-      <li>
-        <b>A domain</b>, when you are ready to put it in front of the committee.
-      </li>
-    </ul>
-  </div>
-
-  <!-- ============ DECISIONS ============ -->
-  <h2>Decisions locked <span class="count">agreed 04–05 Aug 2026</span></h2>
+  <!-- PUBLIC -->
+  <h2>Public Website <span class="count">11 sections · all done</span></h2>
   <div class="tablecard"><div class="scroll"><table>
-    <thead><tr><th>Decision</th><th>Agreed</th><th>Effect on the build</th></tr></thead>
+    <thead><tr><th>Section</th><th>How it's used</th><th>Source</th><th>Status</th></tr></thead>
     <tbody>
-      <tr><td><span class="name">Apps Script</span></td><td class="use"><b>Written fresh for SSGC</b></td><td class="src">No reuse of the Peetam scripts — adds ~2 days to Phase&nbsp;1, but the schema carries no Peetam-only fields</td></tr>
-      <tr><td><span class="name">Admin roles</span></td><td class="use"><b>Single role — admin</b></td><td class="src">No role column, no permission matrix, no per-screen gating</td></tr>
-      <tr><td><span class="name">Hosting</span></td><td class="use"><b>Separate domain</b></td><td class="src">Own Google account, own Drive folder, own Apps Script deployments — nothing shared with Peetam</td></tr>
-      <tr><td><span class="name">9-day schedule</span></td><td class="use"><b>Per festival year</b></td><td class="src">Keyed by <code>year</code> + <code>day_no</code>; the admin screen can copy a previous year forward</td></tr>
-      <tr><td><span class="name">Festival start</span></td><td class="use"><b>14 September 2026</b></td><td class="src">Drives the hero countdown and the gallery's "not begun" state. Held as the <code>festival</code> row of the <code>content</code> sheet, so the admin moves it each year without a developer; <code>src/config/festival.js</code> keeps it only as a fallback</td></tr>
-      <tr><td><span class="name">Home section</span></td><td class="use"><b>Stays static</b></td><td class="src">Artwork plus a countdown. The only editable part is the festival date, which lives in the content sheet so the admin can move it each year</td></tr>
-      <tr><td><span class="name">Fund on the public site</span></td><td class="use"><b>Removed entirely</b></td><td class="src">No ledger, no table, not in the nav. Reached only through the gated flow below</td></tr>
-      <tr><td><span class="name">Image assets</span></td><td class="use"><b>Originals only (PNG / JPEG)</b></td><td class="src">The WebP conversions were removed at the committee's request. Costs ~14&nbsp;MB of images per visit — see the note in Foundation</td></tr>
+      <tr><td><span class="name">Header / Nav</span></td><td class="use">Sticky nav, EN/TE language toggle, mobile drawer</td><td class="src">translations</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Home — Intro</span></td><td class="use">Artwork, language-swapped title, and a festival strip with three states driven by one sheet date: counting down, "Celebrations Started" with the day number, then hidden until next year</td><td class="src">static art · content sheet</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">About</span></td><td class="use">Paragraph and image in both languages. An empty image cell shows a <code>+</code> placeholder</td><td class="src">content sheet</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Committee Members</span></td><td class="use">Executives in the left column, the rest in the grid, each opening an identity card. <b><code>email</code>, <code>access_in</code> and <code>adm_in</code> never reach the browser</b> — the sheet is Restricted and read through a Web App</td><td class="src">members sheet</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">9-Day Schedule</span></td><td class="use">Ticket cards — image, day count, event, time and date. The heading year comes from the rows; a blank weekday is derived from the date. <b>A year is dated long before it is planned</b>, so a day with no name yet reads <code>TBD</code> and one with no time a dash; date and time are parsed apart, or an undecided time would take the month, day and weekday down with it. No picture yet shows the committee emblem at 70%</td><td class="src">schedule sheet</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Gallery</span></td><td class="use">Year selector, alternating scroll rows, lightbox with keys, counter and a <b>download</b> that saves the file the committee uploaded rather than the resized copy on screen. The Drive year folders are the data — a year with nothing in it is not offered at all. <b>Photos and videos both</b>: Drive returns a poster frame for a video, so the tile carries a ▶ badge and the lightbox opens Drive's player</td><td class="src">Drive (script)</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Mandapam Location</span></td><td class="use">The address breaks where the committee breaks it. Get Directions resolves from that one string. The map is the committee's own pin when the sheet holds a <b>pasted Google embed</b>, and the searched address otherwise — only <code>google.com/maps</code> is ever framed, so a pasted link cannot put another site on the page</td><td class="src">content sheet</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Committee Funds card</span></td><td class="use">Logo and name under Mandapam, the whole card one tap target. Deliberately not in the nav</td><td class="src">static</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Sign-in page</span></td><td class="use">Mobile number and a 4-digit captcha. <code>access_in = 0</code> is refused <i>before</i> any mail is sent</td><td class="src">Auth Web App</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">OTP page</span></td><td class="use">Six boxes and an explicit Verify. Replay refused, resend throttled, attempts counted down</td><td class="src">Auth Web App</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Footer</span></td><td class="use">Shloka and copyright</td><td class="src">translations</td><td><span class="pill done">Done</span></td></tr>
     </tbody>
   </table></div></div>
 
-  <!-- ============ PHASES ============ -->
-  <h2>Phased Roadmap <span class="count">8 phases · 49 deliverables · est. 5–7 weeks</span></h2>
-  <p class="lede">Phase&nbsp;1 is the gate: nothing can be bound to live data until the Sheets, Drive folders and Apps Script Web Apps are deployed.</p>
+  <!-- COMMITTEE-ONLY -->
+  <h2>Committee-only Page <span class="count">1 of 2 · behind the gate</span></h2>
+  <div class="tablecard"><div class="scroll"><table>
+    <thead><tr><th>Page</th><th>How it's used</th><th>Source</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><span class="name">Route guard</span></td><td class="use">Wraps <code>/admin</code>. Sends anyone without a session to sign-in; the session lives in <code>sessionStorage</code>, so it dies with the tab and lapses after 60 minutes</td><td class="src">session</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Transactions</span></td><td class="use">The ledger — date, notes, cash in, cash out, running balance, with totals and PDF export</td><td class="src">transactions sheet</td><td><span class="pill todo">To build</span></td></tr>
+    </tbody>
+  </table></div></div>
 
-  <div class="phases">
+  <!-- ADMIN -->
+  <h2>Admin Portal <span class="count">9 of 11 screens · read + write live</span></h2>
+  <div class="tablecard"><div class="scroll"><table>
+    <thead><tr><th>Screen</th><th>How it's used</th><th>Source</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><span class="name">Login</span></td><td class="use">Mobile, captcha, emailed code — no passwords anywhere. The signed token carries <code>adm_in</code>, so the portal knows on arrival which screens to offer</td><td class="src">Auth Web App</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Portal shell</span></td><td class="use">Navy sidebar and topbar over a light working area. <b>No dashboard</b> — <code>/admin</code> lands on Monthly Funds, the one screen every member reaches. Profile and Log out live in the topbar card, so neither exists twice. <b>English only</b>, by decision: visitors are bilingual, the portal is a tool for a handful of people</td><td class="src">session</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">About editor</span></td><td class="use">Text on the left, the picture it produces on the right, cropped as the section crops it — a link Drive will not serve fails here rather than silently on the public page. The preview box takes its height from the fields beside it, never from the image</td><td class="src">content sheet</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Members manager</span></td><td class="use">Table card — search, 5 a page, pencil and bin per row — with add and edit in a side drawer. <b>The only screen that can grant portal access</b>, so the flags are spelled out: sign-in, full access (greyed until sign-in is granted), and the development bypass, counted in a warning bar while any row still has it. A member cannot delete themselves. <i>Access is set in the drawer, not shown as a column</i></td><td class="src">members sheet</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Gallery manager</span></td><td class="use">Create and bin a year, upload, preview, delete. <b>Photos and videos, up to 100 MB</b> — though Apps Script's own POST ceiling makes ~35 MB the real limit, which the screen says before a file is picked rather than after Google refuses it. Anything past 30 a year is refused; deletes go to the Drive bin. Uploading blocks the screen behind a sheet, because the page must not be touched mid-upload. <b>Authorised by the member's session token</b>, never a shared secret</td><td class="src">Drive (script)</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Schedule manager</span></td><td class="use">Table card — search, 5 a page, S.No, thumbnail, both day names, dates as <code>dd-mm-yyyy</code> and times as <code>hh:mm AM/PM</code>. Add and edit open a side drawer, with the day number a 1–9 list and the picture <b>chosen by event name</b> from a Drive folder read fresh each time it opens. Sheets hand dates back as instants, so both are converted through the script's own timezone — read raw they landed a day early and an hour out</td><td class="src">schedule sheet</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Mandapam details</span></td><td class="use">Address in both languages on the left, and on the right the map it actually produces — the same embed the public card renders, held a beat behind the typing. Takes a pasted Google <code>&lt;iframe&gt;</code>, the bare embed URL, or a plain link, and says which of the three arrived</td><td class="src">content sheet</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Profile</span></td><td class="use">The member's own record — name in both languages, mobile and email. Position and the access flags are read-only: a member who could edit <code>adm_in</code> could hand themselves the portal</td><td class="src">Auth Web App</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Settings</span></td><td class="use">The festival date, and deliberately nothing else. Set it and the hero countdown re-arms itself, with no developer involved</td><td class="src">content sheet</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Transactions manager</span></td><td class="use">Insert and update ledger rows, balance computed server-side, with search, paging and soft-delete</td><td class="src">transactions sheet</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">Monthly Funds manager</span></td><td class="use">Who has paid what, month by month. Reachable by every member whatever their <code>adm_in</code> says — the one screen a funds-only member can use</td><td class="src">transactions sheet</td><td><span class="pill todo">To build</span></td></tr>
+    </tbody>
+  </table></div></div>
 
-    <div class="phase active">
-      <div class="phase-head">
-        <div><div class="phase-no">Phase 0 · in progress</div><div class="phase-title">Foundation &amp; Cleanup</div></div>
-        <div class="phase-meta">est. 2–3 days<br><span class="dep">depends on: <b>—</b></span></div>
-      </div>
-      <p class="phase-goal">
-        Theme system, title-artwork pipeline, the hero rebuild, the dummy-data purge and
-        secrets handling are done. Outstanding: routing (needed before the Transactions page
-        and Admin Portal can exist as routes), an error boundary with shared loading / empty
-        states, and re-solving image weight without WebP files in the repo.
-      </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 78%"></span><span class="phase-part" style="width: 0%"></span></div>
-      <div class="phase-foot"><span><b>7 / 9</b> deliverables</span><span>78%</span></div>
+  <!-- BACKEND -->
+  <h2>Backend — Sheets, Drive &amp; Apps Script <span class="count">8 of 9 · four Web Apps deployed</span></h2>
+  <div class="tablecard"><div class="scroll"><table>
+    <thead><tr><th>Piece</th><th>How it's used</th><th>Source</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><span class="name">Workbook &amp; tab schema</span></td><td class="use">Three sheets — <code>content</code>, <code>schedule</code>, <code>members</code>. Every row carries an <code>id</code> and closes with <code>a_in</code> / <code>i_ts</code> / <code>u_ts</code> / <code>d_ts</code>; only <code>a_in = 1</code> renders, so nothing is ever really deleted</td><td class="src">Google Sheets</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Members sheet (Restricted)</span></td><td class="use">No passwords: <code>access_in</code> decides who may sign in, <code>adm_in</code> who may edit. The workbook is Restricted, so its CSV and gviz exports answer <b>401</b> to anyone signed out</td><td class="src">members sheet</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Members Web App</span></td><td class="use">Serves the public columns only — <code>email</code>, <code>access_in</code> and <code>adm_in</code> never leave the script. This is what let the workbook go Restricted</td><td class="src">Apps Script</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Auth Web App</span></td><td class="use">Generates and emails the code, checks <code>access_in</code> before sending, and bakes <code>adm_in</code> into an HMAC-signed token. Also serves and saves the member's own profile</td><td class="src">Apps Script</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Content Web App</span></td><td class="use">The portal's write endpoint for all three sheets. Verifies the same HMAC the auth script signs and <b>refuses anything without <code>adm_in = 1</code></b>. Deletes are soft. A day saves with only its number and year, so a festival can be dated before it is planned. <i>Copy year forward</i> is gone from both the script and the portal. <b>Redeployed 11 Aug</b> — the endpoint answers, though the removal itself is not visible from outside: every request is checked for <code>adm_in</code> before its action is even read</td><td class="src">Apps Script</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Gallery Web App</span></td><td class="use">Folder tree on GET; upload, delete and folder management on POST. <b>Photos and videos</b>, 100 MB a file, 30 a year, deletes recoverable from the bin for 30 days. A second GET serves the event-photo folder by name for the schedule editor — its id is a constant in the script, never a query parameter, or the /exec URL would read any folder its owner can see. <b>Deployed and verified live</b>: both endpoints return the per-file <code>mime</code> the video build added</td><td class="src">Apps Script</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Drive folder tree</span></td><td class="use"><code>/Gallery/&lt;year&gt;/</code> with the media directly inside, plus a flat <b>event-photo folder</b> named after the events. Both shared <i>Anyone with the link → Viewer</i>. Drop a photo into the event folder and the schedule editor offers it; take it out and it stops being offered</td><td class="src">Google Drive</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">React service layer</span></td><td class="use">One fetch serves every editor screen for the visit, and is emptied on sign-out. Drive links are rewritten to the thumbnail host, the only one Chrome will render. Date and time cells come back as UTC instants and are read through the script's own timezone — a real zone, not an offset, since the dates fall in daylight saving and the 1899 time epoch does not</td><td class="src">src/utils · src/contexts</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Transactions Web App</span></td><td class="use">Read and write the ledger, balances computed server-side, gated on a valid session token</td><td class="src">Apps Script</td><td><span class="pill todo">To build</span></td></tr>
+    </tbody>
+  </table></div></div>
+
+  <!-- FOUNDATION -->
+  <h2>Foundation, Polish &amp; Launch <span class="count">17 of 17 · all done</span></h2>
+  <div class="tablecard"><div class="scroll"><table>
+    <thead><tr><th>Item</th><th>What it covers</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><span class="name">Blue &amp; gold theme</span></td><td class="use">One palette and one set of section headings, so a new section inherits the look instead of restating it</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Bilingual title artwork</span></td><td class="use">EN/TE wordmarks swap with the language, auto-cropped so padding does not matter</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Routing</span></td><td class="use"><code>/</code>, <code>/funds</code>, <code>/funds/verify</code> and the <code>/admin</code> tree, with an SPA rewrite so a refresh below the root does not 404</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Env config</span></td><td class="use">Every sheet and Web App URL in one file. No secret is in the repo or the bundle — they live in Script Properties</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Skeleton loading states</span></td><td class="use">Shaped like the content that replaces them, so the page does not jump when the sheets answer. The table screens build theirs from the same column list the table renders from, so adding a column cannot leave the placeholder a column short</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Error boundary + states</span></td><td class="use">Every section is wrapped on its own, so one that throws no longer blanks the page. A shared message tells "could not load" from "nothing here yet" and offers a retry that re-reads the sheets</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Accessibility — dialogs &amp; drawers</span></td><td class="use">One shell behind all of them: Escape, dialog role, labelled by its own heading, focus in on open and back on close, Tab cycling inside. <b>Tab used to walk out into the page behind</b>, where every field was still reachable. The Schedule and Members forms are side drawers off the same shell, so they inherit it; the upload sheet passes <code>busy</code> and cannot be dismissed mid-upload by either route</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Toast notifications</span></td><td class="use">Every save, upload and delete answers with a toast rather than a banner that pushes the page around</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Auto-refresh on return</span></td><td class="use">The sheets are re-read when a visitor comes back to the tab. Silent — no skeleton over content already on screen</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">One fetch per visit</span></td><td class="use">Apps Script takes 3–4 seconds and each screen was paying that again. The rows are held for the visit and emptied on sign-out</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Sheet reads — wasted round trips</span></td><td class="use">Two faults only visible against live data: the CSV export asked for <code>gid=0</code> and got a <b>400</b> on every page load, and the public site was calling the admin <i>write</i> endpoint. Both were invisible because fallbacks covered them</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Dummy-data purge</span></td><td class="use">Nothing on the page is invented — every value is from a sheet or an honest empty state</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Image weight</span></td><td class="use">Settled by decision: artwork is supplied already compressed at about 1 MB a file, so no build step is added</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">CSS name collisions</span></td><td class="use">Closed after measuring — no class has competing definitions. The one real coupling (<code>.plus-icon</code> defined in Committee, borrowed by About) moved to a shared stylesheet</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">SEO &amp; link previews</span></td><td class="use">Description, canonical, Open Graph and Twitter card, and a <code>robots.txt</code> keeping crawlers out of <code>/funds</code> and <code>/admin</code>. The 1200×630 share card is 440 KB — above about 600 KB WhatsApp shows no preview at all</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Deploy</span></td><td class="use">Live on Netlify, its own site. Verified against production with the bundle hash matched to a local build: every section renders and there are no failed requests</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Browser test suite</span></td><td class="use">Playwright, <b>58 specs</b>. Most run against the live Web Apps, the real Drive folder and the Restricted members sheet: every portal screen walked the way a member reaches it, waiting for real rows rather than a painted heading; the whole upload &rarr; render &rarr; delete round trip; a profile edit written to the sheet and put back. Some break things on purpose &mdash; sheets refused, a section throwing, an endpoint failing &mdash; and some cover the dialogs' keyboard behaviour. Editing the content screens is stubbed, deliberately: a live run would write invented names and access flags into the committee's own sheet.<br><b>Brought back into step with the admin rebuild</b> &mdash; the table, drawer and icon selectors were rewritten, the <i>Copy&nbsp;year&nbsp;forward</i> spec dropped with the feature, and rows are now found by their accessible names rather than their position, so the next restyle cannot break them the same way. New specs cover paging, search and the date and time formats. <b>28 of them pass</b>; the live-service specs still need a signed-in run</td><td><span class="pill done">Done</span></td></tr>
+    </tbody>
+  </table></div></div>
+
+  <!-- WHAT'S LEFT -->
+  <h2>What's left <span class="count">the ledger, the tests, and the launch list</span></h2>
+  <div class="pending">
+
+    <div class="item">
+      <h3>The ledger — Transactions and Monthly Funds</h3>
+      <p>Everything still open is the same job: the <b>Transactions Web App</b>, the
+      <b>Transactions page</b> behind the gate, the <b>Transactions manager</b> and
+      <b>Monthly Funds</b>. None can start until the ledger is designed, so they move together.</p>
+      <p><span class="need">Needs a decision first:</span> what columns a transaction has, whether
+      the running balance is stored or computed, and how a monthly contribution relates to a
+      transaction — a member and a month attached to one, or a sheet of its own. Charts were asked
+      for on these screens, and they decide what has to be stored rather than derived.</p>
     </div>
 
-    <div class="phase">
-      <div class="phase-head">
-        <div><div class="phase-no">Phase 1 · half done</div><div class="phase-title">Google Backend — Sheets, Drive &amp; Apps Script</div></div>
-        <div class="phase-meta">est. 6–8 days<br><span class="dep">depends on: <b>Phase 0</b></span></div>
-      </div>
-      <p class="phase-goal">
-        The three sheets exist and the public site reads them directly &mdash; Google serves the
-        CSV export with CORS headers, so <b>no Apps Script is needed for reads at all</b>, which
-        removed two Web Apps from this phase. The Drive folder and the gallery Web App are now
-        deployed and serving. What is left is the write + OTP auth side the admin portal needs.
-      </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 89%"></span><span class="phase-part" style="width: 0%"></span></div>
-      <div class="phase-foot"><span><b>8 / 9</b> deliverables</span><span>89%</span></div>
+    <div class="item">
+      <h3>Tests are kept until development is complete</h3>
+      <p>They earn it. Each of these looked fine in a browser and was found only by a test: the
+      public site calling the admin <i>write</i> endpoint on every visit; a failing request on every
+      page load that a fallback was hiding; screens that painted a heading and then sat in skeletons
+      forever; dialogs that let the keyboard walk out into the page behind them. The status board
+      you are reading is checked too — its own summary drifted out of step with its tables more
+      than once, and did so again the moment a third state was added to it.</p>
+      <p><span class="need">Run before each deploy:</span> <code>npx playwright test</code>. The
+      stubbed and status-page projects need nothing — <code>--project=stubbed --project=docs</code>
+      runs 28 specs against a stubbed Content Web App and its own minted session. The rest hit the
+      live services and need a member with <code>bypass_in = 1</code> and their mobile in
+      <code>tests/.local.json</code>, gitignored because this repository is public. Those write to
+      the real sheet and put things back, so nobody should be editing the same member in a browser
+      while they run.</p>
     </div>
 
-    <div class="phase">
-      <div class="phase-head">
-        <div><div class="phase-no">Phase 2 · complete</div><div class="phase-title">Public Site — Dynamic Binding</div></div>
-        <div class="phase-meta">est. 3–4 days<br><span class="dep">depends on: <b>Phase 1</b></span></div>
-      </div>
-      <p class="phase-goal">
-        Done. About (paragraph + image), Committee Members (names, roles, both photo columns)
-        and Mandapam (address + map) all read from their sheets, with the <code>+</code>
-        placeholder standing in wherever an image cell is empty. Header and Footer are
-        translation-driven with nothing for the committee to edit.
-      </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 100%"></span><span class="phase-part" style="width: 0%"></span></div>
-      <div class="phase-foot"><span><b>7 / 7</b> deliverables</span><span>100%</span></div>
+    <div class="item">
+      <h3>Waiting on the committee, not on code</h3>
+      <p><span class="need">Clear the 2026 names and times.</span> The dates are set; what happens
+      on each day is not. The portal now saves a day without them, and the site reads them as
+      <code>TBD</code> and a dash until they are decided.</p>
+      <p><span class="need">Replace the six event photos.</span> All six are the committee emblem
+      standing in. Use Drive's <i>Manage versions → Upload new version</i> rather than delete and
+      re-upload: the file id stays, so any day already pointing at one keeps working.</p>
     </div>
 
-    <div class="phase">
-      <div class="phase-head">
-        <div><div class="phase-no">Phase 3 · built</div><div class="phase-title">9-Day Schedule Section</div></div>
-        <div class="phase-meta">est. 2–3 days<br><span class="dep">depends on: <b>Phase 1</b></span></div>
-      </div>
-      <p class="phase-goal">
-        Done and live-bound. Nine ticket cards — image, day count, event name, day + time, date —
-        3 per row on large screens, 2 on medium, 1 on small. Reads the schedule sheet, and the
-        &ldquo;2026 Events&rdquo; heading takes its year from the rows themselves, so it can
-        never disagree with the dates below it.
-      </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 100%"></span><span class="phase-part" style="width: 0%"></span></div>
-      <div class="phase-foot"><span><b>1 / 1</b> deliverable</span><span>100%</span></div>
-    </div>
-
-    <div class="phase">
-      <div class="phase-head">
-        <div><div class="phase-no">Phase 4 · complete</div><div class="phase-title">Gallery — Drive-driven</div></div>
-        <div class="phase-meta">est. 2–3 days<br><span class="dep">depends on: <b>Phase 1</b></span></div>
-      </div>
-      <p class="phase-goal">
-        Done. Year selector, alternating scroll rows, lightbox and the not-yet-begun state,
-        reading real photos out of the Drive folder through the deployed gallery Web App.
-        The year folders <i>are</i> the data — a year with no photos is not offered at
-        all. Proven end to end: upload → the photo renders → delete.
-      </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 100%"></span><span class="phase-part" style="width: 0%"></span></div>
-      <div class="phase-foot"><span><b>1 / 1</b> deliverable</span><span>100%</span></div>
-    </div>
-
-    <div class="phase">
-      <div class="phase-head">
-        <div><div class="phase-no">Phase 5 &middot; gate done</div><div class="phase-title">Committee Fund Gate &amp; Transactions Page</div></div>
-        <div class="phase-meta">est. 4–5 days<br><span class="dep">depends on: <b>Phase 1</b></span></div>
-      </div>
-      <p class="phase-goal">
-        The Committee Fund button at the foot of the public page, the mobile-number + secret-code
-        modal, server-side verification, and the gated Transactions page with totals, filters,
-        PDF export and a Back button.
-      </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 83%"></span><span class="phase-part" style="width: 0%"></span></div>
-      <div class="phase-foot"><span><b>5 / 6</b> deliverables</span><span>83%</span></div>
-    </div>
-
-    <div class="phase">
-      <div class="phase-head">
-        <div><div class="phase-no">Phase 6 · nearly done</div><div class="phase-title">Admin Portal</div></div>
-        <div class="phase-meta">est. 10–12 days<br><span class="dep">depends on: <b>Phases 1–5</b></span></div>
-      </div>
-      <p class="phase-goal">
-        Eleven screens that let the committee edit every dynamic section without a developer:
-        login and the portal shell, then About, Members, Gallery uploads, the 9-day Schedule,
-        Mandapam details, Transactions, Monthly Funds, profile and site settings.
-        <b>Nine are built and live.</b> The two unbuilt ones are Transactions and Monthly
-        Funds: both need the ledger designed and a Transactions Web App written, so they are
-        one piece of work, not two.
-      </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 83%"></span><span class="phase-part" style="width: 0%"></span></div>
-      <div class="phase-foot"><span><b>10 / 12</b> deliverables</span><span>83%</span></div>
-    </div>
-
-    <div class="phase">
-      <div class="phase-head">
-        <div><div class="phase-no">Phase 7</div><div class="phase-title">Hardening, Polish &amp; Launch</div></div>
-        <div class="phase-meta">est. 3–4 days<br><span class="dep">depends on: <b>Phase 6</b></span></div>
-      </div>
-      <p class="phase-goal">
-        Accessibility pass across every modal, SEO and WhatsApp link previews, CSS Modules
-        migration to end the class-name collisions, full device testing, and deploy.
-      </p>
-      <div class="phase-track"><span class="phase-fill" style="width: 25%"></span><span class="phase-part" style="width: 0%"></span></div>
-      <div class="phase-foot"><span><b>1 / 4</b> deliverables</span><span>25%</span></div>
+    <div class="item launch">
+      <h3>Before the site goes public</h3>
+      <p><span class="need">Title artwork.</span> <code>title_eng.png</code> and
+      <code>title_tel.png</code> are still the <b>Peetam</b> wordmarks, so the homepage carries
+      another organisation's name. Supply gold SSGC artwork in both languages on a transparent
+      background, <b>about 1 MB each</b> — nothing compresses images on the way in, so whatever is
+      dropped in is what every visitor downloads. The same goes for <code>logo.png</code>
+      (3.1 MB), <code>hm_bg.png</code> and <code>bot2.png</code>.</p>
+      <p><span class="need">Set <code>bypass_in</code> back to 0 for every member.</span> Any row
+      with it on signs in with a fixed code and no email at all. The Members screen shows a warning
+      bar counting the rows that still have it.</p>
+      <p><span class="need">Real content and photos.</span> The sheets still hold seeded rows, and
+      <code>2025</code> holds test images while <code>2026</code> is empty. Up to 30 files a year,
+      photos or video.</p>
+      <p><span class="need">Device testing</span> across the committee's own phones.</p>
     </div>
 
   </div>
-
-  <!-- ============ FUND ACCESS FLOW ============ -->
-  <h2>Committee Fund → Transactions <span class="count">the gated flow</span></h2>
-  <div class="callout">
-    <h3>How a committee member signs in</h3>
-    <p class="lede" style="margin-top:0">
-      <b>Changed 07 Aug 2026.</b> The shared secret code is gone. A member now proves who they
-      are with a one-time code emailed to the address held against them in the members sheet —
-      nothing to circulate, nothing to rotate, and a leaked code is worth 5 minutes.
-    </p>
-    <ol class="flow">
-      <li>The public page ends with a quiet <b>logo + committee name</b> card under Mandapam Location — no figures, and deliberately not in the nav.</li>
-      <li>Clicking it opens <code>/funds</code>: emblem, committee name, <b>Committee Funds</b>, the line <i>only committee members are allowed to view this area</i>, a mobile field and a <b>4-digit captcha</b>.</li>
-      <li><b>Verify &amp; Send OTP</b> checks the captcha in the browser first — a wrong one costs no lookup and no email, and the captcha is regenerated so it cannot be brute-forced.</li>
-      <li>The mobile goes to the <b>Auth Web App</b>, which reads the members sheet with <code>SpreadsheetApp</code> and answers in order: not on the list → <i>not a member</i>; <code>access_in = 0</code> → <b>no permission to sign in</b>, decided <i>before</i> any mail is sent; no email on the row → says so.</li>
-      <li>Otherwise it generates a 6-digit code, holds it for 5 minutes in <code>CacheService</code>, and emails it. <b>The code never reaches the browser</b> — the reply carries only the member's name and a <b>masked</b> address.</li>
-      <li><code>/funds/verify</code> greets them by name with 🤝, shows where the mail went, and offers six boxes. Two clocks run: 5 minutes of validity and 1 minute until <b>Resend OTP</b> unlocks.</li>
-      <li>A correct code returns an <b>HMAC-signed token</b> carrying the member id and <code>adm_in</code>. <code>adm_in = 1</code> opens every screen; <code>adm_in = 0</code> opens Transactions and Monthly funds only.</li>
-      <li>The session lives in <code>sessionStorage</code> for 60 minutes and dies with the tab, so a shared link alone opens nothing.</li>
-    </ol>
-    <p class="warn">
-      <b>Non-negotiable:</b> none of this may be decided in React. The code is generated, stored,
-      emailed and compared inside Apps Script; the token is signed with a key in Script
-      Properties. Anything shipped to the browser is readable in the built bundle. The captcha is
-      the one browser-side check, and it is a speed bump, not a lock — the real limits are
-      server-side: 1 minute between sends, 5 an hour, 5 wrong codes and the code is burned.
-    </p>
-  </div>
-
-  <!-- ============ PUBLIC ============ -->
-  <h2>Public Website <span class="count">11 deliverables · in display order</span></h2>
-  <div class="tablecard"><div class="scroll"><table>
-    <thead><tr><th>Section</th><th>State</th><th>Source</th><th>Phase</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td><span class="name">Header / Nav</span></td><td class="use">Circular emblem with the wordmark locked to its height, six links, scroll-spy, gold language switch, mobile drawer. Labels are translation-driven &mdash; there is no settings sheet, every section is simply visible</td><td class="src">translations</td><td class="ph">P2</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Home — Intro</span></td><td class="use">Background artwork, language-swapped title, Ganesha seated on the stage. The festival strip has three states driven by one sheet date: counting down, &ldquo;Celebrations Started&rdquo; with the day number through days 1&ndash;9, then hidden until the admin sets next year&rsquo;s date</td><td class="src">static art · content sheet</td><td class="ph">P0</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">About</span></td><td class="use">Live from the <code>content</code> sheet &mdash; paragraph and image, both languages. Image left, heading + copy right, reordering to heading &rarr; image &rarr; copy on small screens. An empty image cell shows the <code>+</code> placeholder</td><td class="src">content sheet</td><td class="ph">P2</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Committee Members</span></td><td class="use">Live from the <code>members</code> sheet &mdash; <code>is_executive</code> picks the left column, <code>display_order</code> sorts the grid. <code>photo</code> drives the thumbnail, <code>prfle_photo</code> the identity card, and the identity card also shows the member's <code>mobile</code>, by decision. <b><code>email</code>, <code>access_in</code> and <code>adm_in</code> never reach the browser at all</b> — the site reads this sheet through the Members Web App, and the sheet itself is Restricted</td><td class="src">members sheet</td><td class="ph">P2</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">9-Day Schedule</span></td><td class="use">Live from the <code>schedule</code> sheet &mdash; ticket cards (image &middot; day count &middot; event &middot; day and time &middot; date), 3/2/1 per row. The heading year comes from the rows. <code>day_en</code>/<code>day_te</code> are optional overrides; blank derives the weekday from the date</td><td class="src">schedule sheet</td><td class="ph">P3</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Gallery</span></td><td class="use">Year selector (2025 &rarr; current), alternating scroll rows (2 large / 3 small), lightbox with keys and counter, and a not-yet-begun state for the current year. Photos come from the Drive folder through the gallery Web App &mdash; the year folders are the data, and a year with no photos is not offered at all</td><td class="src">Drive (script)</td><td class="ph">P4</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Mandapam Location</span></td><td class="use">Live from the <code>content</code> sheet &mdash; one address field. The committee decides where it breaks &mdash; line breaks inside the cell are honoured, falling back to splitting on commas. The embed, Get Directions and Open in Maps all resolve from that same string flattened back to one line, so they cannot point at different places</td><td class="src">content sheet</td><td class="ph">P2</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Committee Funds card</span></td><td class="use">Logo + committee name under Mandapam Location, the whole card one button so it is a single target on a phone. Not in the nav</td><td class="src">static</td><td class="ph">P5</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Sign-in page</span></td><td class="use"><code>/funds</code> — emblem, committee name, <b>Committee Funds</b>, the members-only line, mobile field and a 4-digit captcha. The captcha is checked before anything leaves the browser and is regenerated on every failure</td><td class="src">Auth Web App</td><td class="ph">P5</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">OTP page</span></td><td class="use"><code>/funds/verify</code> — greeting with 🤝, the masked address the code went to, six boxes that auto-advance, then a <b>Verify code</b> button — nothing is sent until the member says so, because auto-submitting spent an attempt on a mistyped digit before they could look at it, a 5-minute validity clock and a 1-minute resend clock. Opening it directly bounces back to the sign-in page</td><td class="src">Auth Web App</td><td class="ph">P5</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Footer</span></td><td class="use">Rebuilt as a compact 72px band — the shloka <b>|| Om Gam Ganapathaye Namaha ||</b> above the copyright. Emblem and committee title removed; the header already carries the brand. Translation-driven, nothing to bind</td><td class="src">translations</td><td class="ph">P2</td><td><span class="pill done">Done</span></td></tr>
-    </tbody>
-  </table></div></div>
-
-  <!-- ============ SECRET PAGE ============ -->
-  <h2>Committee-only Page <span class="count">2 deliverables · gated route</span></h2>
-  <div class="tablecard"><div class="scroll"><table>
-    <thead><tr><th>Screen</th><th>What it does</th><th>Source</th><th>Phase</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td><span class="name">Transactions</span></td><td class="use">The ledger — Date, Notes, Cash In, Cash Out, Balance — with running totals, year filter, ₹ formatting, colour-coded in&nbsp;/&nbsp;out, a text-based PDF export and a <b>Back</b> button</td><td class="src">transactions sheet</td><td class="ph">P5</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Route guard</span></td><td class="use">Built as <code>RequireAuth</code> and already wrapping <code>/admin</code>; <code>/transactions</code> slots into the same guard when it exists. Checks the session, sends anyone without one to the sign-in page, and the session is held in <code>sessionStorage</code> so it dies with the tab and lapses after 60 minutes. Verified: <code>/admin</code> bounces when signed out, survives a reload when signed in, and is guarded again the moment the member signs out</td><td class="src">session</td><td class="ph">P5</td><td><span class="pill done">Done</span></td></tr>
-    </tbody>
-  </table></div></div>
-
-  <!-- ============ ADMIN ============ -->
-  <h2>Admin Portal <span class="count">10 screens · read + write</span></h2>
-  <div class="tablecard"><div class="scroll"><table>
-    <thead><tr><th>Screen</th><th>What it does</th><th>Source</th><th>Phase</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td><span class="name">Login</span></td><td class="use">Done as part of the funds gate — mobile + captcha + emailed OTP, no passwords anywhere. The signed token carries <code>adm_in</code>, so the portal knows on arrival which screens to offer. Logging out returns to the sign-in page and re-arms the guard</td><td class="src">Auth Web App</td><td class="ph">P5</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Portal shell</span></td><td class="use">Dark navy sidebar (250&nbsp;px) and topbar (74&nbsp;px) with gold icons, over a light working area &mdash; the chrome ties it to the public site, the content area is light because this is where people read tables and fill in forms for long stretches. Routes are <code>/admin/monthly-funds</code>, <code>/admin/transactions</code>, <code>/admin/about</code>, <code>/admin/members</code>, <code>/admin/gallery</code>, <code>/admin/schedule</code>, <code>/admin/mandapam</code>, <code>/admin/settings</code>, <code>/admin/profile</code>. <b>There is no dashboard screen</b>: <code>/admin</code> redirects to Monthly&nbsp;Funds, the one screen every member reaches whatever their <code>adm_in</code> says, so signing in lands somewhere useful rather than on a menu of links to other screens. The sidebar carries the sections only &mdash; <b>Profile and Log out live in the topbar card</b>, so neither action exists in two places. That card is an identity card: the member's own <code>prfle_photo</code>, their name, and their position, sized to the exact width of the pill above it. The role reads <i>&lt;position&gt; / Administrative</i> for <code>adm_in&nbsp;=&nbsp;1</code> &mdash; the permission is a suffix on the job the committee gave them, not a replacement for it. It stays blank until the record loads: position lives in the sheet row, not in the sign-in reply, so a fallback there flashed a wrong title on every refresh. The menu is filtered by <code>adm_in</code> — verified live at <b>8 items for an admin, 2 for a funds-only member</b>. Screens not yet built render a <i>work in progress</i> card rather than an empty table that looks broken. <b>English only</b>, by decision: the public site is bilingual because visitors are, the portal is a tool for a handful of people</td><td class="src">session</td><td class="ph">P6</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">About editor</span></td><td class="use">Built. English and Telugu paragraphs side by side, as the sheet stores them, plus the section image with a live thumbnail beside the link box &mdash; a Drive URL that Drive will not serve shows <i>Cannot load</i> here rather than silently on the public page. <b>Update stays greyed until something actually changes</b>, and a <i>Discard changes</i> button appears next to it while the form is dirty. The heading and subtitle are deliberately not editable: they live in <code>translations.js</code> because they never change <b>Live against the deployed Content Web App</b> and walked end to end in the browser.</td><td class="src">content sheet</td><td class="ph">P6</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Members manager</span></td><td class="use">Built. The table shows order, name (with the Telugu name and an <i>Executive</i> chip beneath it), position, mobile, email and an access chip &mdash; <i>Full access</i>, <i>Funds only</i> or <i>No sign-in</i> &mdash; so who can do what is readable without opening a row. Add and edit run through a modal; delete is a soft delete (<code>a_in&nbsp;=&nbsp;0</code>) and the confirmation says so, since this is the same sheet the fund gate authenticates against. <b>This is the only screen that can grant portal access</b>, so the three flags are spelled out rather than left as bare column names: <i>Can sign in</i> gates the gate, <i>Full access</i> is greyed until sign-in is granted and drops with it, and <i>Development sign-in</i> is marked as a thing to switch off &mdash; while any row has it, a red bar at the top of the screen counts them. <b>A member cannot delete themselves</b>; that row's bin is disabled <b>Live against the deployed Content Web App</b> and walked end to end in the browser.</td><td class="src">members sheet</td><td class="ph">P6</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Gallery manager</span></td><td class="use">Folder browser over Drive, laid out like the Peetam admin gallery: a panel with a <code>Gallery &rsaquo; 2025</code> breadcrumb, the limits stated above the grid, and the count below them. Create and bin a year, upload with a progress bar, preview, delete — each announced by a toast rather than a banner that pushes the page around. The breadcrumb is the only way back out and there is no Refresh button &mdash; both duplicated something already on the screen. Loading draws skeletons shaped like the cards that replace them, folder tiles at the root and thumbnail-plus-caption tiles inside a year, so the panel does not jump when Drive answers. Non-images, files over 10&nbsp;MB and anything past the 30-per-year cap are refused <i>before</i> uploading. Deletes go to the Drive bin, recoverable for 30 days. <b>Writes are authorised by the member's session token, never the shared upload secret</b> &mdash; the gallery script verifies the same HMAC the auth script signs, so a funds-only member is refused and the browser holds nothing permanent. <b>Proven end to end against the live Drive folder</b>: upload &rarr; the photo renders &rarr; delete, with the folder left exactly as found</td><td class="src">Drive (script)</td><td class="ph">P6</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Schedule manager</span></td><td class="use">Built. One year at a time, newest first, with the header stating <i>2 of 9 days &middot; missing 3, 4, 5&hellip;</i> so a half-filled year is obvious at a glance and <i>Add a day</i> opens on the first gap. Dates read as <i>27 Aug 2025 &middot; Wed</i> rather than as ISO strings &mdash; and the weekday is derived from the date, so a typed one can never contradict it. Editing is a modal, not an inline row: nine fields across two languages will not fit a table row on a phone. <b>Copy a year forward</b> brings titles and times across and shifts the dates by whole years, and says so in the toast, because those dates always need correcting. Deletes are soft <b>Live against the deployed Content Web App</b> and walked end to end in the browser.</td><td class="src">schedule sheet</td><td class="ph">P6</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Mandapam details</span></td><td class="use">Built. Address in both languages plus an optional map link, and <b>a live preview of exactly how the public card will break</b> &mdash; one line in the box is one line on the site, which is the whole point of the five-line address. Leaving the map link empty is fine: the embed, Get Directions and Open in Maps all build from the address itself, so they cannot end up pointing at different places <b>Live against the deployed Content Web App</b> and walked end to end in the browser.</td><td class="src">content sheet</td><td class="ph">P6</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Transactions manager</span></td><td class="use">Insert and update ledger rows; balance auto-computed, with search, paging and soft-delete</td><td class="src">transactions sheet</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Monthly Funds manager</span></td><td class="use">Who has paid what, month by month. Reachable by <b>every</b> member whatever their <code>adm_in</code> says &mdash; it is the screen <code>/admin</code> lands on &mdash; so it is the one place a funds-only member can actually work. Renders a <i>work in progress</i> card today. Needs the ledger settled first, since a monthly contribution is a transaction with a member and a month attached</td><td class="src">transactions sheet</td><td class="ph">P6</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Profile</span></td><td class="use">The member's own record — a portrait photo above name, position, mobile and email — with <b>Edit Profile</b> for name in <b>both languages</b>, mobile and email. The Telugu name writes to <code>name_te</code>, which is how the member's own name renders on the public site when a visitor switches language; it is optional, because plenty of rows have not been filled in and refusing the save over it would block someone correcting their own email. <b>The access level is no longer printed</b>: it is a permission rather than a fact about the person, and <code>adm_in</code> already reads in the position line as <i>/ Administrative</i>. The form below the divider is always on show but inert until Edit is pressed, so the fields a member may change are visible without clicking to find out, and <b>Update</b> lights up only while editing. On a phone the photo moves to the top with the details beneath it, keeping their label/colon/value rows. The record is fetched once per session by the auth context and shared with the topbar card, so both show the same photo and position off a single request. Position and the access flags are read-only: those are the committee's to set, and a member who could edit <code>adm_in</code> could hand themselves the portal. <b>The email comes from the auth endpoint, not the public members API</b>, which withholds it — the server identifies the member from the id inside their signed token, so nobody can read or edit anyone else. Changing the mobile changes what they sign in with next time, so it is checked for collisions against the whole sheet <b>Proven against the live endpoint and the real sheet</b>: the record loads with the email, fields stay read-only until Edit Profile, a malformed address never leaves the browser, and a saved name survives a reload.</td><td class="src">Auth Web App</td><td class="ph">P6</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Settings</span></td><td class="use">Built, and deliberately small: <b>the festival date, and nothing else</b>. Vinayaka Chavithi moves every year, so it lives in the <code>content</code> sheet rather than in code &mdash; set it here and the hero countdown re-arms itself with no developer involved. The screen says which of the three states the date puts the site in (<i>counting down &mdash; 34 days, 10 hours to go</i>, <i>celebrations are running &mdash; day 3 of 9</i>, or <i>finished</i>), so the effect is visible before saving. Section visibility and default language were dropped from the plan: every section is driven by its sheet and empties itself honestly, and the language is the visitor's choice, not an admin's <b>Live against the deployed Content Web App</b> and walked end to end in the browser.</td><td class="src">content sheet</td><td class="ph">P6</td><td><span class="pill done">Done</span></td></tr>
-    </tbody>
-  </table></div></div>
-
-  <!-- ============ BACKEND ============ -->
-  <h2>Backend — Sheets, Drive &amp; Apps Script <span class="count">9 deliverables · the gate for everything</span></h2>
-  <p class="lede">No server to run or pay for, the committee's own account owns the data, and the sensitive sheets never leave Apps Script.</p>
-  <div class="tablecard"><div class="scroll"><table>
-    <thead><tr><th>Deliverable</th><th>What it holds / does</th><th>Where</th><th>Phase</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td><span class="name">Workbook &amp; tab schema</span></td><td class="use">Three sheets &mdash; <code>content</code> (about, mandapam, festival date), <code>schedule</code>, <code>members</code>. Each carries an <code>id</code> for row-level editing and closes with <code>a_in</code> / <code>i_ts</code> / <code>u_ts</code> / <code>d_ts</code>; only <code>a_in = 1</code> rows render</td><td class="src">Google Sheets</td><td class="ph">P1</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Members Web App</span></td><td class="use">Deployed and wired. Serves <code>id</code>, names, positions, <code>mobile</code>, <code>photo</code>, <code>prfle_photo</code>, order and <code>is_executive</code> &mdash; and nothing else. <b><code>email</code>, <code>access_in</code> and <code>adm_in</code> never leave the script</b>, which is what let the workbook go Restricted. Verified signed out: the CSV and gviz exports both answer <b>401</b>, the Web App still answers 200, and no address appears anywhere in the rendered page</td><td class="src">Apps Script</td><td class="ph">P1</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Users sheet (Restricted)</span></td><td class="use">Folded into <code>members</code>, and that workbook is now <b>Restricted</b> — its CSV and gviz exports answer 401 to anyone signed out, so <code>email</code>, <code>access_in</code> and <code>adm_in</code> are no longer readable. No passwords anywhere: <code>access_in</code> decides whether a member may sign in at all, <code>adm_in</code> decides full access versus the transactions and monthly-amount screens only. Sign-in is a <b>6-digit code emailed to the member</b> — the shared committee secret code was dropped, because a code that is circulated is a code that leaks. All three states verified against the live gate</td><td class="src">members sheet</td><td class="ph">P1</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Drive folder tree</span></td><td class="use"><code>/Gallery/&lt;year&gt;/</code> with the photos directly inside; event subfolders are optional and are folded into the same year. Created and shared <i>Anyone with the link &rarr; Viewer</i>, holding <code>2025</code> and <code>2026</code></td><td class="src">Google Drive</td><td class="ph">P1</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Content Web App</span></td><td class="use"><b>Deployed and live.</b> Verified against the deployment: an anonymous read is refused, a read with a valid token returns all three sheets, a write reaches the sheet and stamps <code>u_ts</code>, and a tampered token is refused. Token-gated read and write over all three sheets: <code>saveContent</code>, <code>saveSchedule</code>, <code>deleteSchedule</code>, <code>copyYear</code>, <code>saveMember</code>, <code>deleteMember</code>. It verifies the same HMAC the auth script signs and <b>refuses anything without <code>adm_in&nbsp;=&nbsp;1</code></b>, so a funds-only member cannot write even by calling it directly &mdash; and because it reads with <code>SpreadsheetApp</code>, the workbook stays Restricted. Deletes are soft (<code>a_in&nbsp;=&nbsp;0</code>); nothing is ever removed from a sheet. One GET returns all three sheets, so a screen that needs the schedule gets the members list for free, and a save hands back the fresh rows without a second round trip. <b>38 of 38 checks pass against a stubbed Google</b>; the live proof waits on deployment. Not needed by the public site, which still reads the CSV export directly</td><td class="src">Apps Script</td><td class="ph">P1</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Gallery Web App</span></td><td class="use">Deployed and verified live: folder tree on GET; upload / delete / create-folder / delete-folder on POST, every write refused without the secret. 10&nbsp;MB per file, <b>30 photos per year</b>, deletes go to the bin so they are recoverable. The write secret lives in Script Properties &mdash; never in the repo, never in the bundle</td><td class="src">Apps Script</td><td class="ph">P1</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Auth Web App</span></td><td class="use"><b>Deployed and proven end-to-end against a real inbox.</b> The code is generated, cached for 5 minutes and emailed; <code>access_in</code> is checked <i>before</i> any mail goes out; <code>adm_in</code> is baked into an HMAC-signed token. Reads the sheet with <code>SpreadsheetApp</code>, which is what lets that sheet be Restricted. Verified live: real code accepted, replay refused, blocked member refused with no email sent, resend throttled, wrong code counting down attempts, tampered token rejected. A <code>bypass_in</code> column in the members sheet lets one row sign in with a fixed code and no email at all, for development &mdash; it skips the code, not the rules, and <code>GET /exec</code> reports <code>bypassRows</code> so an open row cannot sit unnoticed. <b>Every row must be back to 0 before launch.</b> Also serves the signed-in member's own profile and saves edits to it, both behind the token. Re-deployed 07&nbsp;Aug with those two actions live &mdash; verified against the deployment: both exist and refuse a bad token, where the previous copy answered <code>UNKNOWN_ACTION</code></td><td class="src">Apps Script</td><td class="ph">P1</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Transactions Web App</span></td><td class="use">Read + write the ledger, balances computed server-side, gated on a valid session token</td><td class="src">Apps Script</td><td class="ph">P1</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">React service layer</span></td><td class="use">Done, in the Peetam shape: <code>sheetsConfig.js</code> &rarr; <code>sheetService.js</code> (CSV then gviz, cache-busted, quote/newline-safe parser) &rarr; <code>ContentContext</code> exposing <code>useSectionContent</code>. Drive links are rewritten to <code>thumbnail?id=…</code> &mdash; the <code>uc?export=view</code> form is blocked by Chrome as <code>ERR_BLOCKED_BY_ORB</code>, and every such <code>&lt;img&gt;</code> needs <code>referrerPolicy="no-referrer"</code> or Drive refuses it. The grid is served 600px files and only the lightbox 1600px, which cuts a full 30-photo year from ~42&nbsp;MB to ~14&nbsp;MB</td><td class="src">src/utils · src/contexts</td><td class="ph">P1</td><td><span class="pill done">Done</span></td></tr>
-    </tbody>
-  </table></div></div>
-
-  <!-- ============ FOUNDATION ============ -->
-  <h2>Foundation, Polish &amp; Launch <span class="count">17 deliverables</span></h2>
-  <div class="tablecard"><div class="scroll"><table>
-    <thead><tr><th>Deliverable</th><th>Why</th><th>Phase</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td><span class="name">Blue &amp; gold theme system</span></td><td class="use">Navy scale matched to the committee emblem with gold as the single accent. Colours and the section-heading scale are centralised in <code>theme.css</code>, so a restyle is one file</td><td class="ph">P0</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Bilingual title artwork</span></td><td class="use">Language-swapped title image with automatic cropping. Mechanism complete — <b>the supplied files are still the Peetam wordmarks</b></td><td class="ph">P0</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Dummy-data purge</span></td><td class="use">Complete. Obsolete docs, a real personal mobile number and a fake &#8377;9,500 transaction removed; <code>committeeMembers.js</code> / <code>schedule.js</code> deleted now the sheets replace them; the <code>picsum.photos</code> gallery photos, the stand-in member cutouts, the built-in About paragraph, the 550&nbsp;ms skeleton timer and the orphaned Fund files all gone. <b>Nothing on the page is invented any more</b> &mdash; every value is either from a sheet or an honest empty state</td><td class="ph">P0</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Image weight</span></td><td class="use">The WebP conversions were removed at the committee's request, so only the original PNG/JPEG files ship. Measured on the current build: <b>16.9&nbsp;MB of images</b> against 473&nbsp;KB of JS and CSS, and about <b>12&nbsp;MB must download before the hero paints</b> (background, title artwork, idol, emblem). The two title PNGs alone are 9.9&nbsp;MB. A build-time optimiser (e.g. <code>vite-plugin-image-optimizer</code>) keeps the originals in the repo while shipping small files, and is worth doing the moment the real SSGC artwork arrives — this is the single biggest cost on a committee member’s phone</td><td class="ph">P0</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Auto-refresh on return</span></td><td class="use">Sheets and the Drive gallery are re-read when the visitor comes back to the tab, so an edit or a new photo is simply there without pressing reload. Silent by design &mdash; no skeleton over content already on screen, and an unchanged result re-renders nothing. Event-driven rather than a timer, throttled to once per 30&nbsp;s, so an idle tab costs nothing</td><td class="ph">P2</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Skeleton loading states</span></td><td class="use">Every section except Home renders a skeleton shaped to its own layout, so nothing shifts when content arrives. Now driven by the real sheet fetch &mdash; the placeholder timer is gone, and all sheets load in parallel so one slow sheet cannot hold up the page</td><td class="ph">P0</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Sheet reads &mdash; wasted round trips</span></td><td class="use"><b>Fixed. Both were only visible once the portal ran against live data.</b> (1) The CSV export was requested as <code>&amp;gid=0</code> whenever the configured sheet URL named no tab. A workbook's first tab is only gid&nbsp;0 if it is the tab the workbook was created with &mdash; these were not, so Google answered <b>400</b> and the gviz fallback quietly rescued every page load. Every visitor paid a failed request per sheet, and the console filled with 400s that looked alarming and were never explained. When no tab is named, none is asked for. (2) <code>ContentContext</code> looked up <code>api[sectionName]</code>, so the section called <code>content</code> picked up <code>api.content</code> &mdash; the admin portal's <i>write</i> endpoint &mdash; the moment it was configured. Every public visitor called it, was told UNAUTHORIZED, and fell back to the CSV. The site rendered correctly throughout, which is exactly why it would have gone unnoticed. Public read endpoints are now named explicitly</td><td class="ph">P2</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">One fetch per visit</span></td><td class="use">The Content Web App takes <b>3&ndash;4 seconds</b> to answer, and every editor screen fetched all three sheets on mount &mdash; so every click of the sidebar meant skeletons again for rows that had not changed. The rows are now held for the visit in <code>adminDataCache</code>, and a save folds its own fresh rows back in. Measured: the first screen fetches, the next four render from what is already loaded. <b>Deliberately not revalidated in the background</b>: each screen seeds its form from the fetched row, so a reply landing mid-sentence would wipe what was being typed. The cache expires on its own instead, and is emptied on sign-out &mdash; it holds every member's email and access flags, so the next person to use the tab must not inherit it</td><td class="ph">P6</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Routing</span></td><td class="use">React Router in place: <code>/</code>, <code>/funds</code>, <code>/funds/verify</code>, <code>/admin</code>. <code>/admin</code> is guarded and an unknown path falls back to the public page. <b>Static hosting needs an SPA rewrite</b> (all paths &rarr; <code>index.html</code>) or a refresh on <code>/funds</code> will 404</td><td class="ph">P0</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Env config</span></td><td class="use">Resolved without <code>.env</code>. Sheet URLs and the gallery <code>/exec</code> URL sit in <code>sheetsConfig.js</code> &mdash; all read-only, so publishing them costs nothing. The one real secret, the gallery write token, is held in Apps Script <b>Script Properties</b>: not in the repo (which is public) and not in the bundle (which every visitor downloads)</td><td class="ph">P0</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Error boundary + states</span></td><td class="use">Shared loading / empty / error components so a failed fetch degrades gracefully</td><td class="ph">P0</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Toast notifications</span></td><td class="use">Every write says what happened, top right, auto-dismissed and dismissable by hand. Errors linger twice as long as successes &mdash; a success is a glance, an error is something to read and act on &mdash; and carry the server’s own reason as a second line. Announced through <code>aria-live</code>, since for a screen reader the toast is the only confirmation there is. A failure to <i>load</i> a screen stays inline instead: a toast that fades would leave an empty card and no explanation</td><td class="ph">P6</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Browser test suite</span></td><td class="use">Playwright, <b>40 specs, all passing &mdash; nothing skipped</b>. Twenty-seven run <b>live</b> against the real Web Apps, the real Drive folder and the Restricted members sheet. <b>Every screen in the portal is walked the way a member reaches it</b>: click the sidebar entry, land on the right URL, and <b>wait for real rows to arrive</b> &mdash; not merely for the heading to paint, which a screen stuck in skeletons forever would also pass. The browser console is asserted clean, with failed requests judged by URL rather than by a message that carries none. A deep link survives a reload, <b>all eight screens bounce to the sign-in page when signed out</b>, and a funds-only member is offered neither the editor entries nor their routes. One spec counts requests at the network to prove the three sheets are fetched <b>once per visit rather than once per screen</b>, and that the public site never touches the write endpoint. On top of that: the portal chrome and its dimensions, the year folders read from Drive, a folder opened with every thumbnail confirmed to have actually painted (<code>naturalWidth&nbsp;&gt;&nbsp;0</code>, not merely present), <b>the whole image round trip</b> &mdash; upload a real file &rarr; Apps Script &rarr; Drive &rarr; the thumbnail renders &rarr; delete &rarr; the count returns to where it started &mdash; and a profile edit <b>written to the sheet, re-read after a reload, then put back</b>, in both languages so <code>name_te</code> is proven too. Thirteen more cover editing the five content screens against a <b>stubbed</b> Content Web App &mdash; the only stubbed specs here, and deliberately so: a live run would write invented names, mobiles and access flags into the sheet the committee depends on, and a stub can fail a save on demand, the path most likely to be wrong and the one a live run can never reach. They assert the request that leaves the browser, not just the screen: the action, the row, and the session token on every call. A second dev server runs with <code>VITE_CONTENT_API</code> pointed at an address the test answers itself, so they never wait on a deployment. Two more check this very report: that the numbers written into it match the ones counted from its own tables, and that no row carries a phase without a status or the reverse. Sign-in happens once in <code>auth.setup.js</code> and is replayed; per-test sign-in trips the server's own one-code-a-minute limit, which then reads as a broken app rather than a throttle working. Three things worth recording: the dev server is pinned to <b>port 5174 with <code>strictPort</code></b>, after a run silently tested <i>a different project</i> that happened to hold 5173; <b>editing any file mid-run</b> makes HMR reload the page under the test, which turned a 90-second run into 59 minutes before it was spotted; and a read-back asserted once rather than polled failed whenever the sheet answered slowly. Live rows are shared, so editing the same member in a browser mid-run fails a read-back on a value that is neither the marker nor the original &mdash; two writers, not a bug</td><td class="ph">P7</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">SEO &amp; link previews</span></td><td class="use">Meta description, favicon, Open Graph image — the site is shared over WhatsApp and previews as a blank card</td><td class="ph">P7</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">CSS Modules migration</span></td><td class="use"><code>.plus-icon</code> and other names are defined in more than one stylesheet — load order decides the winner. Scoping ends it permanently</td><td class="ph">P7</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Deploy</span></td><td class="use">Its own domain and deployment, separate from Peetam. Device testing across the committee's phones</td><td class="ph">P7</td><td><span class="pill todo">To build</span></td></tr>
-    </tbody>
-  </table></div></div>
-
-  <p class="foot-note">
-    Update the phase bars and status pills as work lands. Estimates assume the Google account,
-    Drive folder and domain are available at the start of Phase&nbsp;1, and that the blocked
-    assets listed at the top arrive before their sections are bound.
-  </p>
-
-
-<script>
-/*
- * The numbers on this page are counted from the table below, not typed in.
- *
- * They were hand-maintained until they had drifted three separate times — the
- * hero said 34 of 49 while the tables held 46 rows, and a phase bar disagreed
- * with its own foot. Everything here is derived from one source: the status
- * pill on each row. Change a pill and the bars, percentages and counters all
- * follow. The values in the markup are the last computed set, so the page is
- * still right with scripting off.
- */
-(function () {
-  var KINDS = ['done', 'prog', 'rework', 'todo'];
-
-  /** Tally the status pills on real data rows, optionally for one phase. */
-  function tally(scope, phase) {
-    var out = { done: 0, prog: 0, rework: 0, todo: 0, total: 0 };
-    scope.querySelectorAll('tbody tr').forEach(function (tr) {
-      var pill = tr.querySelector('td .pill');
-      if (!pill) return;
-      if (phase) {
-        var cell = tr.querySelector('.ph');
-        if (!cell || cell.textContent.trim() !== phase) return;
-      }
-      KINDS.forEach(function (k) {
-        if (pill.classList.contains(k)) { out[k]++; out.total++; }
-      });
-    });
-    return out;
-  }
-
-  var pct = function (part, whole) { return whole ? Math.round((part / whole) * 100) : 0; };
-  var set = function (sel, text) {
-    var el = document.querySelector(sel);
-    if (el) el.textContent = text;
-  };
-
-  var all = tally(document);
-  if (!all.total) return;
-
-  var donePct = pct(all.done, all.total);
-  var progPct = pct(all.prog, all.total);
-
-  set('.progress-hero-pct', donePct + '%');
-  document.querySelector('.progress-hero-fill').style.width = donePct + '%';
-  document.querySelector('.progress-hero-part').style.width = progPct + '%';
-  document.querySelector('.progress-hero-track').setAttribute(
-    'aria-label',
-    all.done + ' of ' + all.total + ' deliverables complete, ' + all.prog + ' more in progress');
-
-  var legend = document.querySelectorAll('.progress-hero-legend b');
-  if (legend[0]) legend[0].textContent = all.done + ' of ' + all.total;
-  if (legend[1]) legend[1].textContent = String(all.prog);
-
-  // the four counters and the segmented bar under them
-  var stats = { done: '.stat.done .n', prog: '.stat.prog .n', rework: '.stat.rework .n', todo: '.stat.todo .n' };
-  KINDS.forEach(function (k) {
-    set(stats[k], String(all[k]));
-    var seg = document.querySelector('.bar .s-' + k);
-    if (seg) seg.style.flex = String(all[k]);
-  });
-  var bar = document.querySelector('.bar');
-  if (bar) bar.setAttribute('aria-label', KINDS.map(function (k) {
-    return all[k] + ' ' + (k === 'prog' ? 'in progress' : k === 'todo' ? 'to build' : k);
-  }).join(', '));
-
-  // each phase block, matched to its rows by the P-number in its heading
-  document.querySelectorAll('.phase').forEach(function (block) {
-    var head = block.querySelector('.phase-no');
-    var m = head && head.textContent.match(/Phase\s+(\d)/);
-    if (!m) return;
-    var t = tally(document, 'P' + m[1]);
-    if (!t.total) return;
-
-    var d = pct(t.done, t.total);
-    var fill = block.querySelector('.phase-fill');
-    var part = block.querySelector('.phase-part');
-    if (fill) fill.style.width = d + '%';
-    if (part) part.style.width = pct(t.prog, t.total) + '%';
-
-    var foot = block.querySelectorAll('.phase-foot span');
-    if (foot[0]) {
-      foot[0].innerHTML = '<b>' + t.done + ' / ' + t.total + '</b> deliverable'
-        + (t.total === 1 ? '' : 's')
-        + (t.prog ? ' &middot; ' + t.prog + ' awaiting deploy' : '');
-    }
-    if (foot[1]) foot[1].textContent = d + '%';
-  });
-})();
-</script>
-
 </div>

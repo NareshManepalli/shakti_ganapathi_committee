@@ -1,10 +1,19 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAdminData } from '../useAdminData';
 import { saveMember, deleteMember, activeRows } from '../contentApi';
 import { useToast } from '../ToastContext';
-import { EditorPage } from './EditorShell';
-import { IconTrash } from '../icons';
+import { EditorPage, RowImage, TableFoot, TableSkeleton } from './EditorShell';
+import { IconTrash, IconEdit, IconSearch } from '../icons';
 import { useAuth } from '../../contexts/AuthContext';
+import Modal from '../../components/Modal';
+
+const PER_PAGE = 5;
+
+// Declared once, so the table and its placeholder are built from the same list.
+const COLUMNS = [
+  { cls: 'tbl-sno', w: '60%' }, { cls: 'tbl-acts', w: '70%' }, { cls: 'tbl-img' },
+  { w: '75%' }, { w: '70%' }, { w: '65%' }, { w: '70%' }, { w: '85%' },
+];
 
 const blank = {
   id: '', name_en: '', name_te: '', position_en: '', position_te: '',
@@ -31,6 +40,26 @@ const Members = () => {
   const [editing, setEditing] = useState(null);
   const [confirm, setConfirm] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+
+  // Everything a name might be looked up by, in either language.
+  const found = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return rows;
+    return rows.filter((r) => [
+      r.name_en, r.name_te, r.position_en, r.position_te, r.mobile, r.email,
+    ].join(' ').toLowerCase().includes(needle));
+  }, [rows, query]);
+
+  const pages = Math.max(1, Math.ceil(found.length / PER_PAGE));
+  // Clamped rather than trusted: removing the last row of the last page, or
+  // narrowing the search, leaves `page` pointing past the end.
+  const shown = Math.min(page, pages);
+  const start = (shown - 1) * PER_PAGE;
+  const onPage = found.slice(start, start + PER_PAGE);
+
+  useEffect(() => { setPage(1); }, [query]);
 
   const openNew = () => setEditing({
     ...blank,
@@ -83,7 +112,7 @@ const Members = () => {
       subtitle="Add and edit committee members, and decide who can sign in"
       loading={loading}
       error={error}
-      actions={<button className="admin-btn" onClick={openNew} disabled={busy}>Add a member</button>}
+      skeleton={<TableSkeleton columns={COLUMNS} rows={PER_PAGE} />}
     >
       {bypassCount > 0 && (
         <p className="admin-msg is-warn" role="status">
@@ -92,155 +121,225 @@ const Members = () => {
         </p>
       )}
 
-      <div className="admin-card">
-        <div className="ed-table-wrap">
-          <table className="ed-table">
-            <thead>
-              <tr>
-                <th>#</th><th>Name</th><th>Position</th><th>Mobile</th>
-                <th>Email</th><th>Access</th><th aria-label="Actions" />
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id}>
-                  <td className="ed-day-no">{String(r.display_order || '—')}</td>
-                  <td>
-                    <b>{String(r.name_en || '—')}</b>
-                    {r.name_te ? <i className="ed-te">{String(r.name_te)}</i> : null}
-                    {asBool(r.is_executive) && <span className="ed-chip">Executive</span>}
-                  </td>
-                  <td>{String(r.position_en || '—')}</td>
-                  <td>{String(r.mobile || '—')}</td>
-                  <td className="ed-email">{String(r.email || '—')}</td>
-                  <td>
-                    {asBool(r.access_in)
-                      ? <span className={`ed-chip${asBool(r.adm_in) ? ' is-admin' : ''}`}>
-                          {asBool(r.adm_in) ? 'Full access' : 'Funds only'}
-                        </span>
-                      : <span className="ed-chip is-off">No sign-in</span>}
-                    {asBool(r.bypass_in) && <span className="ed-chip is-warn">bypass</span>}
-                  </td>
-                  <td className="ed-row-actions">
-                    <button className="admin-btn admin-btn-ghost ed-sm" onClick={() => openEdit(r)}>Edit</button>
-                    <button
-                      className="ed-del"
-                      aria-label={`Remove ${r.name_en}`}
-                      title={String(r.id) === String(me?.id) ? 'You cannot remove yourself' : 'Remove'}
-                      disabled={String(r.id) === String(me?.id)}
-                      onClick={() => setConfirm(r)}
-                    >
-                      <IconTrash />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {!rows.length && (
-                <tr><td colSpan={7} className="ed-empty-cell">No members yet.</td></tr>
-              )}
-            </tbody>
-          </table>
+      <div className="admin-card tbl-card">
+        <div className="tbl-head">
+          <button className="admin-btn" onClick={openNew} disabled={busy}>
+            <span className="tbl-plus" aria-hidden="true">+</span> Add a member
+          </button>
+
+          <div className="tbl-search">
+            <IconSearch />
+            <input
+              className="admin-input"
+              type="search"
+              value={query}
+              placeholder="Search members…"
+              aria-label="Search members"
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
         </div>
+
+        {rows.length ? (
+          <>
+            <div className="tbl-wrap">
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th className="tbl-sno">S.No</th>
+                    <th className="tbl-acts">Actions</th>
+                    <th className="tbl-img">Image</th>
+                    <th>Name (English)</th>
+                    <th>Name (తెలుగు)</th>
+                    <th>Position</th>
+                    <th>Mobile</th>
+                    <th>Email</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {onPage.map((r, i) => {
+                    const isMe = String(r.id) === String(me?.id);
+                    return (
+                      <tr key={r.id}>
+                        {/* Numbered across the whole result, not the page, so row
+                            6 is row 6 whichever page it is being read on. */}
+                        <td className="tbl-sno">{start + i + 1}</td>
+                        <td className="tbl-acts">
+                          <div>
+                            <button
+                              className="tbl-icon"
+                              aria-label={`Edit ${r.name_en}`}
+                              disabled={busy}
+                              onClick={() => openEdit(r)}
+                            >
+                              <IconEdit />
+                            </button>
+                            <button
+                              className="tbl-icon is-danger"
+                              aria-label={`Remove ${r.name_en}`}
+                              title={isMe ? 'You cannot remove yourself' : 'Remove'}
+                              disabled={busy || isMe}
+                              onClick={() => setConfirm(r)}
+                            >
+                              <IconTrash />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="tbl-img">
+                          <RowImage link={r.photo || r.prfle_photo} alt={String(r.name_en || '')} />
+                        </td>
+                        <td>{String(r.name_en || '—')}</td>
+                        <td lang="te">{String(r.name_te || '—')}</td>
+                        <td>{String(r.position_en || '—')}</td>
+                        <td className="tbl-nowrap">{String(r.mobile || '—')}</td>
+                        <td className="ed-email">{String(r.email || '—')}</td>
+                      </tr>
+                    );
+                  })}
+
+                  {!found.length && (
+                    <tr>
+                      <td className="tbl-none" colSpan={8}>No member matches “{query.trim()}”.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <TableFoot
+              from={start + 1} to={start + onPage.length} total={found.length}
+              page={shown} pages={pages} onPage={setPage}
+            />
+          </>
+        ) : (
+          <div className="admin-empty">
+            <span className="admin-empty-icon" aria-hidden="true">👥</span>
+            <h2 className="admin-empty-title">No members yet</h2>
+            <p className="admin-empty-text">Add the committee one at a time.</p>
+          </div>
+        )}
       </div>
 
       {editing && (
-        <div className="admin-modal" onClick={() => !busy && setEditing(null)}>
-          <form className="admin-card ed-modal" onClick={(e) => e.stopPropagation()} onSubmit={save}>
-            <h2 className="admin-page-title" style={{ fontSize: 19 }}>
-              {editing.id ? `Edit ${editing.name_en || 'member'}` : 'Add a member'}
-            </h2>
+        /* The same drawer the schedule uses: a dozen fields and four flags is
+           taller than a centred dialog can hold without scrolling inside a
+           floating box, and the list stays visible beside it. */
+        <Modal onClose={() => setEditing(null)} busy={busy} backdropClass="ed-drawer-scrim">{(titleId) => (
+          <form className="ed-drawer" onSubmit={save}>
+            <header className="ed-drawer-head">
+              <h2 id={titleId}>{editing.id ? `Edit ${editing.name_en || 'member'}` : 'Add a member'}</h2>
+              <button
+                type="button" className="ed-drawer-x" aria-label="Close"
+                onClick={() => setEditing(null)} disabled={busy}
+              >
+                ×
+              </button>
+            </header>
 
-            <div className="ed-grid">
-              <label className="ed-field">
-                <span className="admin-label">Name — English</span>
-                <input className="admin-input" value={editing.name_en}
-                       onChange={(e) => setEditing({ ...editing, name_en: e.target.value })} />
-              </label>
-              <label className="ed-field">
-                <span className="admin-label">తెలుగు</span>
-                <input className="admin-input" lang="te" value={editing.name_te}
-                       onChange={(e) => setEditing({ ...editing, name_te: e.target.value })} />
-              </label>
-              <label className="ed-field">
-                <span className="admin-label">Position — English</span>
-                <input className="admin-input" value={editing.position_en}
-                       onChange={(e) => setEditing({ ...editing, position_en: e.target.value })} />
-              </label>
-              <label className="ed-field">
-                <span className="admin-label">తెలుగు</span>
-                <input className="admin-input" lang="te" value={editing.position_te}
-                       onChange={(e) => setEditing({ ...editing, position_te: e.target.value })} />
-              </label>
-              <label className="ed-field">
-                <span className="admin-label">Mobile</span>
-                <input className="admin-input" type="tel" inputMode="numeric" maxLength={10}
-                       value={editing.mobile}
-                       onChange={(e) => setEditing({ ...editing, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) })} />
-              </label>
+            <div className="ed-drawer-body">
+              <div className="ed-grid">
+                <label className="ed-field">
+                  <span className="admin-label">Name — English</span>
+                  <input className="admin-input" value={editing.name_en}
+                         onChange={(e) => setEditing({ ...editing, name_en: e.target.value })} />
+                </label>
+                <label className="ed-field">
+                  <span className="admin-label">Name — తెలుగు</span>
+                  <input className="admin-input" lang="te" value={editing.name_te}
+                         onChange={(e) => setEditing({ ...editing, name_te: e.target.value })} />
+                </label>
+              </div>
+
+              <div className="ed-grid">
+                <label className="ed-field">
+                  <span className="admin-label">Position — English</span>
+                  <input className="admin-input" value={editing.position_en}
+                         onChange={(e) => setEditing({ ...editing, position_en: e.target.value })} />
+                </label>
+                <label className="ed-field">
+                  <span className="admin-label">Position — తెలుగు</span>
+                  <input className="admin-input" lang="te" value={editing.position_te}
+                         onChange={(e) => setEditing({ ...editing, position_te: e.target.value })} />
+                </label>
+              </div>
+
+              <div className="ed-grid">
+                <label className="ed-field">
+                  <span className="admin-label">Mobile</span>
+                  <input className="admin-input" type="tel" inputMode="numeric" maxLength={10}
+                         value={editing.mobile}
+                         onChange={(e) => setEditing({ ...editing, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) })} />
+                </label>
+                <label className="ed-field">
+                  <span className="admin-label">Display order</span>
+                  <input className="admin-input" inputMode="numeric" value={editing.display_order}
+                         onChange={(e) => setEditing({ ...editing, display_order: e.target.value.replace(/\D/g, '').slice(0, 3) })} />
+                </label>
+              </div>
+
+              {/* Full width: an address is long enough that half a drawer would
+                  scroll it out of sight as it was typed. */}
               <label className="ed-field">
                 <span className="admin-label">Email</span>
                 <input className="admin-input" type="email" value={editing.email}
                        onChange={(e) => setEditing({ ...editing, email: e.target.value })} />
               </label>
+
+              <p className="admin-readonly-note">
+                The mobile is what a member signs in with, and the email is where their code is
+                sent. Both must be right for them to reach the portal.
+              </p>
+
               <label className="ed-field">
                 <span className="admin-label">Card photo</span>
                 <input className="admin-input" value={editing.photo} placeholder="Drive share link"
                        onChange={(e) => setEditing({ ...editing, photo: e.target.value })} />
               </label>
+
               <label className="ed-field">
                 <span className="admin-label">Identity card photo</span>
                 <input className="admin-input" value={editing.prfle_photo} placeholder="Drive share link"
                        onChange={(e) => setEditing({ ...editing, prfle_photo: e.target.value })} />
               </label>
-              <label className="ed-field">
-                <span className="admin-label">Display order</span>
-                <input className="admin-input" inputMode="numeric" value={editing.display_order}
-                       onChange={(e) => setEditing({ ...editing, display_order: e.target.value.replace(/\D/g, '').slice(0, 3) })} />
-              </label>
+
+              <div className="ed-flags">
+                <label className="ed-flag">
+                  <input type="checkbox" checked={editing.is_executive}
+                         onChange={(e) => setEditing({ ...editing, is_executive: e.target.checked })} />
+                  <span><b>Executive</b><i>Shown in the left column on the public site</i></span>
+                </label>
+                <label className="ed-flag">
+                  <input type="checkbox" checked={editing.access_in}
+                         onChange={(e) => setEditing({ ...editing, access_in: e.target.checked, adm_in: e.target.checked && editing.adm_in })} />
+                  <span><b>Can sign in</b><i>Without this, they appear on the site but cannot reach the portal</i></span>
+                </label>
+                <label className={`ed-flag${editing.access_in ? '' : ' is-disabled'}`}>
+                  <input type="checkbox" checked={editing.adm_in} disabled={!editing.access_in}
+                         onChange={(e) => setEditing({ ...editing, adm_in: e.target.checked })} />
+                  <span><b>Full access</b><i>Can edit every section. Otherwise: funds screens only</i></span>
+                </label>
+                <label className="ed-flag is-warn">
+                  <input type="checkbox" checked={editing.bypass_in}
+                         onChange={(e) => setEditing({ ...editing, bypass_in: e.target.checked })} />
+                  <span><b>Development sign-in</b><i>Signs in with a fixed code and no email. Must be off before launch</i></span>
+                </label>
+              </div>
             </div>
 
-            <p className="admin-readonly-note">
-              The mobile is what a member signs in with, and the email is where their code is
-              sent. Both must be right for them to reach the portal.
-            </p>
-
-            <div className="ed-flags">
-              <label className="ed-flag">
-                <input type="checkbox" checked={editing.is_executive}
-                       onChange={(e) => setEditing({ ...editing, is_executive: e.target.checked })} />
-                <span><b>Executive</b><i>Shown in the left column on the public site</i></span>
-              </label>
-              <label className="ed-flag">
-                <input type="checkbox" checked={editing.access_in}
-                       onChange={(e) => setEditing({ ...editing, access_in: e.target.checked, adm_in: e.target.checked && editing.adm_in })} />
-                <span><b>Can sign in</b><i>Without this, they appear on the site but cannot reach the portal</i></span>
-              </label>
-              <label className={`ed-flag${editing.access_in ? '' : ' is-disabled'}`}>
-                <input type="checkbox" checked={editing.adm_in} disabled={!editing.access_in}
-                       onChange={(e) => setEditing({ ...editing, adm_in: e.target.checked })} />
-                <span><b>Full access</b><i>Can edit every section. Otherwise: funds screens only</i></span>
-              </label>
-              <label className="ed-flag is-warn">
-                <input type="checkbox" checked={editing.bypass_in}
-                       onChange={(e) => setEditing({ ...editing, bypass_in: e.target.checked })} />
-                <span><b>Development sign-in</b><i>Signs in with a fixed code and no email. Must be off before launch</i></span>
-              </label>
-            </div>
-
-            <div className="admin-btn-row">
-              <button className="admin-btn" type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
+            <footer className="ed-drawer-foot">
               <button className="admin-btn admin-btn-ghost" type="button" onClick={() => setEditing(null)} disabled={busy}>
                 Cancel
               </button>
-            </div>
+              <button className="admin-btn" type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
+            </footer>
           </form>
-        </div>
+        )}</Modal>
       )}
 
       {confirm && (
-        <div className="admin-modal" onClick={() => setConfirm(null)}>
-          <div className="admin-card admin-confirm" onClick={(e) => e.stopPropagation()}>
-            <h2 className="admin-empty-title">Remove {String(confirm.name_en)}?</h2>
+        <Modal onClose={() => setConfirm(null)} busy={busy}>{(titleId) => (
+          <div className="admin-card admin-confirm">
+            <h2 id={titleId} className="admin-empty-title">Remove {String(confirm.name_en)}?</h2>
             <p className="admin-empty-text">
               They disappear from the public site and can no longer sign in. The row stays in
               the sheet, so it can be brought back by setting <code>a_in</code> to 1.
@@ -252,7 +351,7 @@ const Members = () => {
               <button className="admin-btn admin-btn-ghost" onClick={() => setConfirm(null)} disabled={busy}>Cancel</button>
             </div>
           </div>
-        </div>
+        )}</Modal>
       )}
     </EditorPage>
   );

@@ -178,12 +178,7 @@ body.lang-te .committee-section-subtitle { font-size: 0.85rem; }
   background: rgba(255, 255, 255, 0.05);
 }
 
-.plus-icon {
-  font-size: 32px;
-  color: var(--text-muted);
-  font-weight: 300;
-  line-height: 1;
-}
+/* .plus-icon is shared with About — see styles/shared.css */
 
 .member-info {
   text-align: center;

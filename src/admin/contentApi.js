@@ -53,7 +53,6 @@ export const saveContent = (token, section, fields) =>
 
 export const saveScheduleDay = (token, day) => post({ action: 'saveSchedule', token, day });
 export const deleteScheduleDay = (token, id) => post({ action: 'deleteSchedule', token, id });
-export const copyYear = (token, fromYear, toYear) => post({ action: 'copyYear', token, fromYear, toYear });
 
 export const saveMember = (token, member) => post({ action: 'saveMember', token, member });
 export const deleteMember = (token, id) => post({ action: 'deleteMember', token, id });

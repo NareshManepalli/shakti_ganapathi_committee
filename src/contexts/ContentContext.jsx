@@ -12,7 +12,7 @@ import { fetchSheetRows, fetchMembersApi, toMediaUrl } from '../utils/sheetServi
 // holds up the rest of the page.
 // ---------------------------------------------------------------------------
 
-const ContentContext = createContext({ sections: {}, loading: true });
+const ContentContext = createContext({ sections: {}, failed: {}, loading: true, reload: () => {} });
 
 /* ---------------------------------------------------------- transformers */
 
@@ -103,6 +103,10 @@ const PUBLIC_READ_API = new Set(['members']);
 
 export const ContentProvider = ({ children }) => {
   const [sections, setSections] = useState({});
+  // Which sections could not be read. Distinct from a section that answered
+  // and had no rows: only a failure is worth offering a retry for, and only an
+  // empty sheet is the committee's to fix.
+  const [failed, setFailed] = useState({});
   const [loading, setLoading] = useState(true);
   // Guards against a slow first load resolving after a refresh and overwriting
   // the newer data with older rows.
@@ -137,20 +141,22 @@ export const ContentProvider = ({ children }) => {
           rows = await fetchSheetRows(url);
         }
         const shape = TRANSFORMERS[name] || ((x) => x);
-        return [name, shape(rows)];
+        return [name, shape(rows), false];
       } catch (err) {
-        // A failed sheet leaves that section on its built-in text rather than
-        // blanking it, and never stops the others from rendering.
+        // A failed sheet never stops the others from rendering; the section
+        // says so itself and offers a retry.
         console.error(`Could not load the "${name}" sheet:`, err);
-        return [name, null];
+        return [name, null, true];
       }
     }));
     if (!alive.current) return;
 
-    const next = Object.fromEntries(entries);
+    const next = Object.fromEntries(entries.map(([name, rows]) => [name, rows]));
+    const broke = Object.fromEntries(entries.map(([name, , bad]) => [name, Boolean(bad)]));
     // Keep the existing object when nothing actually changed, so a refresh
     // that finds no edits causes no re-render at all.
     setSections((cur) => (JSON.stringify(cur) === JSON.stringify(next) ? cur : next));
+    setFailed((cur) => (JSON.stringify(cur) === JSON.stringify(broke) ? cur : broke));
     setLoading(false);
   }, []);
 
@@ -162,7 +168,7 @@ export const ContentProvider = ({ children }) => {
   useRevalidate(load);
 
   return (
-    <ContentContext.Provider value={{ sections, loading }}>
+    <ContentContext.Provider value={{ sections, failed, loading, reload: load }}>
       {children}
     </ContentContext.Provider>
   );
@@ -171,14 +177,17 @@ export const ContentProvider = ({ children }) => {
 /* ----------------------------------------------------------------- hooks */
 
 export const useSectionContent = (name) => {
-  const { sections, loading } = useContext(ContentContext);
+  const { sections, failed, loading, reload } = useContext(ContentContext);
   return {
     data: sections[name] || null,
+    // `error` means the sheet could not be read, not that it was empty.
+    error: Boolean(failed[name]),
     loading,
+    reload,
   };
 };
 
 export const useAllSections = () => {
-  const { sections, loading } = useContext(ContentContext);
-  return { sections: sections || {}, loading };
+  const { sections, failed, loading, reload } = useContext(ContentContext);
+  return { sections: sections || {}, failed: failed || {}, loading, reload };
 };

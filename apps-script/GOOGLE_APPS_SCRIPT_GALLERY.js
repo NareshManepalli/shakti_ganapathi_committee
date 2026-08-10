@@ -64,6 +64,18 @@
 // https://drive.google.com/drive/folders/1OuWdBCnuMdw5Ese6R925mMARc5x3HsQO
 var GALLERY_FOLDER_ID = '1OuWdBCnuMdw5Ese6R925mMARc5x3HsQO';
 
+// One flat folder of event photos, named after the events themselves. The
+// Schedule screen in the admin portal lists these by name, so a day is given
+// its picture by choosing an event rather than by copying a Drive link.
+//
+// Add a photo to the folder and it appears in that list; remove one and it
+// stops being offered. Nothing here has to change either way.
+//
+// Share it "Anyone with the link -> Viewer", like the gallery folder: the
+// browser loads the chosen photo directly from Drive.
+// https://drive.google.com/drive/folders/1nKoW6gFRRPwAY_auPRC_TLFAmQ5J6kQH
+var EVENT_IMAGES_FOLDER_ID = '1nKoW6gFRRPwAY_auPRC_TLFAmQ5J6kQH';
+
 // The write secret is NOT stored in this file. This file is committed to a
 // public GitHub repo, so a secret written here would be published with it.
 // It lives in Script Properties instead: Project Settings -> Script Properties.
@@ -78,7 +90,21 @@ var UPLOAD_SECRET_KEY = 'UPLOAD_SECRET';
 var SIGNING_KEY_PROP = 'SESSION_SIGNING_KEY';
 
 // Refuse anything larger, so one oversized file can't exhaust the Drive quota.
-var MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
+//
+// NOTE: this is not the only ceiling, and on videos it is not the binding one.
+// A Web App POST is capped by Apps Script itself at around 50 MB, and the file
+// arrives base64-encoded, which inflates it by a third — so roughly 35 MB of
+// video is the most that can actually come through this endpoint whatever this
+// number says. Anything bigger has to be dragged straight into the Drive year
+// folder, which the gallery reads either way.
+var MAX_UPLOAD_BYTES = 100 * 1024 * 1024; // 100 MB
+
+// What may be uploaded. Videos are Drive-hosted like the photos, and the same
+// thumbnail endpoint serves a poster frame for them.
+function isAllowedMime(mime) {
+  var m = String(mime || '');
+  return m.indexOf('image/') === 0 || m.indexOf('video/') === 0;
+}
 
 // Photos allowed per year. Uploads that would push a year past this are
 // refused. Counted across the whole year, including any event subfolders.
@@ -240,11 +266,13 @@ function readImages(folder, eventName, out) {
   while (fileIt.hasNext()) {
     var f = fileIt.next();
     var mime = f.getMimeType() || '';
-    if (mime.indexOf('image/') !== 0) continue; // photos only
+    if (!isAllowedMime(mime)) continue;   // photos and videos, nothing else
     acc.push({
       id: f.getId(),
       name: f.getName(),
       event: eventName || '',
+      // The browser needs this to know whether to render a tile or a player.
+      mime: mime,
     });
   }
   return acc;
@@ -260,7 +288,7 @@ function countYearImages(yearFolder) {
     var n = 0;
     var it = folder.getFiles();
     while (it.hasNext()) {
-      if ((it.next().getMimeType() || '').indexOf('image/') === 0) n += 1;
+      if (isAllowedMime(it.next().getMimeType())) n += 1;
     }
     return n;
   }
@@ -284,15 +312,40 @@ function readYear(yearFolder) {
   return images;
 }
 
+/**
+ * The event photos, flat, newest name order.
+ *
+ * The folder is a constant here rather than something the caller names in the
+ * query string. This script runs as its owner, so an endpoint that read back
+ * whatever folder id it was handed would let any stranger with the /exec URL
+ * read any folder that Google account can see.
+ */
+function readEventImages() {
+  var id = resolveFolderId(EVENT_IMAGES_FOLDER_ID);
+  if (!id || id.indexOf('PASTE_') === 0) return [];
+  var images = readImages(DriveApp.getFolderById(id), '');
+  images.sort(function (a, b) { return a.name.localeCompare(b.name); });
+  return images;
+}
+
 /* -------------------------------------------------------------- READ (GET) */
 /**
  *  (no params)            -> every year and its photos
  *  ?action=year&year=2025 -> just that year, when the whole tree is overkill
+ *  ?action=eventImages    -> the event photo folder, for the schedule editor
  */
 function doGet(e) {
   try {
     var params = (e && e.parameter) || {};
     var action = String(params.action || 'tree');
+
+    // Answered before galleryRoot(), which throws when the gallery folder is
+    // unset — the two folders are unrelated and one missing must not take the
+    // other down with it.
+    if (action === 'eventImages') {
+      return jsonOut({ ok: true, images: readEventImages() });
+    }
+
     var root = galleryRoot();
 
     if (action === 'year') {
@@ -354,14 +407,14 @@ function doPost(e) {
       var evt = String(body.event || '').trim(); // optional event subfolder
       var data = String(body.dataBase64 || '');
       if (!year) throw new Error('year is required.');
-      if (!data) throw new Error('No image data received.');
+      if (!data) throw new Error('No file data received.');
 
       var mimeType = String(body.mimeType || 'image/jpeg');
-      if (mimeType.indexOf('image/') !== 0) throw new Error('Only images can be uploaded.');
+      if (!isAllowedMime(mimeType)) throw new Error('Only photos and videos can be uploaded.');
 
       var bytes = Utilities.base64Decode(data);
       if (bytes.length > MAX_UPLOAD_BYTES) {
-        throw new Error('Image is larger than ' + Math.round(MAX_UPLOAD_BYTES / 1048576) + ' MB.');
+        throw new Error('File is larger than ' + Math.round(MAX_UPLOAD_BYTES / 1048576) + ' MB.');
       }
 
       var yearFolder = getOrCreateChildFolder(root, year);
@@ -371,7 +424,7 @@ function doPost(e) {
       var already = countYearImages(yearFolder);
       if (already >= MAX_PHOTOS_PER_YEAR) {
         throw new Error(
-          year + ' already has ' + already + ' photos and the limit is ' +
+          year + ' already has ' + already + ' files and the limit is ' +
           MAX_PHOTOS_PER_YEAR + ' per year. Delete some before adding more.'
         );
       }

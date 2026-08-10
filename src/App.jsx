@@ -24,26 +24,43 @@ import AdminSchedule from './admin/pages/Schedule'
 import AdminMembers from './admin/pages/Members'
 import AdminSettings from './admin/pages/Settings'
 import './App.css'
+import { SectionBoundary } from './components/SectionState';
+import { useCopyGuard } from './components/useCopyGuard';
 
 // The public scroll page. Everything a visitor sees lives here.
-const PublicSite = () => (
+// Each section is wrapped on its own. React tears down the whole tree when a
+// render throws and nothing catches it, so one bad row used to leave the
+// visitor with a blank white page — no header, no other section, nothing to
+// click. Per-section boundaries keep the damage the size of the section, and
+// the header, the rest of the page and the funds gate all survive it.
+const guard = (label, node) => (
+  <SectionBoundary label={label}>{node}</SectionBoundary>
+);
+
+const PublicSite = () => {
+  // Mounted here rather than at the router, so it covers the public page and
+  // the sign-in screens but never the portal — see useCopyGuard.
+  useCopyGuard();
+
+  return (
   <div className="App">
-    <Header />
-    <Home />
-    <About />
-    <Committee />
-    <Schedule />
-    <Gallery />
+    {guard('Header', <Header />)}
+    {guard('Home', <Home />)}
+    {guard('About', <About />)}
+    {guard('Committee', <Committee />)}
+    {guard('Schedule', <Schedule />)}
+    {guard('Gallery', <Gallery />)}
     {/* Shares one background with the section above it — see .page-tail */}
     <div className="page-tail">
-      <MandapamLocation />
+      {guard('Mandapam', <MandapamLocation />)}
       {/* Committee-only doorway — the last thing on the page, deliberately
           not in the nav. */}
-      <FundsGate />
+      {guard('Committee Funds', <FundsGate />)}
     </div>
-    <Footer />
+    {guard('Footer', <Footer />)}
   </div>
-)
+  );
+};
 
 // Bounces to the login page unless a session is present. The server checks the
 // token on every request too — this only decides what to render.

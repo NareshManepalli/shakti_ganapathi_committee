@@ -1,0 +1,83 @@
+/* Shared loading / empty / error block. See SectionState.jsx for why it exists.
+
+   It has to sit on two very different grounds — the navy public sections and
+   the light Mandapam/Committee panels — so it paints its own translucent card
+   rather than assuming either. */
+
+.sec-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  padding: clamp(26px, 5vw, 46px) 22px;
+  margin: 0 auto;
+  max-width: 46ch;
+}
+
+.sec-state-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent-gold);
+  background: rgba(223, 174, 77, 0.12);
+  border: 1px solid rgba(223, 174, 77, 0.3);
+}
+
+.sec-state.is-error .sec-state-icon {
+  color: #ff9db0;
+  background: rgba(209, 67, 95, 0.14);
+  border-color: rgba(209, 67, 95, 0.36);
+}
+
+.sec-state-title {
+  margin: 0;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(15px, 2.2vw, 17px);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sec-state-text {
+  margin: 0;
+  font-size: clamp(13px, 1.9vw, 14px);
+  line-height: 1.65;
+  color: var(--text-muted);
+}
+
+.sec-state-retry {
+  margin-top: 12px;
+  padding: 9px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(223, 174, 77, 0.45);
+  background: rgba(223, 174, 77, 0.1);
+  color: var(--accent-gold);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+}
+
+.sec-state-retry:hover {
+  background: var(--btn-primary);
+  border-color: var(--btn-primary);
+  color: #23180a;
+}
+
+.sec-state-retry:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 3px; }
+
+/* When the boundary catches a throw there is no section around it any more, so
+   it brings its own vertical rhythm rather than butting against its neighbour. */
+.sec-state-wrap { padding: clamp(30px, 6vw, 60px) 20px; }
+
+/* On the light panels the navy-on-navy text would vanish. */
+.sec-state.on-light .sec-state-title { color: var(--heading-on-light, #16265a); }
+.sec-state.on-light .sec-state-text { color: #56637a; }
+.sec-state.on-light .sec-state-retry { color: #8a6a1e; border-color: rgba(138, 106, 30, 0.4); }

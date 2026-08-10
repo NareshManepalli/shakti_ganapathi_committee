@@ -146,8 +146,11 @@ test('a Telugu name reaches the name_te column and survives a reload', async ({ 
     // Reloaded, so this is the sheet answering rather than the form still
     // holding what was typed into it.
     await page.reload();
+    // The read-only block above appears as soon as the profile lands, but the
+    // form below is seeded from it a tick later — so this needs the same
+    // patience as everything else here, not the 5s default.
     await expect(page.locator('.prof-fact').first()).toBeVisible({ timeout: 45000 });
-    await expect(box()).toHaveValue(changed);
+    await expect(box()).toHaveValue(changed, { timeout: 45000 });
   } finally {
     await page.locator('.admin-btn', { hasText: 'Edit Profile' }).click();
     await box().fill(original);
@@ -155,7 +158,7 @@ test('a Telugu name reaches the name_te column and survives a reload', async ({ 
     await expect(page.locator('.toast-success')).toContainText(/Profile saved/, { timeout: 45000 });
     await page.reload();
     await expect(page.locator('.prof-fact').first()).toBeVisible({ timeout: 45000 });
-    await expect(box()).toHaveValue(original);
+    await expect(box()).toHaveValue(original, { timeout: 45000 });
   }
 });
 

@@ -1,14 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, roleLabelFor } from '../contexts/AuthContext';
 import { toMediaUrl } from '../utils/sheetService';
 import logoImg from '../assets/logo.png';
 import {
   IconAbout, IconMembers, IconGallery, IconSchedule,
   IconMandapam, IconLedger, IconFunds, IconProfile, IconLogout, IconSettings,
+  IconChevron,
 } from './icons';
 import { ToastProvider } from './ToastContext';
 import './Admin.css';
+import { SectionBoundary } from '../components/SectionState';
 
 // The portal shell: a fixed sidebar on desktop, a drawer on phones, and a
 // topbar carrying the profile menu. Same navy and gold as the public site —
@@ -37,7 +39,8 @@ const NAV = [
 
 const AdminLayout = () => {
   const navigate = useNavigate();
-  const { member, profile, signOut, bypass } = useAuth();
+  const { pathname } = useLocation();
+  const { member, profile, signOut } = useAuth();
 
   const [drawer, setDrawer] = useState(false);
   const [menu, setMenu] = useState(false);
@@ -140,7 +143,9 @@ const AdminLayout = () => {
                     the pill does not resize under the cursor when it arrives. */}
                 <i>{role}</i>
               </span>
-              <span className={`admin-caret${menu ? ' is-up' : ''}`} aria-hidden="true">▾</span>
+              <span className={`admin-caret${menu ? ' is-up' : ''}`} aria-hidden="true">
+                <IconChevron />
+              </span>
             </button>
 
             {menu && (
@@ -164,16 +169,13 @@ const AdminLayout = () => {
           </div>
         </header>
 
-        {bypass && (
-          <p className="admin-devbanner" role="alert">
-            <b>Development sign-in.</b> This member has <code>bypass_in = 1</code>, so a
-            fixed code signs them in and no email is sent. Set it back to 0 in the members
-            sheet before the site goes public.
-          </p>
-        )}
-
         <main className="admin-content">
-          <Outlet />
+          {/* Keyed on the path so moving to another screen clears a caught
+              error; without that the boundary stays broken for the rest of
+              the visit and every screen looks broken with it. */}
+          <SectionBoundary key={pathname} label={`admin${pathname}`}>
+            <Outlet />
+          </SectionBoundary>
         </main>
       </div>
     </div>

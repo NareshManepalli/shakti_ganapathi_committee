@@ -166,19 +166,6 @@ body.lang-te .mandapam-subtitle { font-size: 0.85rem; }
   display: block;
 }
 
-.mandapam-btn-overlay {
-  position: absolute;
-  left: 50%;
-  bottom: 16px;
-  transform: translateX(-50%);
-  background: linear-gradient(180deg, rgba(16, 32, 56, 0.95), rgba(5, 10, 20, 0.95));
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
-}
-
-.mandapam-btn-overlay:hover {
-  transform: translateX(-50%) translateY(-2px);
-}
-
 /* ---- Breakpoints ------------------------------------------------------ */
 @media (max-width: 900px) {
   .mandapam-layout {

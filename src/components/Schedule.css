@@ -90,12 +90,15 @@ body.lang-te .schedule-subtitle { font-size: 0.85rem; }
   display: block;
 }
 
-.sd-media-placeholder {
-  font-size: 28px;
-  font-weight: 300;
-  line-height: 1;
-  color: var(--gold-500);
-  opacity: 0.55;
+/* contain, not cover: the emblem is a circle on transparent, and cropping it to
+   fill the square would cut the ring off. Held at 70% so it reads as a stand-in
+   for a photo rather than as the photo. */
+.sd-media .sd-media-fallback {
+  width: 82%;
+  height: 82%;
+  object-fit: contain;
+  opacity: 0.7;
+  display: block;
 }
 
 /* ---- Dotted separators ------------------------------------------------ */
