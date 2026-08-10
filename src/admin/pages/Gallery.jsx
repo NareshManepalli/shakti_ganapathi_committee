@@ -4,9 +4,8 @@ import {
   isGalleryConfigured, fetchTree, fileToBase64,
   uploadPhoto, deletePhoto, createYear, deleteYear,
 } from '../galleryApi';
-import {
-  IconUpload, IconFolderAdd, IconFolder, IconTrash, IconBack, IconRefresh,
-} from '../icons';
+import { IconUpload, IconFolderAdd, IconFolder, IconTrash } from '../icons';
+import { useToast } from '../ToastContext';
 import './Gallery.css';
 
 const MAX_MB = 10;                 // matches MAX_UPLOAD_BYTES in the script
@@ -16,8 +15,21 @@ const PER_YEAR = 30;               // matches MAX_PHOTOS_PER_YEAR
 // year is open. Uploads go one file at a time on purpose — Apps Script has a
 // six-minute ceiling and a payload limit, and a failed batch would leave the
 // committee guessing which photos landed.
+// Drive has no thumbnail for a very small image — it answers 404 rather than
+// resizing — so such a photo would render as a broken tile. Rare with real
+// committee photos (a 3 MB one is ready in about two seconds), but a blank
+// square with the filename is a better answer than a broken-image icon.
+const Thumb = ({ src, name }) => {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return <span className="gal-thumb-missing" title={name}>No preview</span>;
+  }
+  return <img src={src} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />;
+};
+
 const Gallery = () => {
   const { token } = useAuth();
+  const toast = useToast();
   const configured = isGalleryConfigured();
 
   const [tree, setTree] = useState(null);
@@ -26,8 +38,6 @@ const Gallery = () => {
 
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(null);   // { done, total, name }
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
 
   const [newYear, setNewYear] = useState('');
   const [adding, setAdding] = useState(false);
@@ -41,8 +51,7 @@ const Gallery = () => {
     setLoading(true);
     const data = await fetchTree();
     setLoading(false);
-    if (!data) { setError('Could not read the gallery folder.'); return; }
-    setError('');
+    if (!data) { toast.error('Could not read the gallery', 'The Drive folder did not respond.'); return; }
     setTree(data);
   }, [configured]);
 
@@ -61,7 +70,7 @@ const Gallery = () => {
 
   /* ------------------------------------------------------------ upload */
 
-  const pick = () => { setError(''); setNotice(''); fileRef.current?.click(); };
+  const pick = () => fileRef.current?.click();
 
   const onFiles = async (e) => {
     const files = [...(e.target.files || [])];
@@ -84,13 +93,11 @@ const Gallery = () => {
     if (skippedFull) skips.push(`${skippedFull} over the ${PER_YEAR}-per-year limit`);
 
     if (!allowed.length) {
-      setError(skips.length ? `Nothing uploaded — ${skips.join(', ')}.` : 'Nothing to upload.');
+      toast.error('Nothing uploaded', skips.length ? skips.join(', ') : 'No images were selected.');
       return;
     }
 
     setBusy(true);
-    setError('');
-    setNotice('');
     let done = 0;
     const failed = [];
 
@@ -111,8 +118,17 @@ const Gallery = () => {
     setBusy(false);
     await load();
 
-    if (failed.length) setError(`${done} uploaded. ${failed.length} failed — ${failed[0]}`);
-    else setNotice(`${done} photo${done === 1 ? '' : 's'} uploaded${skips.length ? ` (${skips.join(', ')})` : ''}.`);
+    if (failed.length) {
+      toast.error(
+        done ? `${done} uploaded, ${failed.length} failed` : `${failed.length} could not be uploaded`,
+        failed[0],
+      );
+    } else {
+      toast.success(
+        `${done} photo${done === 1 ? '' : 's'} uploaded`,
+        skips.length ? `Skipped: ${skips.join(', ')}.` : undefined,
+      );
+    }
   };
 
   /* ------------------------------------------------------ create / delete */
@@ -120,26 +136,29 @@ const Gallery = () => {
   const addYear = async (e) => {
     e.preventDefault();
     const v = newYear.trim();
-    if (!/^\d{4}$/.test(v)) { setError('Enter a four-digit year, e.g. 2027.'); return; }
-    setBusy(true); setError('');
+    if (!/^\d{4}$/.test(v)) { toast.error('That is not a year', 'Enter four digits, e.g. 2027.'); return; }
+    setBusy(true);
     const res = await createYear(token, v);
     setBusy(false);
-    if (!res.ok) { setError(res.error || 'Could not create the folder.'); return; }
-    setNewYear(''); setAdding(false); setNotice(`Folder ${v} created.`);
+    if (!res.ok) { toast.error('Could not create the folder', res.error); return; }
+    setNewYear(''); setAdding(false);
+    toast.success(`Folder ${v} created`);
     load();
   };
 
   const doDelete = async () => {
     if (!confirm) return;
-    setBusy(true); setError('');
+    setBusy(true);
     const res = confirm.kind === 'photo'
       ? await deletePhoto(token, confirm.id)
       : await deleteYear(token, confirm.year);
     setBusy(false);
+    const what = confirm.label;
+    const wasYear = confirm.kind === 'year';
     setConfirm(null);
-    if (!res.ok) { setError(res.error || 'Could not delete.'); return; }
-    setNotice(`${confirm.label} moved to the Drive bin — recoverable for 30 days.`);
-    if (confirm.kind === 'year') setOpenYear(null);
+    if (!res.ok) { toast.error(`Could not delete ${what}`, res.error); return; }
+    toast.success(`${what} deleted`, 'Moved to the Drive bin — recoverable for 30 days.');
+    if (wasYear) setOpenYear(null);
     load();
   };
 
@@ -162,34 +181,10 @@ const Gallery = () => {
     <>
       <div className="admin-page-head">
         <div>
-          <h1 className="admin-page-title">Gallery</h1>
+          <h1 className="admin-page-title">Gallery Management</h1>
           <p className="admin-page-sub">
-            {year
-              ? `${year.year} — ${year.used} of ${year.limit} photos, ${remaining} slot${remaining === 1 ? '' : 's'} left`
-              : 'Festival photos, one folder per year. Up to 30 photos a year.'}
+            Browse the Drive gallery folders, create or remove folders, and manage images
           </p>
-        </div>
-
-        <div className="admin-btn-row">
-          {year ? (
-            <>
-              <button className="admin-btn admin-btn-ghost" onClick={() => setOpenYear(null)} disabled={busy}>
-                <IconBack /> All years
-              </button>
-              <button className="admin-btn" onClick={pick} disabled={busy || remaining === 0}>
-                <IconUpload /> {remaining === 0 ? 'Year is full' : 'Upload photos'}
-              </button>
-            </>
-          ) : (
-            <>
-              <button className="admin-btn admin-btn-ghost" onClick={load} disabled={busy || loading}>
-                <IconRefresh /> Refresh
-              </button>
-              <button className="admin-btn" onClick={() => setAdding((v) => !v)} disabled={busy}>
-                <IconFolderAdd /> New year
-              </button>
-            </>
-          )}
         </div>
       </div>
 
@@ -201,9 +196,6 @@ const Gallery = () => {
         hidden
         onChange={onFiles}
       />
-
-      {error && <p className="admin-msg is-error" role="alert">{error}</p>}
-      {notice && !error && <p className="admin-msg is-ok" role="status">{notice}</p>}
 
       {progress && (
         <div className="gal-progress" role="status">
@@ -237,20 +229,77 @@ const Gallery = () => {
         </form>
       )}
 
-      {loading ? (
-        <div className="gal-grid">
-          {Array.from({ length: 4 }, (_, i) => <span key={i} className="gal-skel" />)}
-        </div>
-      ) : year ? (
-        year.images.length ? (
-          <div className="gal-grid">
-            {year.images.map((img) => (
-              <figure className="gal-item" key={img.id}>
-                <button className="gal-thumb" onClick={() => setPreview(img)} title={img.name}>
-                  <img src={img.thumb} alt="" loading="lazy" referrerPolicy="no-referrer" />
+      <div className="gal-panel">
+        <div className="gal-panel-head">
+          <nav className="gal-crumbs" aria-label="Breadcrumb">
+            {year ? (
+              <>
+                {/* The crumb is how you go back — a separate button beside it
+                    would be two controls for one action. */}
+                <button className="gal-crumb" onClick={() => setOpenYear(null)}>
+                  Gallery
                 </button>
-                <figcaption>
-                  <span title={img.name}>{img.name}</span>
+                <span className="gal-crumb-sep" aria-hidden="true">›</span>
+                <span className="gal-crumb is-current">{year.year}</span>
+              </>
+            ) : (
+              <span className="gal-crumb is-current">Gallery</span>
+            )}
+          </nav>
+
+          {year ? (
+            <button className="admin-btn" onClick={pick} disabled={busy || remaining === 0}>
+              <IconUpload /> {remaining === 0 ? 'Year is full' : 'Upload photos'}
+            </button>
+          ) : (
+            <button className="admin-btn" onClick={() => setAdding((v) => !v)} disabled={busy}>
+              <IconFolderAdd /> New Year
+            </button>
+          )}
+        </div>
+
+        {/* The limits, stated before anyone picks a file rather than after the
+            server refuses one. */}
+        <p className="gal-limits">
+          {year
+            ? <>Up to <b>{year.limit}</b> photos per year · images ≤ <b>{MAX_MB} MB</b></>
+            : <>One folder per year · up to <b>{PER_YEAR}</b> photos each</>}
+        </p>
+
+        {/* A count only where it means something. Inside a year it is the room
+            left against a cap; at the root it just restated the grid. */}
+        {year && (
+          <p className="gal-count">{year.used} of {year.limit} photos · {remaining} left</p>
+        )}
+
+        {loading ? (
+          /* Shaped like the cards they replace — a square block where a folder
+             card is short and wide just makes the page jump when data lands. */
+          <div className={`gal-grid${openYear ? ' gal-grid-files' : ''}`}>
+            {Array.from({ length: openYear ? 6 : 4 }, (_, i) => (
+              openYear ? (
+                <span className="gal-skel-file" key={i}>
+                  <span className="gal-skel-thumb" />
+                  <span className="gal-skel-cap" />
+                </span>
+              ) : (
+                <span className="gal-skel-folder" key={i}>
+                  <span className="gal-skel-icon" />
+                  <span className="gal-skel-name" />
+                  <span className="gal-skel-meta" />
+                </span>
+              )
+            ))}
+          </div>
+        ) : year ? (
+          year.images.length ? (
+            <div className="gal-grid gal-grid-files">
+              {year.images.map((img) => (
+                <figure className="gal-file" key={img.id}>
+                  <button className="gal-thumb" onClick={() => setPreview(img)} title={img.name}>
+                    <Thumb src={img.thumb} name={img.name} />
+                  </button>
+                  <figcaption title={img.name}>{img.name}</figcaption>
                   <button
                     className="gal-del"
                     aria-label={`Delete ${img.name}`}
@@ -259,47 +308,44 @@ const Gallery = () => {
                   >
                     <IconTrash />
                   </button>
-                </figcaption>
-              </figure>
+                </figure>
+              ))}
+            </div>
+          ) : (
+            <div className="gal-empty">
+              <span className="gal-empty-icon" aria-hidden="true">📷</span>
+              <h2 className="gal-empty-title">No photos in {year.year}</h2>
+              <p className="gal-empty-text">Upload up to {year.limit} photos for this year.</p>
+            </div>
+          )
+        ) : (tree || []).length ? (
+          <div className="gal-grid">
+            {tree.map((y) => (
+              <div className="gal-folder-wrap" key={y.year}>
+                <button className="gal-folder" onClick={() => setOpenYear(y.year)}>
+                  <IconFolder className="gal-folder-icon" />
+                  <span className="gal-folder-name">{y.year}</span>
+                  <span className="gal-folder-meta">{y.used} photo{y.used === 1 ? '' : 's'}</span>
+                </button>
+                <button
+                  className="gal-del"
+                  aria-label={`Delete the ${y.year} folder`}
+                  disabled={busy}
+                  onClick={() => setConfirm({ kind: 'year', year: y.year, label: `Folder ${y.year}` })}
+                >
+                  <IconTrash />
+                </button>
+              </div>
             ))}
           </div>
         ) : (
-          <div className="admin-card admin-wip">
-            <span className="admin-wip-icon" aria-hidden="true">📷</span>
-            <h2 className="admin-wip-title">No photos in {year.year}</h2>
-            <p className="admin-wip-text">Upload up to {year.limit} photos for this year.</p>
+          <div className="gal-empty">
+            <span className="gal-empty-icon" aria-hidden="true">📁</span>
+            <h2 className="gal-empty-title">No year folders yet</h2>
+            <p className="gal-empty-text">Create one to start adding photos.</p>
           </div>
-        )
-      ) : (
-        <div className="gal-years">
-          {(tree || []).map((y) => (
-            <div className="gal-year" key={y.year}>
-              <button className="gal-year-open" onClick={() => { setOpenYear(y.year); setError(''); setNotice(''); }}>
-                <span className="gal-year-icon"><IconFolder /></span>
-                <span className="gal-year-text">
-                  <b>{y.year}</b>
-                  <i>{y.used} of {y.limit} photos</i>
-                </span>
-              </button>
-              <button
-                className="gal-del"
-                aria-label={`Delete the ${y.year} folder`}
-                disabled={busy}
-                onClick={() => setConfirm({ kind: 'year', year: y.year, label: `Folder ${y.year}` })}
-              >
-                <IconTrash />
-              </button>
-            </div>
-          ))}
-          {!(tree || []).length && (
-            <div className="admin-card admin-wip" style={{ gridColumn: '1 / -1' }}>
-              <span className="admin-wip-icon" aria-hidden="true">📁</span>
-              <h2 className="admin-wip-title">No year folders yet</h2>
-              <p className="admin-wip-text">Create one to start adding photos.</p>
-            </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
 
       {confirm && (
         <div className="gal-modal" onClick={() => setConfirm(null)}>

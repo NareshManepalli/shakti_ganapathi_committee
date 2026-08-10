@@ -1,52 +1,48 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { getProfile, updateProfile } from '../../utils/authService';
+import { useAuth, roleLabelFor } from '../../contexts/AuthContext';
+import { updateProfile } from '../../utils/authService';
 import { toMediaUrl } from '../../utils/sheetService';
+import { useToast } from '../ToastContext';
+import { IconEdit } from '../icons';
 
 // The member's own record. The email shown here does not come from the public
 // members API — that one deliberately withholds it, because it is the address
 // the sign-in code is sent to. It comes from the auth endpoint instead, which
 // identifies the member from the id inside their signed token, so a member can
 // only ever read and edit themselves.
+//
+// The screen reads top to bottom: who you are, then the form that changes it.
+// The form is always on show but inert until Edit is pressed, so the fields a
+// member can change are visible without having to click to find out.
 const Profile = () => {
-  const { token, member, signOut } = useAuth();
+  // The record is fetched once per session by AuthContext and shared with the
+  // portal chrome, which shows the same photo and position in its topbar.
+  const { member, token, profile, profileLoading, profileError, setProfile } = useAuth();
+  const toast = useToast();
 
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ name: '', mobile: '', email: '' });
+  const [form, setForm] = useState({ name: '', nameTe: '', mobile: '', email: '' });
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [ok, setOk] = useState('');
   const [photoFailed, setPhotoFailed] = useState(false);
 
-  const load = async () => {
-    setLoading(true);
-    const res = await getProfile(token);
-    setLoading(false);
-    if (!res.ok) {
-      setError(res.error);
-      // A dead session cannot be fixed by retrying — send them back to sign in.
-      if (res.code === 'UNAUTHORIZED') setTimeout(signOut, 1800);
-      return;
-    }
-    setProfile(res.profile);
+  // Seed the form once the record lands, and again if it is refetched.
+  useEffect(() => {
+    if (!profile) return;
     setForm({
-      name: res.profile.name || '',
-      mobile: res.profile.mobile || '',
-      email: res.profile.email || '',
+      name: profile.name || '',
+      nameTe: profile.nameTe || '',
+      mobile: profile.mobile || '',
+      email: profile.email || '',
     });
-  };
+  }, [profile]);
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [token]);
-
-  const startEdit = () => { setEditing(true); setError(''); setOk(''); };
+  const startEdit = () => setEditing(true);
 
   const cancel = () => {
     setEditing(false);
-    setError('');
     setForm({
       name: profile.name || '',
+      nameTe: profile.nameTe || '',
       mobile: profile.mobile || '',
       email: profile.email || '',
     });
@@ -54,19 +50,17 @@ const Profile = () => {
 
   const save = async (e) => {
     e.preventDefault();
-    if (busy) return;
+    if (busy || !editing) return;
     setBusy(true);
-    setError('');
-    setOk('');
     const res = await updateProfile(token, form);
     setBusy(false);
-    if (!res.ok) { setError(res.error); return; }
+    if (!res.ok) { toast.error('Could not save your profile', res.error); return; }
+    const mobileChanged = form.mobile !== (profile.mobile || '');
     setProfile(res.profile || { ...profile, ...form });
     setEditing(false);
-    setOk(
-      form.mobile !== (profile.mobile || '')
-        ? 'Saved. Your next sign-in code will use the new mobile number.'
-        : 'Saved.'
+    toast.success(
+      'Profile saved',
+      mobileChanged ? 'Your next sign-in code will go to the new mobile number.' : undefined,
     );
   };
 
@@ -75,27 +69,34 @@ const Profile = () => {
 
   return (
     <>
+      {/* Wrapped, as Gallery does — .admin-page-head spreads its children apart
+          to make room for a right-hand action, which would push the subtitle
+          across the page instead of under the title. */}
       <div className="admin-page-head">
-        <h1 className="admin-page-title">My Profile</h1>
-        <p className="admin-page-sub">Your committee record. Position and access are set by the admin.</p>
+        <div>
+          <h1 className="admin-page-title">My Profile</h1>
+          <p className="admin-page-sub">Your committee account details</p>
+        </div>
       </div>
 
-      {error && <p className="admin-msg is-error" role="alert">{error}</p>}
-      {ok && <p className="admin-msg is-ok" role="status">{ok}</p>}
+      {/* A failure to LOAD stays inline: there is nothing on the screen behind
+          it, so a toast that fades would leave an empty card and no reason. */}
+      {profileError && <p className="admin-msg is-error" role="alert">{profileError}</p>}
 
       <div className="admin-card">
-        {loading ? (
-          <div className="admin-profile-head">
-            <span className="admin-profile-photo" />
-            <span style={{ flex: 1 }}>
-              <span className="admin-skel" style={{ display: 'block', width: '48%', marginBottom: 8 }} />
-              <span className="admin-skel" style={{ display: 'block', width: '30%' }} />
-            </span>
+        {profileLoading ? (
+          <div className="prof-top">
+            <span className="prof-avatar" />
+            <div style={{ flex: 1 }}>
+              {['52%', '38%', '44%', '60%'].map((w) => (
+                <span key={w} className="admin-skel" style={{ display: 'block', width: w, marginBottom: 12 }} />
+              ))}
+            </div>
           </div>
         ) : profile ? (
           <>
-            <div className="admin-profile-head">
-              <span className="admin-profile-photo">
+            <div className="prof-top">
+              <span className="prof-avatar">
                 {photo && !photoFailed ? (
                   <img
                     src={photo}
@@ -106,83 +107,97 @@ const Profile = () => {
                   />
                 ) : initial}
               </span>
-              <span>
-                <h2 className="admin-profile-name">{profile.name}</h2>
-                <p className="admin-profile-role">
-                  {profile.position || 'Committee member'}
-                  {profile.isAdmin ? ' · Administrator' : ''}
-                </p>
-              </span>
+
+              <dl className="prof-facts">
+                <div className="prof-fact"><dt>Name</dt><dd>{profile.name || '—'}</dd></div>
+                <div className="prof-fact"><dt>Position</dt><dd>{roleLabelFor(profile, profile.isAdmin)}</dd></div>
+                <div className="prof-fact"><dt>Mobile</dt><dd>{profile.mobile || '—'}</dd></div>
+                <div className="prof-fact"><dt>Email</dt><dd>{profile.email || '—'}</dd></div>
+              </dl>
             </div>
 
-            {editing ? (
-              <form onSubmit={save}>
+            <div className="prof-edit-row">
+              <button className="admin-btn admin-btn-ghost" type="button" onClick={startEdit} disabled={editing}>
+                <IconEdit />
+                Edit Profile
+              </button>
+            </div>
+
+            {/* Always rendered, disabled until Edit. Position is not here at all:
+                it is the committee's to set, and so is adm_in, so a permanently
+                greyed box only invited the question of how to change it. It is
+                still shown above, where the rest of the read-only record is. */}
+            <form className="prof-form" onSubmit={save}>
+              <div className="prof-grid">
                 <label className="admin-field">
-                  <span className="admin-label">Name</span>
+                  <span className="admin-label">Name <em className="prof-req">*</em></span>
                   <input
                     className="admin-input"
                     value={form.name}
                     maxLength={60}
+                    disabled={!editing}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                   />
                 </label>
 
+                {/* name_te — how this member's name renders on the public site in
+                    Telugu. Optional: many rows have not been filled in yet, and
+                    refusing the save over it would block an email correction. */}
                 <label className="admin-field">
-                  <span className="admin-label">Mobile number</span>
+                  <span className="admin-label">Name (Telugu)</span>
+                  <input
+                    className="admin-input"
+                    lang="te"
+                    value={form.nameTe}
+                    maxLength={60}
+                    placeholder={editing ? 'పేరు' : ''}
+                    disabled={!editing}
+                    onChange={(e) => setForm({ ...form, nameTe: e.target.value })}
+                  />
+                </label>
+
+                <label className="admin-field">
+                  <span className="admin-label">Mobile <em className="prof-req">*</em></span>
                   <input
                     className="admin-input"
                     type="tel"
                     inputMode="numeric"
                     maxLength={10}
                     value={form.mobile}
+                    disabled={!editing}
                     onChange={(e) => setForm({ ...form, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) })}
                   />
                 </label>
-                <p className="admin-readonly-note">This is the number you sign in with.</p>
 
                 <label className="admin-field">
-                  <span className="admin-label">Email</span>
+                  <span className="admin-label">Email <em className="prof-req">*</em></span>
                   <input
                     className="admin-input"
                     type="email"
                     value={form.email}
+                    disabled={!editing}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                   />
                 </label>
-                <p className="admin-readonly-note">Your sign-in code is emailed here.</p>
+              </div>
 
-                <label className="admin-field">
-                  <span className="admin-label">Position</span>
-                  <input className="admin-input" value={profile.position || ''} disabled />
-                </label>
-                <p className="admin-readonly-note">Set by the admin — not editable here.</p>
+              {editing && (
+                <p className="admin-readonly-note">
+                  The mobile number is the one you sign in with, and the sign-in code is emailed to the address above.
+                </p>
+              )}
 
-                <div className="admin-btn-row">
-                  <button className="admin-btn" type="submit" disabled={busy}>
-                    {busy ? 'Saving…' : 'Save changes'}
-                  </button>
+              <div className="admin-btn-row">
+                <button className="admin-btn" type="submit" disabled={!editing || busy}>
+                  {busy ? 'Updating…' : 'Update'}
+                </button>
+                {editing && (
                   <button className="admin-btn admin-btn-ghost" type="button" onClick={cancel} disabled={busy}>
                     Cancel
                   </button>
-                </div>
-              </form>
-            ) : (
-              <>
-                <dl>
-                  <div className="admin-detail"><dt>Name</dt><dd>{profile.name || '—'}</dd></div>
-                  <div className="admin-detail"><dt>Position</dt><dd>{profile.position || '—'}</dd></div>
-                  <div className="admin-detail"><dt>Mobile</dt><dd>{profile.mobile || '—'}</dd></div>
-                  <div className="admin-detail"><dt>Email</dt><dd>{profile.email || '—'}</dd></div>
-                  <div className="admin-detail">
-                    <dt>Access</dt>
-                    <dd>{profile.isAdmin ? 'Full access' : 'Funds screens only'}</dd>
-                  </div>
-                </dl>
-                <div className="admin-btn-row">
-                  <button className="admin-btn" type="button" onClick={startEdit}>Edit</button>
-                </div>
-              </>
-            )}
+                )}
+              </div>
+            </form>
           </>
         ) : (
           <p className="admin-page-sub">Could not load your profile.</p>

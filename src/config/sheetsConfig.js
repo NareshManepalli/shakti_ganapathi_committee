@@ -76,6 +76,19 @@ export const SHEETS_CONFIG = {
   //   While this is null the site falls back to the CSV export, so the sheet
   //   must stay public until it is set.
   api: {
+    // content: the Content Web App (apps-script/GOOGLE_APPS_SCRIPT_CONTENT.js).
+    //   The admin portal's write endpoint for the content, schedule and members
+    //   sheets. Every call needs a session token with adm_in = 1, so publishing
+    //   the URL costs nothing. Leave null until it is deployed — the editor
+    //   screens then say so rather than failing on save.
+    //
+    //   VITE_CONTENT_API overrides it. That exists for the browser tests, which
+    //   answer the endpoint themselves rather than write real committee members
+    //   into the live sheet; it means those specs run now instead of sitting
+    //   skipped until the deployment lands. Paste the real /exec URL below.
+    content: (import.meta.env && import.meta.env.VITE_CONTENT_API)
+      || 'https://script.google.com/macros/s/AKfycbzJH8kx4HlG1Jmf-pElUnFCOgwQQvsSxv5ozncMHr5_Xy4YKbYdSB6Q4NAhmHfAllxZEQ/exec',
+
     members: 'https://script.google.com/macros/s/AKfycbzB_4OcL26B4SbVkfb1byNV8ZLzqPMHXc0t18hs1ZnlO7iVx7W6jqio6QTGGar-dUdHuw/exec',
   },
 };

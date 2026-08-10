@@ -99,7 +99,7 @@ const OtpPage = () => {
       // Set when the server accepted a development bypass rather than an
       // emailed code. Carried through so the portal can say so on every screen
       // — a bypass that reaches production must be impossible to miss.
-      devBypass: Boolean(res.devBypass),
+      bypass: Boolean(res.bypass),
     });
     navigate('/admin', { replace: true });
   }, [busy, state, signIn, navigate, t]);
@@ -142,7 +142,9 @@ const OtpPage = () => {
           {t.authHello.replace('{name}', state.name || '')} <span aria-hidden="true">🤝</span>
         </p>
         <p className="auth-helper">
-          {t.authSentTo} <b className="auth-email">{state.maskedEmail}</b>
+          {state.bypass
+            ? 'Development sign-in — no email was sent for this member.'
+            : <>{t.authSentTo} <b className="auth-email">{state.maskedEmail}</b></>}
         </p>
 
         <form className="auth-otp-form" onSubmit={onSubmit}>
@@ -187,6 +189,9 @@ const OtpPage = () => {
           type="button"
           className="auth-resend"
           onClick={resend}
+          /* Nothing was emailed for a bypass member, so there is nothing to
+             resend — hiding it avoids offering an action that does nothing. */
+          hidden={Boolean(state.bypass)}
           disabled={resendIn > 0 || busy}
         >
           {resendIn > 0

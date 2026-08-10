@@ -328,3 +328,18 @@ body.lang-te .auth-title { line-height: 1.45; }
   .auth-captcha { padding: 9px 10px; }
   .auth-captcha-d { font-size: 17px; }
 }
+
+/* Shown while a development bypass is live, so nobody is left wondering why
+   no email arrived. */
+.auth-devnote {
+  width: 100%;
+  margin: 0 0 14px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: left;
+  color: #4a2a00;
+  background: repeating-linear-gradient(135deg, #ffe6a8 0 12px, #ffdf90 12px 24px);
+  border: 1px solid #d9a83a;
+}

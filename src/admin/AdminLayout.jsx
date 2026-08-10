@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, roleLabelFor } from '../contexts/AuthContext';
+import { toMediaUrl } from '../utils/sheetService';
 import logoImg from '../assets/logo.png';
 import {
-  IconDashboard, IconAbout, IconMembers, IconGallery, IconSchedule,
-  IconMandapam, IconLedger, IconFunds, IconProfile, IconLogout,
+  IconAbout, IconMembers, IconGallery, IconSchedule,
+  IconMandapam, IconLedger, IconFunds, IconProfile, IconLogout, IconSettings,
 } from './icons';
+import { ToastProvider } from './ToastContext';
 import './Admin.css';
 
 // The portal shell: a fixed sidebar on desktop, a drawer on phones, and a
@@ -20,23 +22,26 @@ import './Admin.css';
 // the funds screens and their own profile, nothing else. Filtering here is a
 // courtesy so they aren't shown doors they cannot open — the real check is the
 // signed token, which the server reads on every write.
+// Monthly Funds is first because it is where sign-in lands everyone — it is the
+// one screen every member can reach, admin or not.
 const NAV = [
-  { to: '/admin',               label: 'Dashboard',     Icon: IconDashboard, admin: false, end: true },
+  { to: '/admin/monthly-funds', label: 'Monthly Funds', Icon: IconFunds,     admin: false },
+  { to: '/admin/transactions',  label: 'Transactions',  Icon: IconLedger,    admin: false },
   { to: '/admin/about',         label: 'About',         Icon: IconAbout,     admin: true },
   { to: '/admin/members',       label: 'Members',       Icon: IconMembers,   admin: true },
   { to: '/admin/gallery',       label: 'Gallery',       Icon: IconGallery,   admin: true },
   { to: '/admin/schedule',      label: 'Schedule',      Icon: IconSchedule,  admin: true },
   { to: '/admin/mandapam',      label: 'Mandapam',      Icon: IconMandapam,  admin: true },
-  { to: '/admin/transactions',  label: 'Transactions',  Icon: IconLedger,    admin: false },
-  { to: '/admin/monthly-funds', label: 'Monthly Funds', Icon: IconFunds,     admin: false },
+  { to: '/admin/settings',      label: 'Settings',      Icon: IconSettings,  admin: true },
 ];
 
 const AdminLayout = () => {
   const navigate = useNavigate();
-  const { member, signOut, devBypass } = useAuth();
+  const { member, profile, signOut, bypass } = useAuth();
 
   const [drawer, setDrawer] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [photoFailed, setPhotoFailed] = useState(false);
   const menuRef = useRef(null);
 
   const isAdmin = Boolean(member && member.isAdmin);
@@ -63,10 +68,22 @@ const AdminLayout = () => {
     window.location.assign('/funds');
   };
 
-  const name = (member && member.name) || '';
+  const name = (profile && profile.name) || (member && member.name) || '';
   const initial = (name.trim().charAt(0) || 'S').toUpperCase();
+  const role = roleLabelFor(profile, isAdmin);
+
+  // prfle_photo is the portrait cut out for the ID card; photo is the plain
+  // headshot. Either reads fine in a circle, so take whichever the sheet has.
+  const photo = profile ? toMediaUrl(profile.profilePhoto || profile.photo, 200) : '';
+  const showPhoto = Boolean(photo) && !photoFailed;
+
+  // Same face in the pill and in the card below it, so only the size differs.
+  const avatar = showPhoto
+    ? <img src={photo} alt="" referrerPolicy="no-referrer" onError={() => setPhotoFailed(true)} />
+    : initial;
 
   return (
+    <ToastProvider>
     <div className="admin-root">
       {drawer && <div className="admin-scrim" onClick={() => setDrawer(false)} aria-hidden="true" />}
 
@@ -95,27 +112,10 @@ const AdminLayout = () => {
               {item.label}
             </NavLink>
           ))}
-          <span className="admin-nav-sep" />
-          <NavLink
-            to="/admin/profile"
-            className={({ isActive }) => `admin-nav-link${isActive ? ' is-active' : ''}`}
-            onClick={() => setDrawer(false)}
-          >
-            <IconProfile />
-            My Profile
-          </NavLink>
         </nav>
-
-        <button className="admin-nav-logout" onClick={leave}>
-          <IconLogout />
-          Log out
-        </button>
-
-        <p className="admin-role">
-          {isAdmin
-            ? 'Full access — you can edit every section.'
-            : 'View-only access to the funds screens.'}
-        </p>
+        {/* Profile and Log out live in the topbar card only — the sidebar is
+            for the sections, and having each of them in two places invited the
+            question of whether the two did the same thing. */}
       </aside>
 
       <div className="admin-main">
@@ -133,34 +133,42 @@ const AdminLayout = () => {
               aria-haspopup="menu"
               aria-expanded={menu}
             >
-              <span className="admin-avatar">{initial}</span>
+              <span className="admin-avatar">{avatar}</span>
               <span className="admin-profile-text">
                 <b>{name}</b>
-                <i>{isAdmin ? 'Administrator' : 'Committee member'}</i>
+                {/* Empty until the record loads — the line keeps its height so
+                    the pill does not resize under the cursor when it arrives. */}
+                <i>{role}</i>
               </span>
               <span className={`admin-caret${menu ? ' is-up' : ''}`} aria-hidden="true">▾</span>
             </button>
 
             {menu && (
+              /* A card, not a list of links: the avatar and name repeated large
+                 confirm who you are signed in as before you act on it. */
               <div className="admin-profile-menu" role="menu">
+                <span className="admin-profile-menu-avatar" aria-hidden="true">{avatar}</span>
+                <b className="admin-profile-menu-name">{name}</b>
+                <i className="admin-profile-menu-role">{role}</i>
+
                 <button role="menuitem" onClick={() => { setMenu(false); navigate('/admin/profile'); }}>
                   <IconProfile />
-                  My Profile
+                  Profile
                 </button>
                 <button role="menuitem" className="is-danger" onClick={leave}>
                   <IconLogout />
-                  Log out
+                  Logout
                 </button>
               </div>
             )}
           </div>
         </header>
 
-        {devBypass && (
+        {bypass && (
           <p className="admin-devbanner" role="alert">
-            <b>Development sign-in.</b> You are signed in with the bypass code, not an
-            emailed one. Run <code>disableDevBypass()</code> in the Auth Apps Script
-            project before this site goes public.
+            <b>Development sign-in.</b> This member has <code>bypass_in = 1</code>, so a
+            fixed code signs them in and no email is sent. Set it back to 0 in the members
+            sheet before the site goes public.
           </p>
         )}
 
@@ -169,6 +177,7 @@ const AdminLayout = () => {
         </main>
       </div>
     </div>
+    </ToastProvider>
   );
 };
 

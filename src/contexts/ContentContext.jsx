@@ -97,6 +97,10 @@ const TRANSFORMERS = {
 
 /* ------------------------------------------------------------- provider */
 
+// Sections with a public, read-only Web App in front of them. Everything else
+// is read from the sheet's CSV export.
+const PUBLIC_READ_API = new Set(['members']);
+
 export const ContentProvider = ({ children }) => {
   const [sections, setSections] = useState({});
   const [loading, setLoading] = useState(true);
@@ -116,7 +120,12 @@ export const ContentProvider = ({ children }) => {
 
     const entries = await Promise.all(names.map(async (name) => {
       const url = SHEETS_CONFIG.sections[name];
-      const apiUrl = (SHEETS_CONFIG.api || {})[name];
+      // Only sections named in PUBLIC_READ_API have one. Looking up api[name]
+      // blindly meant the section called `content` picked up api.content — the
+      // admin portal's WRITE endpoint, which needs a token and answers every
+      // visitor with UNAUTHORIZED before this fell back to the CSV. The site
+      // still rendered, so the only trace was a wasted request per visit.
+      const apiUrl = PUBLIC_READ_API.has(name) ? (SHEETS_CONFIG.api || {})[name] : null;
       if (!url && !apiUrl) return [name, null];
       try {
         // Prefer a Web App where one is configured: it serves only the public

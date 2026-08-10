@@ -42,6 +42,9 @@ const LoginPage = () => {
     }
 
     setBusy(true);
+    // One call either way. The server decides from the member's bypass_in
+    // whether to email a code or wave them through, and says which in the
+    // reply — the page never has to know in advance.
     const res = await requestOtp(digits);
     setBusy(false);
 
@@ -60,6 +63,7 @@ const LoginPage = () => {
         maskedEmail: res.maskedEmail,
         expiresInSec: res.expiresInSec,
         resendInSec: res.resendInSec,
+        bypass: Boolean(res.bypass),
       },
     });
   };

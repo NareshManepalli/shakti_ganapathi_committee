@@ -1,0 +1,9 @@
+node_modules/
+.otp
+.session.json
+.session-value.json
+test-results/
+playwright-report/
+
+# Holds a real member's mobile. This repository is public.
+.local.json

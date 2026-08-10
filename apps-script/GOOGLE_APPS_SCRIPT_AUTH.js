@@ -47,25 +47,21 @@ var SESSION_TTL_MINUTES  = 60;
 var SIGNING_KEY_PROP = 'SESSION_SIGNING_KEY';
 
 /* ---------------------------------------------------------------------------
- * DEVELOPMENT BYPASS
+ * DEVELOPMENT BYPASS — per member, from the sheet
  *
- * While building the portal, waiting for an email on every sign-in is slow and
- * burns the daily send quota. enableDevBypass() lets one fixed code stand in.
+ * A member whose `bypass_in` is 1 signs in with BYPASS_CODE instead of an
+ * emailed one, and no email is sent for them at all. Everyone else goes
+ * through the normal flow, so one row can be opened up for testing without
+ * weakening sign-in for the rest of the committee.
  *
- * It is deliberately awkward to leave switched on:
- *   - it is NOT in this file, so it cannot reach the public repo
- *   - it lives in Script Properties and is off unless explicitly enabled
- *   - it EXPIRES BY ITSELF after a set number of days, so a forgotten bypass
- *     closes on its own rather than sitting open forever
- *   - the health endpoint reports it, so `curl <exec>` shows whether it is live
- *   - every use is written to the log
+ * It skips the CODE, not the rules: access_in is still required, a non-member
+ * still cannot get in, and adm_in still decides what they see.
  *
- * With it on, ANYONE who knows the code can sign in as ANY member on the list,
- * including an admin. Run disableDevBypass() before the site goes public.
+ * Set bypass_in back to 0 on every row before the site goes public. A row left
+ * at 1 is a permanent way in for anyone who knows the code, and the code is in
+ * this file, which is in a public repo.
  * ------------------------------------------------------------------------- */
-var DEV_BYPASS_PROP = 'DEV_OTP_BYPASS';
-var DEV_BYPASS_UNTIL_PROP = 'DEV_OTP_BYPASS_UNTIL';
-var DEV_BYPASS_MAX_DAYS = 7;
+var BYPASS_CODE = '111111';
 
 // Shown as the sender in the member's inbox. The underlying address is the
 // Google account this script is deployed under — deploy it on the committee's
@@ -95,48 +91,8 @@ function initAuth() {
   Logger.log('Rows that can actually sign in (access_in = 1 AND an email): ' + canSignIn);
 }
 
-/**
- * Turn the bypass on. Defaults to 111111 for 7 days; both are overridable.
- *
- * Note that this default is written in a file that lives in a PUBLIC repo, so
- * "111111" is public knowledge. That costs nothing while the bypass is off,
- * but it means an enabled-and-forgotten bypass is open to anyone who has read
- * the repo. Pass your own code if that matters:  enableDevBypass('482913', 2)
- */
-function enableDevBypass(code, days) {
-  var props = PropertiesService.getScriptProperties();
-  var value = String(code || '111111');
-  var span = Math.min(Number(days) || DEV_BYPASS_MAX_DAYS, DEV_BYPASS_MAX_DAYS);
-  var until = Date.now() + span * 24 * 60 * 60 * 1000;
-  props.setProperty(DEV_BYPASS_PROP, value);
-  props.setProperty(DEV_BYPASS_UNTIL_PROP, String(until));
-  Logger.log('DEV BYPASS ON. Code "' + value + '" signs in as any member.');
-  Logger.log('It expires on ' + new Date(until) + ' — or run disableDevBypass() now.');
-}
 
-/** Turn it off. Run this before the site goes public. */
-function disableDevBypass() {
-  var props = PropertiesService.getScriptProperties();
-  props.deleteProperty(DEV_BYPASS_PROP);
-  props.deleteProperty(DEV_BYPASS_UNTIL_PROP);
-  Logger.log('DEV BYPASS OFF. Only emailed codes are accepted.');
-}
 
-/** The active bypass code, or '' when off or lapsed. */
-function devBypassCode() {
-  var props = PropertiesService.getScriptProperties();
-  var code = props.getProperty(DEV_BYPASS_PROP);
-  if (!code) return '';
-  var until = Number(props.getProperty(DEV_BYPASS_UNTIL_PROP) || 0);
-  if (!until || Date.now() > until) {
-    // Lapsed: clear it so it cannot be revived by accident.
-    props.deleteProperty(DEV_BYPASS_PROP);
-    props.deleteProperty(DEV_BYPASS_UNTIL_PROP);
-    Logger.log('DEV BYPASS expired and has been cleared.');
-    return '';
-  }
-  return String(code);
-}
 
 /* ------------------------------------------------------------------ utils */
 
@@ -193,6 +149,7 @@ function readMembers() {
   var iId = col('id'), iName = col('name_en'), iNameTe = col('name_te');
   var iMobile = col('mobile'), iEmail = col('email');
   var iAccess = col('access_in'), iAdm = col('adm_in'), iActive = col('a_in');
+  var iBypass = col('bypass_in');   // -1 when the column is absent, i.e. off
 
   var out = [];
   for (var r = 1; r < values.length; r++) {
@@ -207,6 +164,7 @@ function readMembers() {
       email: iEmail < 0 ? '' : String(row[iEmail] || '').trim(),
       accessIn: String(iAccess < 0 ? '0' : row[iAccess]).trim() === '1',
       admIn: String(iAdm < 0 ? '0' : row[iAdm]).trim() === '1',
+      bypassIn: String(iBypass < 0 ? '0' : row[iBypass]).trim() === '1',
     });
   }
   return out;
@@ -368,6 +326,20 @@ function handleRequestOtp(body) {
     return fail('NO_EMAIL', 'No email address is set against this member. Ask the admin to add one.');
   }
 
+  // bypass_in = 1: no code is generated and no email is sent. The reply is the
+  // same shape, so the page after this behaves identically either way.
+  if (member.bypassIn) {
+    Logger.log('BYPASS sign-in offered to ' + mobile + ' (' + member.name + ') — no email sent');
+    return jsonOut({
+      ok: true,
+      bypass: true,
+      name: member.name,
+      maskedEmail: maskEmail(member.email),
+      expiresInSec: OTP_TTL_SECONDS,
+      resendInSec: 0,
+    });
+  }
+
   var code = String(Math.floor(100000 + Math.random() * 900000));
   cache.put(otpKey(mobile), JSON.stringify({
     code: code,
@@ -396,24 +368,20 @@ function handleVerifyOtp(body) {
   var entered = String(body.otp || '').replace(/\D/g, '');
   var cache = sheetCache();
 
-  // Development bypass, if one is switched on and has not lapsed. Checked
-  // before the cache so a member can sign in without requesting a code at all.
-  var bypass = devBypassCode();
-  if (bypass && entered === bypass) {
-    var devMember = findMemberByMobile(mobile);
-    if (!devMember) return fail('NOT_A_MEMBER', 'This mobile number is not on the committee list.');
-    if (!devMember.accessIn) {
+  // bypass_in = 1: the fixed code stands in for an emailed one. Checked before
+  // the cache, because no code was ever generated for this member.
+  var early = findMemberByMobile(mobile);
+  if (early && early.bypassIn && entered === BYPASS_CODE) {
+    if (!early.accessIn) {
       return fail('NO_PERMISSION', 'You do not have permission to sign in. Please contact the committee admin.');
     }
-    Logger.log('DEV BYPASS USED for ' + mobile + ' (' + devMember.name + ')');
+    Logger.log('BYPASS USED for ' + mobile + ' (' + early.name + ')');
     cache.remove(otpKey(mobile));
     return jsonOut({
       ok: true,
-      devBypass: true,               // so the browser can say so out loud
-      token: issueToken(devMember),
-      member: {
-        id: devMember.id, name: devMember.name, nameTe: devMember.nameTe, isAdmin: devMember.admIn,
-      },
+      bypass: true,
+      token: issueToken(early),
+      member: { id: early.id, name: early.name, nameTe: early.nameTe, isAdmin: early.admIn },
       expiresInMin: SESSION_TTL_MINUTES,
     });
   }
@@ -530,18 +498,24 @@ function membersTab() {
 }
 
 /**
- * Updates the signed-in member's own name, mobile and email. Nothing else is
- * writable here: position and the access flags are the committee's business,
- * not the member's, and letting a member set adm_in would hand out the portal.
+ * Updates the signed-in member's own name (English and Telugu), mobile and
+ * email. Nothing else is writable here: position and the access flags are the
+ * committee's business, not the member's, and letting a member set adm_in would
+ * hand out the portal.
  *
  * Changing the mobile changes how they sign in next time, so it must stay
  * unique across the sheet — otherwise two rows would answer to one number.
+ *
+ * name_te is optional. It is how the member's name renders on the public site
+ * in Telugu, and plenty of rows have not been filled in yet; refusing a save
+ * because of it would block a member from correcting their own email.
  */
 function handleUpdateProfile(body) {
   var claims = verifyToken(body.token);
   if (!claims) return fail('UNAUTHORIZED', 'Your session has ended. Please sign in again.');
 
   var name = String(body.name || '').trim();
+  var nameTe = String(body.nameTe || '').trim();
   var mobile = normaliseMobile(body.mobile);
   var email = String(body.email || '').trim();
 
@@ -562,12 +536,13 @@ function handleUpdateProfile(body) {
   var values = sheet.getDataRange().getValues();
   var header = values[0].map(function (h) { return String(h || '').trim().toLowerCase(); });
   var col = function (nm) { return header.indexOf(nm); };
-  var iId = col('id'), iName = col('name_en'), iMobile = col('mobile'),
-      iEmail = col('email'), iUts = col('u_ts');
+  var iId = col('id'), iName = col('name_en'), iNameTe = col('name_te'),
+      iMobile = col('mobile'), iEmail = col('email'), iUts = col('u_ts');
 
   for (var r = 1; r < values.length; r++) {
     if (String(values[r][iId]) !== String(claims.mid)) continue;
     if (iName >= 0)   sheet.getRange(r + 1, iName + 1).setValue(name);
+    if (iNameTe >= 0) sheet.getRange(r + 1, iNameTe + 1).setValue(nameTe);
     if (iMobile >= 0) sheet.getRange(r + 1, iMobile + 1).setValue(mobile);
     if (iEmail >= 0)  sheet.getRange(r + 1, iEmail + 1).setValue(email);
     // Same audit convention as the rest of the workbook.
@@ -592,16 +567,16 @@ function handleUpdateProfile(body) {
 /** A plain GET is only ever a health check — it exposes nothing. */
 function doGet() {
   var configured = !!PropertiesService.getScriptProperties().getProperty(SIGNING_KEY_PROP);
-  var bypass = devBypassCode();
+  var open = 0;
+  try {
+    open = readMembers().filter(function (m) { return m.bypassIn; }).length;
+  } catch (e) { open = -1; }
   return jsonOut({
     ok: true,
     service: 'ssgc-auth',
     configured: configured,
-    // Reported on purpose: a single GET shows whether the bypass is live, so it
-    // cannot sit open unnoticed. The code itself is never included.
-    devBypass: bypass ? true : false,
-    devBypassUntil: bypass
-      ? new Date(Number(PropertiesService.getScriptProperties().getProperty(DEV_BYPASS_UNTIL_PROP))).toISOString()
-      : null,
+    // How many rows can sign in with the fixed code. Reported on purpose: one
+    // GET shows whether any bypass is live, without naming who or the code.
+    bypassRows: open,
   });
 }

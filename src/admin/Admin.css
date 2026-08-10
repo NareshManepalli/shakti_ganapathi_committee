@@ -11,7 +11,7 @@
 .admin-root {
   --a-radius: 14px;
   --a-radius-sm: 10px;
-  --a-sidebar-w: 248px;
+  --a-sidebar-w: 250px;
 
   /* light working area */
   --a-bg: #eef1f6;
@@ -69,15 +69,15 @@
 .admin-brand {
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 16px 16px 15px;
+  gap: 12px;
+  padding: 16px 18px;
   border-bottom: 1px solid var(--sb-line);
 }
 
 .admin-brand-emblem {
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
   border-radius: 50%;
   overflow: hidden;
   clip-path: circle(50%);   /* logo.png hides square corners under its padding */
@@ -95,17 +95,28 @@
 
 .admin-brand-text b {
   font-family: var(--font-display, inherit);
-  font-size: 13px;
-  letter-spacing: 0.06em;
+  font-size: 16.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.005em;
   color: var(--a-gold-soft);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
 }
 
+/* Sized to clear the sidebar in one line: 250px less the 36px of padding and
+   the 54px the emblem and its gap take leaves ~160px, and 19 tracked capitals
+   have to fit inside that. Widening the tracking without dropping the size is
+   what wrapped it onto a second line. */
 .admin-brand-text i {
   font-style: normal;
-  font-size: 9.5px;
-  letter-spacing: 0.12em;
+  font-size: 9px;
+  letter-spacing: 0.185em;
   text-transform: uppercase;
   color: var(--sb-muted);
+  margin-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .admin-drawer-close {
@@ -119,23 +130,23 @@
   cursor: pointer;
 }
 
-.admin-nav { display: flex; flex-direction: column; gap: 3px; padding: 12px 10px; flex: 1; overflow-y: auto; }
+.admin-nav { display: flex; flex-direction: column; gap: 3px; padding: 12px; flex: 1; overflow-y: auto; }
 
 .admin-nav-link {
   display: flex;
   align-items: center;
   gap: 13px;
-  padding: 10px 13px;
+  padding: 11px 14px;
   border-radius: 12px;
   color: var(--sb-text);
   text-decoration: none;
-  font-size: 13.8px;
+  font-size: 14px;
   font-weight: 500;
   border: 1px solid transparent;
   transition: background 0.15s, color 0.15s, box-shadow 0.15s;
 }
 
-.admin-nav-link svg { width: 19px; height: 19px; flex: none; color: var(--a-gold); }
+.admin-nav-link svg { width: 20px; height: 20px; flex: none; color: var(--a-gold); }
 .admin-nav-link:hover { background: rgba(255, 255, 255, 0.06); }
 
 .admin-nav-link.is-active {
@@ -147,48 +158,26 @@
 
 .admin-nav-link.is-active svg { color: var(--a-gold-soft); }
 
-.admin-nav-sep { height: 1px; background: var(--sb-line); margin: 8px 6px; }
-
-/* logout — outlined pill at the foot of the menu */
-.admin-nav-logout {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  margin: 4px 10px 12px;
-  padding: 10px 13px;
-  border-radius: 12px;
-  border: 1px solid rgba(209, 67, 95, 0.45);
-  background: none;
-  color: #ff9d9d;
-  font: inherit;
-  font-size: 13.5px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.admin-nav-logout svg { width: 19px; height: 19px; flex: none; }
-.admin-nav-logout:hover { background: rgba(209, 67, 95, 0.16); color: #ffc0c0; }
-
-.admin-role {
-  margin: 0 14px 12px;
-  font-size: 10.5px;
-  line-height: 1.55;
-  color: var(--sb-muted);
-  padding-top: 11px;
-  border-top: 1px solid var(--sb-line);
-}
+/* Profile and Log out are not repeated down here — they live in the topbar
+   card, which is on every screen including the drawer's. */
 
 /* ============================ topbar (dark) ============================ */
 
 .admin-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 
 .admin-topbar {
+  height: 74px;
+  flex: none;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 20px;
-  background: linear-gradient(120deg, #0e1b33, #16274a);
-  border-bottom: 1px solid rgba(223, 174, 77, 0.2);
+  padding: 0 24px;
+  /* A woven navy rather than a flat bar: peetam carries a banner image here,
+     which is their artwork, so this stands in with the committee's own colours. */
+  background:
+    radial-gradient(120% 200% at 12% 50%, rgba(223, 174, 77, 0.16) 0%, transparent 55%),
+    linear-gradient(120deg, #0b1730 0%, #16274a 55%, #0e1b33 100%);
+  border-bottom: 1px solid rgba(223, 174, 77, 0.22);
   position: sticky;
   top: 0;
   z-index: 30;
@@ -196,9 +185,11 @@
 
 .admin-topbar-title {
   font-family: var(--font-display, inherit);
-  font-size: 15px;
+  font-size: 17px;
+  font-weight: 600;
   color: var(--a-gold-soft);
   letter-spacing: 0.02em;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
 }
 
 .admin-hamburger {
@@ -220,7 +211,7 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 5px 12px 5px 5px;
+  padding: 7px 14px 7px 7px;
   border-radius: 999px;
   border: 1px solid rgba(223, 174, 77, 0.28);
   background: rgba(255, 255, 255, 0.06);
@@ -233,7 +224,7 @@
 .admin-profile-btn:hover { border-color: rgba(223, 174, 77, 0.6); background: rgba(255, 255, 255, 0.1); }
 
 .admin-avatar {
-  width: 32px; height: 32px; flex: 0 0 32px;
+  width: 36px; height: 36px; flex: 0 0 36px;
   border-radius: 50%;
   display: grid; place-items: center;
   overflow: hidden;
@@ -245,35 +236,93 @@
 
 .admin-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-.admin-profile-text { display: flex; flex-direction: column; line-height: 1.2; text-align: left; max-width: 150px; }
-.admin-profile-text b { font-size: 12.8px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.admin-profile-text i { font-style: normal; font-size: 10.5px; color: #a9bada; }
+/* Wide enough for a position and the "/ Administrative" suffix on one line;
+   the dropdown card below measures itself against this, so it gains the room too. */
+.admin-profile-text { display: flex; flex-direction: column; line-height: 1.2; text-align: left; max-width: 200px; }
+.admin-profile-text b { font-size: 13.5px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* min-height so the empty line before the record loads still occupies its
+   space — otherwise the pill shrinks and then grows again on every refresh.
+   nowrap because "<position> / Administrative" is long enough to take a second
+   line, which would make the topbar pill twice as tall. */
+.admin-profile-text i {
+  font-style: normal; font-size: 11px; color: #a9bada;
+  min-height: 1.2em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 
 .admin-caret { color: #a9bada; font-size: 11px; transition: transform 0.18s; }
 .admin-caret.is-up { transform: rotate(180deg); }
 
+/* Identity card rather than a bare menu — avatar, name, role, then the two
+   actions as full-width tiles. */
+/* left+right rather than a width: the card then measures exactly as wide as the
+   pill above it, whatever the member's name does to that pill. */
 .admin-profile-menu {
-  position: absolute; right: 0; top: calc(100% + 9px);
-  min-width: 186px; padding: 6px;
-  border-radius: 12px;
+  position: absolute; left: 0; right: 0; top: calc(100% + 10px);
+  padding: 20px 16px 16px;
+  border-radius: 18px;
   background: var(--a-surface);
   border: 1px solid var(--a-border);
-  box-shadow: var(--a-shadow);
-  display: flex; flex-direction: column; gap: 2px;
+  box-shadow: 0 18px 44px rgba(15, 30, 60, 0.2);
+  display: flex; flex-direction: column; align-items: center;
+}
+
+.admin-profile-menu-avatar {
+  width: 74px; height: 74px; flex: none;
+  margin-bottom: 13px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid; place-items: center;
+  background: linear-gradient(180deg, var(--a-navy-2), var(--a-navy));
+  color: var(--a-gold-soft);
+  font-size: 27px; font-weight: 700;
+  /* White ring first, then the gold hairline — lifts the circle off the card
+     the way the reference does, without leaving the committee's palette. */
+  box-shadow: 0 0 0 5px var(--a-surface), 0 0 0 6px rgba(223, 174, 77, 0.5), 0 6px 16px rgba(15, 30, 60, 0.18);
+}
+
+.admin-profile-menu-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.admin-profile-menu-name,
+.admin-profile-menu-role {
+  max-width: 100%;
+  text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.admin-profile-menu-name {
+  font-family: var(--font-display, inherit);
+  font-size: 16.5px; font-weight: 700;
+  color: var(--a-heading);
+}
+
+.admin-profile-menu-role {
+  font-style: normal;
+  font-size: 12.5px;
+  color: var(--a-muted-2);
+  margin: 3px 0 17px;
+  min-height: 1.2em;   /* holds the line while the record is still loading */
 }
 
 .admin-profile-menu button {
-  display: flex; align-items: center; gap: 10px;
-  text-align: left; padding: 9px 11px;
-  border-radius: 8px; border: none; background: none;
-  color: var(--a-text); font: inherit; font-size: 13px; cursor: pointer;
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--a-border);
+  background: var(--a-surface-2);
+  color: var(--a-text); font: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.admin-profile-menu button svg { width: 17px; height: 17px; color: var(--a-muted); }
-.admin-profile-menu button:hover { background: var(--a-surface-2); }
+.admin-profile-menu button + button { margin-top: 9px; }
+
+.admin-profile-menu button svg { width: 18px; height: 18px; flex: none; color: var(--a-muted); }
+.admin-profile-menu button:hover { background: #eceff5; border-color: #d7deea; }
 .admin-profile-menu button.is-danger { color: var(--a-red); }
 .admin-profile-menu button.is-danger svg { color: var(--a-red); }
-.admin-profile-menu button.is-danger:hover { background: var(--a-red-bg); }
+.admin-profile-menu button.is-danger:hover { background: var(--a-red-bg); border-color: rgba(209, 67, 95, 0.35); }
 
 /* ========================== content (light) ========================== */
 
@@ -302,29 +351,16 @@
 .admin-wip-title { margin: 0 0 6px; font-size: 17px; color: var(--a-heading); font-family: var(--font-display, inherit); }
 .admin-wip-text { margin: 0 auto; max-width: 44ch; font-size: 13px; line-height: 1.65; color: var(--a-muted); }
 
-/* dashboard tiles */
-.admin-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 13px; }
-
-.admin-tile {
-  display: flex; flex-direction: column; gap: 4px;
-  padding: 16px; border-radius: 12px; text-decoration: none;
-  background: var(--a-surface);
-  border: 1px solid var(--a-border);
-  box-shadow: var(--a-shadow-sm);
-  transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s;
-}
-
-.admin-tile:hover { border-color: var(--a-gold); transform: translateY(-2px); box-shadow: var(--a-shadow); }
-.admin-tile b { font-family: var(--font-display, inherit); font-size: 15px; color: var(--a-heading); }
-.admin-tile i { font-style: normal; font-size: 12px; color: var(--a-muted); }
-
 /* ------------------------------- forms ------------------------------- */
 
 .admin-field { display: block; margin-bottom: 15px; }
 
+/* The fixed line-height is what keeps an English label and its Telugu twin the
+   same height: Telugu vowel marks reach further above and below, and left to
+   itself the taller line box pushes that column's input out of step. */
 .admin-label {
   display: block; margin-bottom: 6px;
-  font-size: 11.5px; letter-spacing: 0.07em; text-transform: uppercase;
+  font-size: 11.5px; line-height: 17px; letter-spacing: 0.07em; text-transform: uppercase;
   color: var(--a-muted);
 }
 
@@ -337,10 +373,16 @@
   font: inherit; font-size: 14.5px;
 }
 
+/* Josefin Sans carries no Telugu glyphs, so name the face explicitly rather
+   than leave the Telugu name box to whatever the browser falls back to. */
+.admin-input[lang="te"] { font-family: 'Anek Telugu', var(--font-display, inherit), sans-serif; }
+
 .admin-input:focus { outline: none; border-color: var(--a-gold); box-shadow: 0 0 0 3px rgba(223, 174, 77, 0.18); }
 .admin-input:disabled { background: var(--a-surface-2); color: var(--a-muted); cursor: not-allowed; }
 
-.admin-readonly-note { margin: -8px 0 15px; font-size: 11.5px; color: var(--a-muted-2); }
+/* Capped so the note stays a readable column on a wide screen rather than one
+   line running the full width of the workspace. */
+.admin-readonly-note { margin: -8px 0 15px; max-width: 78ch; font-size: 11.5px; line-height: 1.65; color: var(--a-muted-2); }
 
 .admin-btn {
   display: inline-flex; align-items: center; gap: 8px;
@@ -368,33 +410,55 @@
 .admin-msg { margin: 0 0 14px; padding: 10px 13px; border-radius: var(--a-radius-sm); font-size: 13px; line-height: 1.55; }
 .admin-msg.is-error { color: #8c1d33; background: var(--a-red-bg); border: 1px solid rgba(209, 67, 95, 0.35); }
 .admin-msg.is-ok { color: #0d5c31; background: var(--a-green-bg); border: 1px solid rgba(23, 145, 76, 0.32); }
+/* Something is set up in a way that needs attention, as against something
+   having gone wrong — kept distinct so a glance tells them apart. */
+.admin-msg.is-warn { color: #8a5a00; background: #fff6e0; border: 1px solid #e6c877; }
 
 /* ------------------------------ profile ------------------------------ */
 
-.admin-profile-head {
-  display: flex; align-items: center; gap: 18px;
-  margin-bottom: 20px; padding-bottom: 18px;
-  border-bottom: 1px solid var(--a-border-soft);
-}
+.prof-top { display: flex; align-items: flex-start; gap: 26px; }
 
-.admin-profile-photo {
-  width: 84px; height: 84px; flex: 0 0 84px;
-  border-radius: 50%; overflow: hidden;
-  background: linear-gradient(180deg, var(--a-navy-2), var(--a-navy));
-  border: 2px solid var(--a-gold);
+/* Portrait, not a circle or a square: prfle_photo is a standing cut-out, so a
+   taller frame shows the subject rather than cropping them at the shoulders. */
+.prof-avatar {
+  width: 118px; height: 152px; flex: 0 0 118px;
+  border-radius: 16px; overflow: hidden;
+  background: linear-gradient(160deg, var(--a-navy-2), var(--a-navy));
+  border: 5px solid var(--a-surface);
+  box-shadow: 0 6px 20px rgba(15, 30, 60, 0.22);
   display: grid; place-items: center;
-  font-size: 30px; font-weight: 700; color: var(--a-gold-soft);
+  font-size: 42px; font-weight: 700; color: #fff;
 }
 
-.admin-profile-photo img { width: 100%; height: 100%; object-fit: cover; }
+.prof-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-.admin-profile-name { margin: 0 0 3px; font-size: 19px; font-family: var(--font-display, inherit); color: var(--a-heading); }
-.admin-profile-role { margin: 0; font-size: 13px; color: var(--a-muted); }
+.prof-facts { margin: 6px 0 0; flex: 1; min-width: 0; }
 
-.admin-detail { display: flex; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--a-border-soft); }
-.admin-detail:last-child { border-bottom: none; }
-.admin-detail dt { flex: 0 0 112px; font-size: 11.5px; color: var(--a-muted); letter-spacing: 0.06em; text-transform: uppercase; padding-top: 2px; }
-.admin-detail dd { margin: 0; font-size: 14.5px; color: var(--a-text); word-break: break-word; }
+/* dt carries a fixed width so every colon lands in the same column. */
+.prof-fact { display: flex; align-items: baseline; padding: 5px 0; }
+.prof-fact dt { flex: 0 0 104px; font-size: 14px; color: var(--a-muted); }
+.prof-fact dd {
+  margin: 0; min-width: 0;
+  font-size: 14.5px; font-weight: 600; color: var(--a-heading);
+  overflow-wrap: anywhere;
+}
+
+.prof-fact dd::before {
+  content: ':';
+  display: inline-block; width: 20px;
+  font-weight: 400; color: var(--a-muted-2);
+}
+
+.prof-edit-row { display: flex; justify-content: flex-end; margin: 6px 0 20px; }
+
+.prof-form { border-top: 1px solid var(--a-border-soft); padding-top: 22px; }
+
+.prof-grid {
+  display: grid; gap: 0 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.prof-req { font-style: normal; color: var(--a-red); }
 
 .admin-skel { height: 15px; border-radius: 5px; background: var(--a-surface-2); }
 
@@ -412,13 +476,54 @@
   .admin-scrim { position: fixed; inset: 0; z-index: 35; background: rgba(8, 19, 38, 0.6); }
   .admin-content { padding: 16px 14px 36px; }
   .admin-profile-text { display: none; }      /* avatar only on a phone */
-  .admin-topbar-title { font-size: 13.5px; }
+  /* The pill is down to an avatar and a caret here, so matching its width would
+     leave the card too narrow to hold anything. Fixed width, hung off the right. */
+  .admin-profile-menu { left: auto; width: 248px; max-width: calc(100vw - 28px); }
+  .admin-topbar-title { font-size: 14.5px; }
+  .admin-topbar { height: 66px; padding: 0 14px; }
 }
 
-@media (max-width: 480px) {
-  .admin-profile-head { flex-direction: column; text-align: center; gap: 12px; }
-  .admin-detail { flex-direction: column; gap: 2px; }
-  .admin-detail dt { flex-basis: auto; }
+/* One breakpoint for the whole card. The form collapsing to a single column is
+   the same moment the details column stops being wide enough to sit beside the
+   photo — at 560px it was breaking "President / Administrative" across two
+   lines and hyphenating the email. */
+@media (max-width: 640px) {
+  .prof-grid { grid-template-columns: minmax(0, 1fr); }
+
+  /* Photo on top, everything below it in label/colon/value rows — the read-only
+     facts and the form fields alike, so the two halves of the card line up
+     instead of one reading as rows and the other as stacked blocks. */
+  .prof-top { flex-direction: column; align-items: center; gap: 4px; }
+  .prof-facts { width: 100%; margin-top: 14px; }
+  .prof-fact dt { flex: 0 0 86px; font-size: 13.5px; }
+  .prof-fact dd { font-size: 14px; }
+  .prof-fact dd::before { width: 16px; }
+
+  .prof-grid .admin-field { display: flex; align-items: center; margin-bottom: 14px; }
+
+  /* Sentence case, not the uppercase caption used elsewhere: here the label is
+     one half of a row rather than a heading over a field. */
+  .prof-grid .admin-label {
+    position: relative;
+    flex: 0 0 100px;
+    margin-bottom: 0;
+    padding-right: 18px;
+    font-size: 13.5px;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+
+  /* Absolute, so the colon lands at the same x on every row regardless of how
+     long the label is. */
+  .prof-grid .admin-label::after {
+    content: ':';
+    position: absolute;
+    right: 3px;
+    color: var(--a-muted-2);
+  }
+
+  .prof-grid .admin-input { flex: 1; min-width: 0; }
+
   .admin-page-head { flex-direction: column; align-items: stretch; }
 }
 
@@ -441,3 +546,276 @@
   border-radius: 4px;
   font-size: 11.8px;
 }
+
+/* ============================== toasts ============================== */
+
+.toast-stack {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(360px, calc(100vw - 32px));
+  /* The stack spans the corner but must not swallow clicks; each toast turns
+     pointer events back on for itself. */
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  box-shadow: 0 14px 34px rgba(15, 30, 60, 0.18);
+  animation: toast-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
+}
+
+.toast-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.toast-body { flex: 1; min-width: 0; }
+.toast-body b { display: block; font-size: 14px; font-weight: 700; line-height: 1.3; }
+.toast-body span { display: block; font-size: 12.5px; margin-top: 3px; opacity: 0.88; line-height: 1.45; }
+
+.toast-close {
+  flex: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: inherit;
+  opacity: 0.6;
+}
+
+.toast-close:hover { opacity: 1; }
+
+.toast-success { background: linear-gradient(180deg, #ddf3e5, #cbedd7); color: #16693c; }
+.toast-success .toast-icon { color: var(--a-green); }
+
+.toast-error { background: linear-gradient(180deg, #fbdce1, #f6ccd3); color: #9c2740; }
+.toast-error .toast-icon { color: var(--a-red); }
+
+.toast-info { background: linear-gradient(180deg, #dde8fb, #cdd9f6); color: #26406e; }
+.toast-info .toast-icon { color: var(--a-navy-2); }
+
+@media (max-width: 520px) {
+  .toast-stack { top: 12px; right: 12px; left: 12px; width: auto; }
+}
+
+/* ========================= editor screens ========================= */
+
+.ed-field { display: block; margin-bottom: 16px; }
+.ed-skel { display: flex; flex-direction: column; gap: 12px; }
+
+/* English and Telugu side by side, as the sheet stores them */
+.ed-bi { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.ed-bi-col { display: block; }
+
+.ed-bi-tag {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 16px; /* same reason as .admin-label — hold the box, not the glyphs */
+  font-weight: 600;
+  color: var(--a-navy);
+  background: var(--a-surface-2);
+  border: 1px solid var(--a-border);
+}
+
+.ed-textarea { resize: vertical; line-height: 1.6; font-size: 14px; }
+
+.ed-image-row { display: flex; gap: 12px; align-items: stretch; }
+.ed-image-row .admin-input { flex: 1; }
+
+.ed-image-preview {
+  width: 92px; height: 62px; flex: none;
+  border-radius: var(--a-radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--a-border);
+  background: var(--a-surface-2);
+  display: grid; place-items: center;
+}
+
+.ed-image-preview img { width: 100%; height: 100%; object-fit: cover; }
+.ed-image-empty { font-size: 11.5px; color: var(--a-muted-2); }
+
+.ed-preview-card {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 13px 15px;
+  border-radius: var(--a-radius-sm);
+  background: var(--a-surface-2);
+  border: 1px solid var(--a-border);
+  font-size: 13.5px;
+  color: var(--a-text);
+}
+
+.ed-state { margin: 0 0 12px; font-size: 13px; color: var(--a-green); font-weight: 600; }
+.ed-state.is-warn { color: var(--a-red); }
+
+/* -------------------------------- toolbars ------------------------------- */
+
+.ed-toolbar {
+  display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap;
+  padding-bottom: 14px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--a-border-soft);
+}
+
+.ed-inline { display: block; }
+.ed-inline .admin-input { min-width: 130px; }
+.ed-inline-note { font-size: 12.5px; color: var(--a-muted); padding-bottom: 10px; }
+
+.ed-strip {
+  display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;
+  padding: 14px; margin-bottom: 16px;
+  border-radius: var(--a-radius-sm);
+  background: var(--a-surface-2);
+  border: 1px solid var(--a-border);
+}
+
+/* --------------------------------- tables -------------------------------- */
+
+.ed-table-wrap { overflow-x: auto; }
+.ed-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+
+.ed-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #cdd8ec;
+  background: linear-gradient(140deg, var(--a-navy-2), var(--a-navy));
+  white-space: nowrap;
+}
+
+.ed-table th:first-child { border-radius: var(--a-radius-sm) 0 0 var(--a-radius-sm); }
+.ed-table th:last-child { border-radius: 0 var(--a-radius-sm) var(--a-radius-sm) 0; }
+
+.ed-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--a-border-soft);
+  vertical-align: middle;
+}
+
+.ed-table tbody tr:hover { background: var(--a-surface-2); }
+.ed-table td b { display: block; color: var(--a-text); font-weight: 600; }
+.ed-te { display: block; font-style: normal; font-size: 12px; color: var(--a-muted); margin-top: 1px; }
+.ed-day-no { font-weight: 700; color: var(--a-heading); }
+.ed-email { word-break: break-all; max-width: 200px; }
+.ed-empty-cell { text-align: center; color: var(--a-muted); padding: 28px 12px; }
+
+.ed-row-actions { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
+.ed-sm { padding: 6px 12px; font-size: 12.5px; }
+
+.ed-del {
+  width: 30px; height: 30px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 8px; border: 1px solid transparent;
+  background: none; color: var(--a-muted-2); cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.ed-del svg { width: 16px; height: 16px; }
+.ed-del:hover:not(:disabled) { background: var(--a-red-bg); color: var(--a-red); border-color: rgba(209, 67, 95, 0.3); }
+.ed-del:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ---------------------------------- chips -------------------------------- */
+
+.ed-chip {
+  display: inline-block;
+  margin: 3px 4px 0 0;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--a-navy);
+  background: rgba(22, 39, 74, 0.08);
+  border: 1px solid var(--a-border);
+}
+
+.ed-chip.is-admin { color: #0d5c31; background: var(--a-green-bg); border-color: rgba(23, 145, 76, 0.3); }
+.ed-chip.is-off { color: var(--a-muted); background: var(--a-surface-2); }
+.ed-chip.is-warn { color: #8a5a00; background: #fff2d1; border-color: #e6c877; }
+
+/* --------------------------------- modals -------------------------------- */
+
+.ed-modal { width: min(640px, 100%); max-height: 88vh; overflow-y: auto; }
+.ed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+
+/* ---------------------------------- flags -------------------------------- */
+
+.ed-flags {
+  display: flex; flex-direction: column; gap: 2px;
+  margin: 4px 0 18px;
+  border: 1px solid var(--a-border);
+  border-radius: var(--a-radius-sm);
+  overflow: hidden;
+}
+
+.ed-flag {
+  display: flex; align-items: flex-start; gap: 11px;
+  padding: 11px 13px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--a-border-soft);
+}
+
+.ed-flag:last-child { border-bottom: none; }
+.ed-flag:hover { background: var(--a-surface-2); }
+.ed-flag input { margin-top: 3px; width: 16px; height: 16px; flex: none; accent-color: var(--a-navy-2); }
+.ed-flag span { display: flex; flex-direction: column; }
+.ed-flag b { font-size: 13.5px; color: var(--a-text); }
+.ed-flag i { font-style: normal; font-size: 12px; color: var(--a-muted); margin-top: 1px; }
+.ed-flag.is-disabled { opacity: 0.5; cursor: not-allowed; }
+.ed-flag.is-warn { background: #fffaf0; }
+.ed-flag.is-warn b { color: #8a5a00; }
+
+@media (max-width: 720px) {
+  .ed-bi, .ed-grid { grid-template-columns: 1fr; }
+  .ed-image-row { flex-direction: column; }
+  .ed-image-preview { width: 100%; height: 120px; }
+}
+
+/* Modal and empty-state shells for the editor screens. Gallery carries its own
+   copies in Gallery.css; these are here so a screen never depends on a sibling
+   page's stylesheet having been loaded. */
+
+.admin-modal {
+  position: fixed; inset: 0; z-index: 60;
+  display: grid; place-items: center;
+  padding: 22px;
+  background: rgba(8, 19, 38, 0.72);
+}
+
+.admin-confirm { max-width: 400px; text-align: center; }
+
+.admin-empty { text-align: center; padding: 40px 20px; }
+.admin-empty-icon { font-size: 32px; display: block; margin-bottom: 8px; }
+.admin-empty-title { margin: 0 0 5px; font-size: 16px; color: var(--a-heading); font-family: var(--font-display, inherit); }
+.admin-empty-text { margin: 0 auto; max-width: 40ch; font-size: 12.8px; line-height: 1.6; color: var(--a-muted); }

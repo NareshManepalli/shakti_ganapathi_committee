@@ -10,7 +10,6 @@ const svg = (paths) => (props) => (
   </svg>
 );
 
-export const IconDashboard = svg(<><rect x="3" y="3" width="7" height="8" rx="1.5" /><rect x="14" y="3" width="7" height="5" rx="1.5" /><rect x="14" y="11" width="7" height="10" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /></>);
 export const IconAbout     = svg(<><circle cx="12" cy="12" r="9" /><path d="M12 11v5" /><path d="M12 8h.01" /></>);
 export const IconMembers   = svg(<><circle cx="9" cy="8" r="3.2" /><path d="M3 20c0-3.3 2.7-5.4 6-5.4s6 2.1 6 5.4" /><path d="M16.5 11a2.7 2.7 0 1 0-1.6-4.9" /><path d="M17.4 20c0-2.3-.8-3.9-2.1-4.9" /></>);
 export const IconGallery   = svg(<><rect x="3" y="4" width="18" height="16" rx="2.5" /><circle cx="8.5" cy="9.5" r="1.6" /><path d="m4 17 4.6-4.3a2 2 0 0 1 2.7 0L20 20" /></>);
@@ -24,5 +23,5 @@ export const IconUpload    = svg(<><path d="M12 16V4" /><path d="m7.5 8.5 4.5-4.
 export const IconFolderAdd = svg(<><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2.5h7A1.5 1.5 0 0 1 19 10v8.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 3 18.5z" /><path d="M12 12.5v4M10 14.5h4" /></>);
 export const IconFolder    = svg(<><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2.5h7A1.5 1.5 0 0 1 19 10v8.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 3 18.5z" /></>);
 export const IconTrash     = svg(<><path d="M4 7h16" /><path d="M9 7V4.8A.8.8 0 0 1 9.8 4h4.4a.8.8 0 0 1 .8.8V7" /><path d="M6.5 7 7.4 20h9.2L17.5 7" /><path d="M10.5 11v5M13.5 11v5" /></>);
-export const IconBack      = svg(<><path d="M15 19l-7-7 7-7" /></>);
-export const IconRefresh   = svg(<><path d="M20 11a8 8 0 1 0-.7 4.5" /><path d="M20 5v6h-6" /></>);
+export const IconEdit      = svg(<><path d="M4 20h4l10-10a2.1 2.1 0 0 0-3-3L5 17z" /><path d="M14.5 6.5l3 3" /></>);
+export const IconSettings  = svg(<><circle cx="12" cy="12" r="3.1" /><path d="M12 2.8v2.4M12 18.8v2.4M4.5 7.5l2.1 1.2M17.4 15.3l2.1 1.2M4.5 16.5l2.1-1.2M17.4 8.7l2.1-1.2" /></>);

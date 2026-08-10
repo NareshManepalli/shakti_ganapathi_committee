@@ -63,6 +63,12 @@ const post = async (payload) => {
 /** Step 1 — look the mobile up and email a code. Never returns the code. */
 export const requestOtp = (mobile) => post({ action: 'requestOtp', mobile });
 
+
+/**
+ * The bypass equivalent of requestOtp: same reply, but nothing is emailed and
+ * nothing is throttled. Refused by the server unless a bypass is live.
+ */
+
 /** Step 2 — check the code. On success this is where the session comes from. */
 export const verifyOtp = (mobile, otp) => post({ action: 'verifyOtp', mobile, otp });
 
@@ -90,9 +96,9 @@ export const makeCaptcha = () => String(Math.floor(1000 + Math.random() * 9000))
 export const getProfile = (token) => post({ action: 'getProfile', token });
 
 /**
- * Updates the member's own name, mobile and email. Position and the access
- * flags are not writable — those are the committee's to set, and letting a
- * member edit adm_in would hand out the portal.
+ * Updates the member's own name in both languages, mobile and email. Position
+ * and the access flags are not writable — those are the committee's to set, and
+ * letting a member edit adm_in would hand out the portal.
  */
-export const updateProfile = (token, { name, mobile, email }) =>
-  post({ action: 'updateProfile', token, name, mobile, email });
+export const updateProfile = (token, { name, nameTe, mobile, email }) =>
+  post({ action: 'updateProfile', token, name, nameTe, mobile, email });

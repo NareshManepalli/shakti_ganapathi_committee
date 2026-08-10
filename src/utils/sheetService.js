@@ -11,8 +11,12 @@ const parseSheetUrl = (url) => {
   if (!url) return null;
   const idMatch = String(url).match(/\/d\/([a-zA-Z0-9-_]+)/);
   if (!idMatch) return null;
+  // null, not '0', when the URL names no tab. A workbook's first tab is only
+  // gid 0 if it is the tab the workbook was created with — rename or recreate
+  // it and the id is some other number. Asking for gid=0 on such a workbook is
+  // a 400, so when no tab is named we ask for no tab and take the default.
   const gidMatch = String(url).match(/[#&?]gid=([0-9]+)/);
-  return { sheetId: idMatch[1], gid: gidMatch ? gidMatch[1] : '0' };
+  return { sheetId: idMatch[1], gid: gidMatch ? gidMatch[1] : null };
 };
 
 // The two CSV export URLs we attempt, in order. A cache-busting param is
@@ -20,9 +24,10 @@ const parseSheetUrl = (url) => {
 // is edited.
 const buildCsvUrls = ({ sheetId, gid }) => {
   const cb = `_cb=${Date.now()}`;
+  const tab = gid === null ? '' : `gid=${gid}&`;
   return [
-    `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}&${cb}`,
-    `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}&${cb}`,
+    `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&${tab}${cb}`,
+    `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&${tab}${cb}`,
   ];
 };
 
