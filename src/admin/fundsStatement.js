@@ -10,10 +10,15 @@ import { rupees, summarise, rangeLabel, todayDmy } from './fundsApi';
 
 const NAVY = [14, 27, 51];
 const GOLD = [175, 122, 26];
+const AMBER = [201, 130, 20];
 const INK = [31, 39, 51];
 const MUTED = [100, 116, 139];
 const LINE = [205, 214, 228];
+const WHITE = [255, 255, 255];
 
+// The column fills, and the same three colours again at card strength. A figure
+// on a card and the column it was totalled from are the same colour on purpose:
+// it is what lets the two be matched without reading either label.
 const CREDIT_FILL = [231, 244, 236];
 const DEBIT_FILL = [253, 236, 239];
 const BALANCE_FILL = [232, 240, 251];
@@ -22,20 +27,34 @@ const CREDIT_INK = [28, 110, 64];
 const DEBIT_INK = [156, 39, 64];
 const BALANCE_INK = [28, 74, 134];
 
+const CREDIT_EDGE = [163, 210, 182];
+const DEBIT_EDGE = [240, 178, 192];
+const BALANCE_EDGE = [172, 197, 232];
+
 const PAGE = { w: 210, h: 297 };          // A4 portrait, millimetres
 const M = { left: 14, right: 14, bottom: 16 };
 
 const BAND_H = 30;                        // the navy header band
-const HEAD_H = 8;                         // the table's own heading row
+const HEAD_H = 9;                         // the table's own heading row
+const TITLE_H = 22;                       // band bottom to the top of the cards
+const CARD_H = 18;                        // the summary cards
+const CARD_GAP = 7;                       // cards to table
 
+// Widened to the full text column — 182 mm rather than 175 — so the table's
+// right edge lines up with the emblem band above it and the cards beside it.
+//
+// "Rs" rather than the rupee sign. jsPDF's built-in Helvetica is WinAnsi, which
+// has no glyph at U+20B9 — a ₹ in it prints as a blank box or nothing at all.
+// Carrying a font that does have it would add a few hundred kilobytes to a
+// document whose whole point is being small enough to email.
 const COLS = [
   { key: 'sno', label: 'S.NO', w: 13, align: 'center' },
-  { key: 'date', label: 'DATE', w: 24 },
-  { key: 'month', label: 'MONTH', w: 24 },
-  { key: 'reason', label: 'REMARKS', w: 45 },
-  { key: 'credit', label: 'CREDIT', w: 23, align: 'right', fill: CREDIT_FILL, ink: CREDIT_INK },
-  { key: 'debit', label: 'DEBIT', w: 22, align: 'right', fill: DEBIT_FILL, ink: DEBIT_INK },
-  { key: 'balance', label: 'BALANCE', w: 24, align: 'right', fill: BALANCE_FILL, ink: BALANCE_INK },
+  { key: 'date', label: 'DATE', w: 26, icon: 'calendar' },
+  { key: 'month', label: 'MONTH', w: 26 },
+  { key: 'reason', label: 'REMARKS', w: 47 },
+  { key: 'credit', label: 'CREDIT (Rs)', w: 24, align: 'right', fill: CREDIT_FILL, ink: CREDIT_INK },
+  { key: 'debit', label: 'DEBIT (Rs)', w: 22, align: 'right', fill: DEBIT_FILL, ink: DEBIT_INK },
+  { key: 'balance', label: 'BALANCE (Rs)', w: 24, align: 'right', fill: BALANCE_FILL, ink: BALANCE_INK },
 ];
 
 const TABLE_W = COLS.reduce((t, c) => t + c.w, 0);
@@ -68,6 +87,62 @@ const logoData = (px = 260) => new Promise((resolve) => {
 });
 
 const money = (n) => (n ? rupees(n) : '—');
+
+/* ------------------------------------------------------------------ icons */
+//
+// Drawn from primitives rather than embedded as images. Each is a handful of
+// lines at 3 mm, where a raster would either blur or cost more than the rest of
+// the document — and these inherit the colour they are asked for, so the same
+// calendar serves the amber date line, the provenance panel, and the date cells
+// in the table.
+
+const iconCalendar = (doc, x, y, s, colour) => {
+  doc.setDrawColor(...colour);
+  doc.setLineWidth(0.25);
+  doc.roundedRect(x, y + s * 0.14, s, s * 0.86, s * 0.14, s * 0.14, 'S');
+  doc.line(x, y + s * 0.42, x + s, y + s * 0.42);          // the header rule
+  doc.line(x + s * 0.3, y, x + s * 0.3, y + s * 0.24);      // the two hangers
+  doc.line(x + s * 0.7, y, x + s * 0.7, y + s * 0.24);
+};
+
+/** Money in: an arrow coming down into an open hand. */
+const iconIn = (doc, cx, cy, colour) => {
+  doc.setDrawColor(...colour);
+  doc.setLineWidth(0.45);
+  doc.line(cx, cy - 2.6, cx, cy + 0.2);
+  doc.line(cx - 1.2, cy - 1, cx, cy + 0.2);
+  doc.line(cx + 1.2, cy - 1, cx, cy + 0.2);
+  doc.line(cx - 2.2, cy + 1.6, cx + 2.2, cy + 1.6);        // the palm
+  doc.line(cx - 2.2, cy + 1.6, cx - 2.6, cy + 2.6);
+  doc.line(cx + 2.2, cy + 1.6, cx + 2.6, cy + 2.6);
+};
+
+/** Money out: a wallet with its clasp. */
+const iconOut = (doc, cx, cy, colour) => {
+  doc.setDrawColor(...colour);
+  doc.setLineWidth(0.45);
+  doc.roundedRect(cx - 2.6, cy - 1.9, 5.2, 4, 0.7, 0.7, 'S');
+  doc.line(cx - 2.6, cy - 0.4, cx + 2.6, cy - 0.4);
+  doc.setFillColor(...colour);
+  doc.circle(cx + 1.1, cy + 0.75, 0.42, 'F');
+};
+
+/** What is left: a balance beam. */
+const iconBalance = (doc, cx, cy, colour) => {
+  doc.setDrawColor(...colour);
+  doc.setLineWidth(0.45);
+  doc.line(cx, cy - 2.6, cx, cy + 2.4);                    // the post
+  doc.line(cx - 2.7, cy - 1.7, cx + 2.7, cy - 1.7);        // the beam
+  doc.line(cx - 1.5, cy + 2.4, cx + 1.5, cy + 2.4);        // the foot
+  doc.line(cx - 2.7, cy - 1.7, cx - 3.5, cy + 0.5);        // the two pans
+  doc.line(cx - 2.7, cy - 1.7, cx - 1.9, cy + 0.5);
+  doc.line(cx - 3.5, cy + 0.5, cx - 1.9, cy + 0.5);
+  doc.line(cx + 2.7, cy - 1.7, cx + 1.9, cy + 0.5);
+  doc.line(cx + 2.7, cy - 1.7, cx + 3.5, cy + 0.5);
+  doc.line(cx + 1.9, cy + 0.5, cx + 3.5, cy + 0.5);
+};
+
+/* ----------------------------------------------------------------- pieces */
 
 /** Splits `text` to fit `width`, and never returns more than `maxLines`. */
 const clampLines = (doc, text, width, maxLines) => {
@@ -137,24 +212,32 @@ const drawBand = (doc, logo) => {
  * The band says who the committee is and never changes; this says which slice
  * of the ledger is on the page, and changes every time. Keeping them apart
  * means the second can be read without hunting through the first.
+ *
+ * Two facts, and they are not equals. The fund year is the heading; the span of
+ * dates under it is the qualifier, in amber so it is plainly a second thing
+ * rather than more heading. When the statement was made is provenance — true of
+ * the document rather than of the money — so it sits quietly on the right.
  */
-const drawTitle = (doc, { title, count }) => {
-  const y = BAND_H + 10;
+const drawTitle = (doc, { title, span }) => {
+  const y = BAND_H + 9;
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11.5);
+  doc.setFontSize(12);
   doc.setTextColor(...NAVY);
   doc.text(`FUNDS STATEMENT — ${title}`, M.left, y);
+
+  iconCalendar(doc, M.left, y + 3.2, 3.1, AMBER);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...AMBER);
+  doc.text(span, M.left + 4.4, y + 5.9);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(...MUTED);
-  doc.text(
-    `Generated ${todayDmy()} · ${count} entr${count === 1 ? 'y' : 'ies'}`,
-    PAGE.w - M.right, y, { align: 'right' },
-  );
+  doc.text(`Generated on ${todayDmy()}`, PAGE.w - M.right, y, { align: 'right' });
 
-  return y + 7;
+  return BAND_H + TITLE_H;
 };
 
 /**
@@ -164,55 +247,63 @@ const drawTitle = (doc, { title, count }) => {
  * parts of one sum.
  */
 const drawSummary = (doc, y, totals) => {
-  const gap = 5;
+  const gap = 6;
   const w = (TABLE_W - gap * 2) / 3;
-  const h = 23;
 
   const cards = [
-    ['TOTAL FUND AMOUNT', totals.credit, CREDIT_INK, CREDIT_FILL],
-    ['TOTAL SPEND AMOUNT', totals.debit, DEBIT_INK, DEBIT_FILL],
-    ['CURRENT BALANCE', totals.balance, BALANCE_INK, BALANCE_FILL],
+    ['TOTAL FUND AMOUNT', totals.credit, CREDIT_INK, CREDIT_FILL, CREDIT_EDGE, iconIn],
+    ['TOTAL SPEND AMOUNT', totals.debit, DEBIT_INK, DEBIT_FILL, DEBIT_EDGE, iconOut],
+    ['CURRENT BALANCE', totals.balance, BALANCE_INK, BALANCE_FILL, BALANCE_EDGE, iconBalance],
   ];
 
-  cards.forEach(([label, value, ink, fill], i) => {
+  cards.forEach(([label, value, ink, fill, edge, glyph], i) => {
     const x = M.left + i * (w + gap);
 
-    doc.setFillColor(255, 255, 255);
-    doc.setDrawColor(...LINE);
-    doc.setLineWidth(0.3);
-    doc.roundedRect(x, y, w, h, 2.5, 2.5, 'FD');
-
-    // A chip in the column's own colour, so a figure can be matched to the
-    // column it came from without reading either label.
     doc.setFillColor(...fill);
-    doc.roundedRect(x + 5, y + 5.5, 5.5, 5.5, 1.4, 1.4, 'F');
+    doc.setDrawColor(...edge);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(x, y, w, CARD_H, 3, 3, 'FD');
+
+    // A white disc under the glyph, so the mark reads at 5 mm against a tint
+    // that is otherwise close to it in value.
+    const cx = x + 8.5;
+    const cy = y + CARD_H / 2;
+    doc.setFillColor(...WHITE);
+    doc.circle(cx, cy, 5.2, 'F');
+    glyph(doc, cx, cy, ink);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
+    doc.setFontSize(6.8);
     doc.setTextColor(...MUTED);
-    doc.text(label, x + 13, y + 9.4);
+    doc.text(label, x + 16.5, cy - 1.6);
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
+    doc.setFontSize(12.5);
     doc.setTextColor(...ink);
-    doc.text(rupees(value), x + 5, y + 18.5);
+    doc.text(`Rs ${rupees(value)}`, x + 16.5, cy + 4.4);
   });
 
-  return y + h + 7;
+  return y + CARD_H + CARD_GAP;
 };
 
+/** The navy heading row, with the table's top corners rounded into it. */
 const drawTableHead = (doc, y) => {
   doc.setFillColor(...NAVY);
-  doc.rect(M.left, y, TABLE_W, HEAD_H, 'F');
+  doc.roundedRect(M.left, y, TABLE_W, HEAD_H, 2.5, 2.5, 'F');
+  // The rounding belongs to the top of the table only — square the bottom edge
+  // back off, or the first row sits on two visible notches.
+  doc.rect(M.left, y + HEAD_H / 2, TABLE_W, HEAD_H / 2, 'F');
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(219, 227, 245);
 
+  // Every label centred over its column, including the money ones. The figures
+  // below stay right-aligned — a column of amounts is read down its last digit
+  // — but a heading centred over the whole column reads as naming all of it.
   let x = M.left;
   for (const c of COLS) {
-    const tx = c.align === 'right' ? x + c.w - 2 : c.align === 'center' ? x + c.w / 2 : x + 2;
-    doc.text(c.label, tx, y + 5.2, { align: c.align === 'center' ? 'center' : c.align || 'left' });
+    doc.text(c.label, x + c.w / 2, y + 5.8, { align: 'center' });
     x += c.w;
   }
   return y + HEAD_H;
@@ -256,18 +347,18 @@ export const buildStatement = async ({ rows, range, title, filename }) => {
       credit: r.credit,
       debit: r.debit,
       balance: r.balance,
-      h: Math.max(9, reason.length * 4 + 5),
+      h: Math.max(10, reason.length * 4 + 6),
     };
   });
 
   // Laid out before anything is drawn, so the page count in the footer is right
   // on page one rather than only on the last.
   const bottom = PAGE.h - M.bottom - 4;
-  const firstTop = () => (BAND_H + 10 + 7) + (23 + 7) + HEAD_H;
+  const firstTop = BAND_H + TITLE_H + CARD_H + CARD_GAP + HEAD_H;
   const laterTop = BAND_H + 10 + HEAD_H;
 
   const pages = [[]];
-  let used = firstTop();
+  let used = firstTop;
   for (const m of measured) {
     if (used + m.h > bottom) { pages.push([]); used = laterTop; }
     pages[pages.length - 1].push(m);
@@ -285,8 +376,8 @@ export const buildStatement = async ({ rows, range, title, filename }) => {
       // The fund year's own name when there is one — "2nd year (2025 - 2026)"
       // says more to the committee than the two dates it resolves to.
       y = drawTitle(doc, {
-        title: title ? `${title} · ${rangeLabel(range, rows)}` : rangeLabel(range, rows),
-        count: rows.length,
+        title: title || rangeLabel(range, rows),
+        span: rangeLabel(range, rows),
       });
       y = drawSummary(doc, y, totals);
     } else {
@@ -312,21 +403,31 @@ export const buildStatement = async ({ rows, range, title, filename }) => {
       x = M.left;
       doc.setFontSize(8);
       for (const c of COLS) {
-        const tx = c.align === 'right' ? x + c.w - 2 : c.align === 'center' ? x + c.w / 2 : x + 2;
         const align = c.align === 'center' ? 'center' : c.align || 'left';
+        // A column with a glyph starts its text after it; the rest start at the
+        // padding. Kept as one expression so the two cannot drift apart.
+        const pad = c.icon ? 7.5 : 2.5;
+        const tx = align === 'right' ? x + c.w - 2.5
+          : align === 'center' ? x + c.w / 2
+            : x + pad;
+
+        if (c.icon) {
+          const s = 3.1;
+          iconCalendar(doc, x + 2.6, y + m.h / 2 - s / 2 - 0.2, s, MUTED);
+        }
 
         if (c.key === 'reason') {
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(...INK);
-          doc.text(m.reason, tx, y + 5.6);
+          doc.text(m.reason, tx, y + 6.1);
         } else if (c.ink) {
           doc.setFont('helvetica', c.key === 'balance' ? 'bold' : 'normal');
           doc.setTextColor(...c.ink);
-          doc.text(money(m[c.key]), tx, y + 5.6, { align });
+          doc.text(money(m[c.key]), tx, y + m.h / 2 + 1.2, { align });
         } else {
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(...(c.key === 'sno' ? MUTED : INK));
-          doc.text(String(m[c.key]), tx, y + 5.6, { align });
+          doc.text(String(m[c.key]), tx, y + m.h / 2 + 1.2, { align });
         }
         x += c.w;
       }
@@ -350,7 +451,7 @@ export const buildStatement = async ({ rows, range, title, filename }) => {
     }
     doc.line(gx, bodyTop, gx, y);
     doc.setLineWidth(0.4);
-    doc.rect(M.left, tableTop, TABLE_W, y - tableTop);
+    doc.roundedRect(M.left, tableTop, TABLE_W, y - tableTop, 2.5, 2.5, 'S');
 
     if (p === pageCount - 1) {
       doc.setFont('helvetica', 'normal');
