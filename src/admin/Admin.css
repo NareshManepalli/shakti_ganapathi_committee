@@ -1346,3 +1346,12 @@
 
 /* "2nd year (2025 - 2026)" needs more room than "2026" ever did. */
 .fnd-year-select { min-width: 170px; }
+
+/* The seconds left in the idle warning — tabular, so the number does not
+   jitter the line as it counts down. */
+.idle-count {
+  margin: 12px 0 0;
+  font-size: 15px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--a-red);
+}

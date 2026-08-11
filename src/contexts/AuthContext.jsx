@@ -40,6 +40,10 @@ const AuthContext = createContext({
  * flash a wrong title before correcting itself. The fallback is for a member
  * whose position cell is actually blank, which is a different thing.
  */
+// Ten minutes idle, warned at nine.
+export const IDLE_LOGOUT_MS = 10 * 60 * 1000;
+export const IDLE_WARN_MS = 9 * 60 * 1000;
+
 export const roleLabelFor = (profile, isAdmin) => {
   if (!profile) return '';
   const position = String(profile.position || '').trim() || 'Committee member';
@@ -101,6 +105,43 @@ export const AuthProvider = ({ children }) => {
     return () => clearTimeout(t);
   }, [session, signOut]);
 
+  /* ------------------------------------------------------------ idle */
+
+  // Ten minutes untouched ends the session, with a minute's warning first.
+  //
+  // The warning is the point. A silent drop mid-entry loses whatever was being
+  // typed, and the member cannot tell that from the portal breaking — so the
+  // one thing this must never do is disappear without saying so.
+  //
+  // Deliberate actions only: a click, a key, a scroll, a touch. Not mousemove,
+  // which a bumped desk or a passing cursor would count as somebody working.
+  const [idleWarning, setIdleWarning] = useState(false);
+
+  useEffect(() => {
+    if (!session) { setIdleWarning(false); return undefined; }
+
+    let warnAt;
+    let outAt;
+
+    const arm = () => {
+      setIdleWarning(false);
+      clearTimeout(warnAt);
+      clearTimeout(outAt);
+      warnAt = setTimeout(() => setIdleWarning(true), IDLE_WARN_MS);
+      outAt = setTimeout(signOut, IDLE_LOGOUT_MS);
+    };
+
+    const events = ['mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'];
+    events.forEach((e) => window.addEventListener(e, arm, { passive: true }));
+    arm();
+
+    return () => {
+      clearTimeout(warnAt);
+      clearTimeout(outAt);
+      events.forEach((e) => window.removeEventListener(e, arm));
+    };
+  }, [session, signOut]);
+
   const token = session ? session.token : null;
 
   // One fetch per session, shared by the portal chrome and the profile screen —
@@ -140,7 +181,11 @@ export const AuthProvider = ({ children }) => {
     setProfile,
     signIn,
     signOut,
-  }), [session, token, profile, profileLoading, profileError, refreshProfile, signIn, signOut]);
+    idleWarning,
+    // Any real interaction re-arms the timers on its own; this is for the
+    // warning's own button, which has to work without moving the mouse.
+    staySignedIn: () => setIdleWarning(false),
+  }), [session, token, profile, profileLoading, profileError, refreshProfile, signIn, signOut, idleWarning]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

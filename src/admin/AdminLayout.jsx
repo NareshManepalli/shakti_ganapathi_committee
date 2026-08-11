@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth, roleLabelFor } from '../contexts/AuthContext';
+import { useAuth, roleLabelFor, IDLE_LOGOUT_MS, IDLE_WARN_MS } from '../contexts/AuthContext';
+import Modal from '../components/Modal';
 import { toMediaUrl } from '../utils/sheetService';
 import logoImg from '../assets/logo.png';
 import {
@@ -42,7 +43,17 @@ const NAV = [
 const AdminLayout = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { member, profile, signOut } = useAuth();
+  const { member, profile, signOut, idleWarning, staySignedIn } = useAuth();
+
+  // Counts down inside the warning, so "a minute" is a number going down
+  // rather than a claim the member has to take on trust.
+  const [left, setLeft] = useState(Math.round((IDLE_LOGOUT_MS - IDLE_WARN_MS) / 1000));
+
+  useEffect(() => {
+    if (!idleWarning) { setLeft(Math.round((IDLE_LOGOUT_MS - IDLE_WARN_MS) / 1000)); return undefined; }
+    const t = setInterval(() => setLeft((n) => Math.max(0, n - 1)), 1000);
+    return () => clearInterval(t);
+  }, [idleWarning]);
 
   const [drawer, setDrawer] = useState(false);
   const [menu, setMenu] = useState(false);
@@ -170,6 +181,25 @@ const AdminLayout = () => {
             )}
           </div>
         </header>
+
+        {idleWarning && (
+          <Modal onClose={staySignedIn} label="Still there?">
+            <div className="admin-card admin-confirm">
+              <h2 className="admin-empty-title">Still there?</h2>
+              <p className="admin-empty-text">
+                Nothing has been touched for nine minutes. The portal signs itself out after
+                ten, so anything half-typed is lost — this is the warning before that.
+              </p>
+              <p className="idle-count" aria-live="polite">
+                Signing out in {left}s
+              </p>
+              <div className="admin-btn-row" style={{ justifyContent: 'center', marginTop: 14 }}>
+                <button className="admin-btn" onClick={staySignedIn}>Stay signed in</button>
+                <button className="admin-btn admin-btn-ghost" onClick={leave}>Log out now</button>
+              </div>
+            </div>
+          </Modal>
+        )}
 
         <main className="admin-content">
           {/* Keyed on the path so moving to another screen clears a caught
