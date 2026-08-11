@@ -58,7 +58,13 @@ export const buildCycles = (scheduleRows) => {
     // annual_year is what the committee calls the span this celebration closes.
     // Taken as written when it is there, worked out from the dates when it is
     // not, so a sheet that predates the column still reads correctly.
-    starts.push({ iso, annual: String(r.annual_year || '').trim() });
+    starts.push({
+      iso,
+      annual: String(r.annual_year || '').trim(),
+      // The committee's own numbering when the sheet carries it; counting by
+      // position only holds while no year is ever missing from the schedule.
+      id: Number(r.annual_yr_id) || 0,
+    });
   }
   if (!starts.length) return [];
 
@@ -66,10 +72,10 @@ export const buildCycles = (scheduleRows) => {
   const cycles = [];
   let previousEnd = '';
 
-  starts.forEach(({ iso, annual }, i) => {
+  starts.forEach(({ iso, annual, id }, i) => {
     const end = shift(iso, FESTIVAL_DAYS - 1);
     cycles.push({
-      no: i + 1,
+      no: id || i + 1,
       annual,
       // The first year has no start: whatever was collected before the very
       // first celebration belongs to it, however far back that goes.
@@ -81,7 +87,7 @@ export const buildCycles = (scheduleRows) => {
   });
 
   cycles.push({
-    no: cycles.length + 1,
+    no: (cycles.length ? cycles[cycles.length - 1].no : 0) + 1,
     from: dayAfter(previousEnd),
     to: '',
     festival: '',

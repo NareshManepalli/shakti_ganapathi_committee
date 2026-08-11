@@ -159,11 +159,8 @@ test.describe('monthly funds — live', () => {
 
     // The range is chosen in a drawer now, so the statement is a document about
     // a period rather than whatever year the table happened to be showing.
+    // The statement is the table: the fund year on screen, narrowed by search.
     await page.getByRole('button', { name: /Download statement/ }).click();
-    await page.locator('.ed-drawer select').first().selectOption('dates');
-    await page.locator('.ed-drawer input[type=date]').first().fill('2025-12-30');
-    await expect(page.locator('.fnd-range b')).toContainText('30-12-2025 to');
-    await page.locator('.ed-drawer').getByRole('button', { name: /Download/ }).click();
     await expect(page.locator('.toast')).toContainText('Statement downloaded', { timeout: 60000 });
 
     const base64 = await page.evaluate(async () => {
@@ -182,7 +179,6 @@ test.describe('monthly funds — live', () => {
     expect(pdf).toContain('SRI SHAKTHI GANAPATHI COMMITTEE');
     expect(pdf).toContain('Annapurnamma Peta');
     expect(pdf).toContain('FUNDS STATEMENT');
-    expect(pdf).toContain('30-12-2025 to');
     expect(pdf).toContain('TOTAL FUND AMOUNT');
     expect(pdf).toContain('CURRENT BALANCE');
     // the emblem twice — once in the band, once as the centre watermark

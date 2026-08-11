@@ -182,19 +182,22 @@ const MonthlyFunds = () => {
   );
 
   const download = async () => {
-    if (downloading || !statement || !chosenRows.length) return;
+    if (downloading || !found.length) return;
     setDownloading(true);
     try {
-      const span = chosen.from || chosen.to
-        ? `${chosen.from || 'start'}_to_${chosen.to || 'today'}`
-        : 'all';
+      // Exactly what the table is showing: the fund year chosen, narrowed by
+      // any search. A statement that did not match the screen it was taken from
+      // would be the one thing nobody could check.
+      const span = current
+        ? { from: current.from, to: current.to && dateKey(current.to) > dateKey(todayDmy()) ? todayDmy() : current.to }
+        : { from: '', to: '' };
       await buildStatement({
-        rows: chosenRows,
-        range: chosen,
-        filename: `SSGC-funds-statement-${span}.pdf`,
+        rows: found,
+        range: span,
+        title: current ? cycleLabel(current) : '',
+        filename: `SSGC-funds-${(current ? cycleLabel(current) : 'all').replace(/[^\w]+/g, '-')}.pdf`,
       });
-      setStatement(null);
-      toast.success('Statement downloaded', rangeLabel(chosen, chosenRows));
+      toast.success('Statement downloaded', current ? cycleLabel(current) : 'All records');
     } catch (err) {
       console.error('Statement failed:', err);
       toast.error('Could not build the statement', err.message);
@@ -242,8 +245,8 @@ const MonthlyFunds = () => {
             {current && current.festival && ` · celebrations from ${current.festival}`}
           </p>
         </div>
-        <button className="admin-btn" onClick={openStatement} disabled={!ledger.length}>
-          <IconDownload /> Download statement
+        <button className="admin-btn" onClick={download} disabled={downloading || !found.length}>
+          <IconDownload /> {downloading ? 'Building…' : 'Download statement'}
         </button>
       </div>
 
@@ -419,129 +422,6 @@ const MonthlyFunds = () => {
         </>
       )}
 
-
-      {statement && (
-        <Modal onClose={() => setStatement(null)} busy={downloading} backdropClass="ed-drawer-scrim">{(titleId) => (
-          <div className="ed-drawer">
-            <header className="ed-drawer-head">
-              <h2 id={titleId}>Download statement</h2>
-              <button
-                type="button" className="ed-drawer-x" aria-label="Close"
-                onClick={() => setStatement(null)} disabled={downloading}
-              >
-                ×
-              </button>
-            </header>
-
-            <div className="ed-drawer-body">
-              <label className="ed-field">
-                <span className="admin-label">Cover</span>
-                {/* One question at four resolutions. Asking which resolution
-                    first is what lets a month range mean the whole month
-                    without a date range having to guess at it. */}
-                <select
-                  className="admin-input"
-                  value={statement.mode}
-                  onChange={(e) => setStatement({ ...statement, mode: e.target.value })}
-                >
-                  <option value="all">Every record</option>
-                  {Boolean(offered.length) && <option value="cycle">A fund year</option>}
-                  <option value="year">A calendar year</option>
-                  <option value="months">A range of months</option>
-                  <option value="dates">A range of dates</option>
-                </select>
-              </label>
-
-              {statement.mode === 'cycle' && (
-                <label className="ed-field">
-                  <span className="admin-label">Fund year</span>
-                  <select
-                    className="admin-input"
-                    value={statement.cycleNo}
-                    onChange={(e) => setStatement({ ...statement, cycleNo: e.target.value })}
-                  >
-                    {offered.map((c) => <option key={c.no} value={c.no}>{cycleLabel(c)}</option>)}
-                  </select>
-                </label>
-              )}
-
-              {statement.mode === 'year' && (
-                <label className="ed-field">
-                  <span className="admin-label">Calendar year</span>
-                  <select
-                    className="admin-input"
-                    value={statement.year}
-                    onChange={(e) => setStatement({ ...statement, year: e.target.value })}
-                  >
-                    {[...new Set(ledger.map((r) => r.year).filter(Boolean))]
-                      .sort((a, b) => Number(b) - Number(a))
-                      .map((y) => <option key={y} value={y}>{y}</option>)}
-                  </select>
-                </label>
-              )}
-
-              {statement.mode === 'months' && (
-                <div className="ed-grid">
-                  <label className="ed-field">
-                    <span className="admin-label">From month</span>
-                    <input className="admin-input" type="month" value={statement.fromMonth}
-                           onChange={(e) => setStatement({ ...statement, fromMonth: e.target.value })} />
-                  </label>
-                  <label className="ed-field">
-                    <span className="admin-label">To month</span>
-                    <input className="admin-input" type="month" value={statement.toMonth}
-                           onChange={(e) => setStatement({ ...statement, toMonth: e.target.value })} />
-                  </label>
-                </div>
-              )}
-
-              {statement.mode === 'dates' && (
-                <div className="ed-grid">
-                  <label className="ed-field">
-                    <span className="admin-label">From date</span>
-                    <input className="admin-input" type="date" value={statement.fromDate}
-                           onChange={(e) => setStatement({ ...statement, fromDate: e.target.value })} />
-                  </label>
-                  <label className="ed-field">
-                    <span className="admin-label">To date</span>
-                    <input className="admin-input" type="date" value={statement.toDate}
-                           onChange={(e) => setStatement({ ...statement, toDate: e.target.value })} />
-                  </label>
-                </div>
-              )}
-
-              {/* The resolved span, said back before anything is generated —
-                  a month range that stops at today rather than at the end of
-                  the month should not be a surprise found in the PDF. */}
-              <div className="fnd-range">
-                <b>{rangeLabel(chosen || {}, chosenRows)}</b>
-                <span>
-                  {chosenRows.length
-                    ? `${chosenRows.length} entr${chosenRows.length === 1 ? 'y' : 'ies'} · in ₹${rupees(summarise(chosenRows).credit)} · out ₹${rupees(summarise(chosenRows).debit)}`
-                    : 'No entries fall in this span'}
-                </span>
-              </div>
-
-              <p className="admin-readonly-note">
-                A period that has not finished is cut at today, so a statement never claims
-                weeks that have not happened. Numbering on the statement starts at 1 whatever
-                line the first entry sits on in the ledger.
-              </p>
-            </div>
-
-            <footer className="ed-drawer-foot">
-              <button className="admin-btn admin-btn-ghost" type="button"
-                      onClick={() => setStatement(null)} disabled={downloading}>
-                Cancel
-              </button>
-              <button className="admin-btn" type="button" onClick={download}
-                      disabled={downloading || !chosenRows.length}>
-                <IconDownload /> {downloading ? 'Building…' : 'Download'}
-              </button>
-            </footer>
-          </div>
-        )}</Modal>
-      )}
 
       {editing && (
         <Modal onClose={() => setEditing(null)} busy={busy} backdropClass="ed-drawer-scrim">{(titleId) => (

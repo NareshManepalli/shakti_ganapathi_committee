@@ -16,7 +16,7 @@ import fs from 'node:fs';
  * Needs tests/.session-value.json, which `npx playwright test --project=setup`
  * writes. Reads only — nothing is saved to the sheet.
  */
-const OUT = 'sheets/funds-statement-sample.pdf';
+const OUT_DIR = 'sheets';
 const BASE = process.env.SSGC_BASE || 'http://localhost:5174';
 
 const session = fs.readFileSync('tests/.session-value.json', 'utf8');
@@ -41,36 +41,19 @@ page.on('console', (m) => { if (m.type() === 'error') console.error('[page]', m.
 page.on('pageerror', (e) => console.error('[pageerror]', e.message));
 
 await page.goto(`${BASE}/admin/monthly-funds`);
-await page.locator('.tbl tbody tr').first().waitFor({ timeout: 60000 });
+await page.locator('.fnd-year-select').waitFor({ timeout: 60000 });
 
 // The range is chosen through the drawer, so the sample is produced the way a
 // member produces one — not by calling the builder behind the screen's back.
-const FROM = process.env.SSGC_FROM || '';                    // yyyy-mm-dd
-const TO = process.env.SSGC_TO || '';                        // yyyy-mm-dd
-const FROM_MONTH = process.env.SSGC_FROM_MONTH || '';        // yyyy-mm
-const TO_MONTH = process.env.SSGC_TO_MONTH || '';            // yyyy-mm
+const YEAR = process.env.SSGC_YEAR || '';   // the fund year's number, e.g. 1 or 2
+const OUT_NAME = process.env.SSGC_OUT || 'funds-statement-sample.pdf';
+
+if (YEAR) await page.locator('.fnd-year-select').selectOption(YEAR);
+const span = (await page.locator('.fnd-year-select').textContent()) || '';
+const detail = (await page.locator('.tbl-count').textContent()) || '';
 
 await page.getByRole('button', { name: /Download statement/ }).click();
-await page.locator('.ed-drawer').waitFor({ timeout: 20000 });
-
-if (FROM_MONTH || TO_MONTH) {
-  await page.locator('.ed-drawer select').first().selectOption('months');
-  if (FROM_MONTH) await page.locator('.ed-drawer input[type=month]').first().fill(FROM_MONTH);
-  if (TO_MONTH) await page.locator('.ed-drawer input[type=month]').last().fill(TO_MONTH);
-} else if (FROM || TO) {
-  await page.locator('.ed-drawer select').first().selectOption('dates');
-  if (FROM) await page.locator('.ed-drawer input[type=date]').first().fill(FROM);
-  if (TO) await page.locator('.ed-drawer input[type=date]').last().fill(TO);
-}
-
-const span = (await page.locator('.fnd-range b').textContent()) || '';
-const detail = (await page.locator('.fnd-range span').textContent()) || '';
-
-await page.locator('.ed-drawer').getByRole('button', { name: /Download/ }).click();
-await page.locator('.ed-drawer').waitFor({ state: 'detached', timeout: 60000 });
-
-const toast = await page.locator('.toast').first().textContent().catch(() => null);
-if (toast) console.error('[toast]', toast.replace(/\s+/g, ' ').trim());
+await page.getByRole('button', { name: 'Download statement' }).waitFor({ timeout: 60000 });
 
 const base64 = await page.evaluate(async () => {
   const blob = window.__pdfBlobs.at(-1);
@@ -95,8 +78,8 @@ if (bytes.subarray(0, 5).toString() !== '%PDF-') {
   process.exit(1);
 }
 
-fs.writeFileSync(OUT, bytes);
-console.log(`${OUT}
+fs.writeFileSync(`${OUT_DIR}/${OUT_NAME}`, bytes);
+console.log(`${OUT_DIR}/${OUT_NAME}
   ${span.trim()}
   ${detail.trim()}
   ${(bytes.length / 1024).toFixed(1)} kB`);

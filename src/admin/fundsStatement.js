@@ -230,7 +230,7 @@ const drawFooter = (doc, page, pages) => {
   doc.text(`Page ${page} of ${pages}`, PAGE.w - M.right, PAGE.h - M.bottom + 7, { align: 'right' });
 };
 
-export const buildStatement = async ({ rows, range, filename }) => {
+export const buildStatement = async ({ rows, range, title, filename }) => {
   const { default: JsPDF } = await import('jspdf');
   const doc = new JsPDF({ unit: 'mm', format: 'a4' });
   const logo = await logoData();
@@ -282,7 +282,12 @@ export const buildStatement = async ({ rows, range, filename }) => {
 
     let y;
     if (p === 0) {
-      y = drawTitle(doc, { title: rangeLabel(range, rows), count: rows.length });
+      // The fund year's own name when there is one — "2nd year (2025 - 2026)"
+      // says more to the committee than the two dates it resolves to.
+      y = drawTitle(doc, {
+        title: title ? `${title} · ${rangeLabel(range, rows)}` : rangeLabel(range, rows),
+        count: rows.length,
+      });
       y = drawSummary(doc, y, totals);
     } else {
       y = BAND_H + 10;
