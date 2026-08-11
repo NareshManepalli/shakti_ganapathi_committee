@@ -2,7 +2,10 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../ToastContext';
 import { TableFoot, TableSkeleton } from './EditorShell';
-import { IconTrash, IconEdit, IconSearch, IconDownload } from '../icons';
+import {
+  IconTrash, IconEdit, IconSearch, IconDownload,
+  IconYear, IconIn, IconOut, IconBalance,
+} from '../icons';
 import Modal from '../../components/Modal';
 import {
   isFundsConfigured, fetchFunds, saveFund, deleteFund,
@@ -109,6 +112,19 @@ const MonthlyFunds = () => {
   );
 
   const currentLabel = current ? cycleLabel(current) : 'All entries';
+
+  // Just the span the committee calls the year — "2025 - 2026" — without the
+  // "2nd year" in front of it, which the dropdown right below already says.
+  // Falls back to the celebration dates when annual_year has not been filled in,
+  // so the card is never blank on a sheet that predates that column.
+  const yearSpan = useMemo(() => {
+    if (!current) return 'All entries';
+    if (current.annual) return current.annual;
+    const years = [current.from, current.to]
+      .map((d) => String(d || '').slice(-4)).filter(Boolean);
+    const span = [...new Set(years)];
+    return span.join(' - ') || '—';
+  }, [current]);
 
   const totals = useMemo(() => summarise(forYear), [forYear]);
   const drifted = useMemo(() => forYear.filter((r) => r.drift).length, [forYear]);
@@ -269,19 +285,28 @@ const MonthlyFunds = () => {
         <TableSkeleton columns={COLUMNS} rows={PER_PAGE} withSelect />
       ) : (
         <>
+          {/* All four read the fund year the dropdown below is on — the totals
+              are summarised from `forYear`, and the first card names the span
+              they were taken from, so a figure can never be read against the
+              wrong year. */}
           <div className="fnd-summary">
-            <div className="fnd-stat is-credit">
-              <span className="fnd-stat-l">Collected</span>
-              <b className="fnd-stat-n">₹{rupees(totals.credit)}</b>
-            </div>
-            <div className="fnd-stat is-debit">
-              <span className="fnd-stat-l">Spent</span>
-              <b className="fnd-stat-n">₹{rupees(totals.debit)}</b>
-            </div>
-            <div className="fnd-stat is-balance">
-              <span className="fnd-stat-l">Balance carried</span>
-              <b className="fnd-stat-n">₹{rupees(totals.balance)}</b>
-            </div>
+            {[
+              { k: 'year', Ico: IconYear, l: 'Annual year', v: yearSpan },
+              { k: 'credit', Ico: IconIn, l: 'Total funded amount', v: `₹${rupees(totals.credit)}` },
+              { k: 'debit', Ico: IconOut, l: 'Total spended amount', v: `₹${rupees(totals.debit)}` },
+              { k: 'balance', Ico: IconBalance, l: 'Current balance amount', v: `₹${rupees(totals.balance)}` },
+            ].map(({ k, Ico, l, v }) => (
+              <article className={`fnd-card is-${k}`} key={k}>
+                <span className="fnd-card-ico" aria-hidden="true"><Ico /></span>
+                <div className="fnd-card-body">
+                  <span className="fnd-card-l">{l}</span>
+                  <b className="fnd-card-v">{v}</b>
+                </div>
+                {/* The pale disc the figure sits over, as on the reference
+                    cards. Purely decoration, and out of the way of the text. */}
+                <span className="fnd-card-disc" aria-hidden="true" />
+              </article>
+            ))}
           </div>
 
           <div className="admin-card tbl-card">

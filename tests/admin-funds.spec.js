@@ -138,9 +138,42 @@ test.describe('monthly funds', () => {
     // the whole seed counts, where a calendar filter would have shown only the
     // three rows dated 2026.
     await expect(page.locator('.tbl-select')).toHaveValue('2');
-    await expect(page.locator('.fnd-stat.is-credit')).toContainText('23,000');
-    await expect(page.locator('.fnd-stat.is-debit')).toContainText('2,000');
-    await expect(page.locator('.fnd-stat.is-balance')).toContainText('21,000');
+    await expect(page.locator('.fnd-card.is-credit')).toContainText('23,000');
+    await expect(page.locator('.fnd-card.is-debit')).toContainText('2,000');
+    await expect(page.locator('.fnd-card.is-balance')).toContainText('21,000');
+  });
+
+  test('the four cards name the year they were counted from, and follow the dropdown', async ({ page }) => {
+    // A row before the 2025 celebration, so there are two fund years to move
+    // between — the shared seed sits entirely inside the second, and a dropdown
+    // with one option cannot show that the cards follow it.
+    await stub(page, {
+      rows: [entry('SSGC2025000000', '10-08-2025', 'Opening Amount', 5000, 0), ...SEED],
+    });
+    await page.goto('/admin/monthly-funds');
+
+    await expect(page.locator('.fnd-card')).toHaveCount(4);
+
+    // The first card is why the other three can be trusted: it names the span
+    // they were counted over, so a figure cannot be read against the wrong year.
+    const year = page.locator('.fnd-card.is-year');
+    await expect(year).toContainText('Annual year');
+    await expect(year).toContainText('2025 - 2026');
+    await expect(page.locator('.fnd-card.is-credit')).toContainText('Total funded amount');
+    await expect(page.locator('.fnd-card.is-debit')).toContainText('Total spended amount');
+    await expect(page.locator('.fnd-card.is-balance')).toContainText('Current balance amount');
+
+    // Latest year first, and the balance carries the 5,000 opening in with it.
+    await expect(page.locator('.fnd-card.is-credit')).toContainText('₹23,000');
+    await expect(page.locator('.fnd-card.is-debit')).toContainText('₹2,000');
+    await expect(page.locator('.fnd-card.is-balance')).toContainText('₹26,000');
+
+    // All four move together, the year card included.
+    await page.locator('.tbl-select').selectOption('1');
+    await expect(year).not.toContainText('2025 - 2026');
+    await expect(page.locator('.fnd-card.is-credit')).toContainText('₹5,000');
+    await expect(page.locator('.fnd-card.is-debit')).toContainText('₹0');
+    await expect(page.locator('.fnd-card.is-balance')).toContainText('₹5,000');
   });
 
   test('a new credit raises the balance and every balance after it', async ({ page }) => {
@@ -156,7 +189,7 @@ test.describe('monthly funds', () => {
 
     await expect(page.locator('.toast')).toContainText('Entry saved');
     await expect(balanceOf(page, 'March Amount')).toHaveText('₹23,500');
-    await expect(page.locator('.fnd-stat.is-balance')).toContainText('23,500');
+    await expect(page.locator('.fnd-card.is-balance')).toContainText('23,500');
     expect(posts.at(-1)).toMatchObject({ action: 'saveFund' });
     // dd-mm-yyyy on the wire, which is the shape the sheet holds
     expect(posts.at(-1).entry).toMatchObject({ credit: 2500, debit: 0, date: '05-03-2026' });
@@ -173,8 +206,8 @@ test.describe('monthly funds', () => {
     await page.locator('form.ed-drawer').getByRole('button', { name: 'Save' }).click();
 
     await expect(balanceOf(page, 'Mandapam repair')).toHaveText('₹19,500');
-    await expect(page.locator('.fnd-stat.is-debit')).toContainText('3,500');
-    await expect(page.locator('.fnd-stat.is-balance')).toContainText('19,500');
+    await expect(page.locator('.fnd-card.is-debit')).toContainText('3,500');
+    await expect(page.locator('.fnd-card.is-balance')).toContainText('19,500');
   });
 
   test('an entry dated into the middle restates everything after it', async ({ page }) => {
@@ -227,7 +260,7 @@ test.describe('monthly funds', () => {
     await expect(page.locator('.toast')).toContainText('deleted');
     // the 2,000 spend is gone, so February climbs by it
     await expect(balanceOf(page, 'February Amount')).toHaveText('₹23,000');
-    await expect(page.locator('.fnd-stat.is-debit')).toContainText('₹0');
+    await expect(page.locator('.fnd-card.is-debit')).toContainText('₹0');
   });
 
   test('a funds-only member sees the ledger but none of the controls', async ({ page }) => {
@@ -288,4 +321,12 @@ test.describe('who reaches what', () => {
     await page.goto('/admin/profile');
     await expect(page).toHaveURL(/\/admin\/profile$/);
   });
+});
+
+test('OPTS', async ({ page }) => {
+  await stub(page);
+  await page.goto('/admin/monthly-funds');
+  await expect(page.locator('.fnd-card').first()).toBeVisible({ timeout: 20000 });
+  console.log('OPTIONS ' + JSON.stringify(await page.locator('.tbl-select option').evaluateAll(
+    (els) => els.map((e) => `${e.value}=${e.textContent}`))));
 });

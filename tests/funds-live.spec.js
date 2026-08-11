@@ -28,7 +28,7 @@ const DATE_DMY = '31-12-2026';
 
 const rupees = (text) => Number(String(text).replace(/[^0-9-]/g, '')) || 0;
 
-const balanceTile = (page) => page.locator('.fnd-stat.is-balance');
+const balanceTile = (page) => page.locator('.fnd-card.is-balance');
 /**
  * A real data row, never the empty state.
  *

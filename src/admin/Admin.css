@@ -545,6 +545,12 @@
   .prof-grid .admin-input { flex: 1; min-width: 0; }
 
   .admin-page-head { flex-direction: column; align-items: stretch; }
+  /* The heading block still spans the width, but an action in this bar does
+     not: stretched, "Download statement" became a full-width bar across the
+     phone, reading as the page's main content rather than one control beside
+     the title. It keeps its own width and stays on the right, as it is on a
+     large screen. */
+  .admin-page-head > .admin-btn { align-self: flex-end; width: auto; }
 }
 
 /* ============================== toasts ============================== */
@@ -1063,34 +1069,86 @@
 
 .fnd-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
   margin-bottom: 16px;
 }
 
-.fnd-stat {
-  padding: 15px 18px;
-  border-radius: var(--a-radius);
-  border: 1px solid var(--a-border);
-  background: var(--a-surface);
-  box-shadow: var(--a-shadow-sm);
-  border-left-width: 4px;
+/* The four cards the committee asked for, built after the reference: a rounded
+   gradient panel, a circled icon on the left, and a pale disc behind the figure.
+
+   The gradients follow the ledger's own colour language rather than the
+   reference's palette — green in, red out, blue left over. Those three already
+   mean that in the table, in the sheet and in the PDF, and a card that coloured
+   money-in orange would be the one place on the site where they did not agree. */
+.fnd-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 16px;
+  min-height: 92px;
+  border-radius: 18px;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(15, 30, 60, 0.16);
 }
 
-.fnd-stat-l { display: block; font-size: 12px; color: var(--a-muted); }
-.fnd-stat-n {
-  display: block; margin-top: 5px;
+.fnd-card.is-year    { background: linear-gradient(125deg, #6f8bf5, #9a7bef); }
+.fnd-card.is-credit  { background: linear-gradient(125deg, #1aa05a, #35c07d); }
+.fnd-card.is-debit   { background: linear-gradient(125deg, #e0526d, #f2839a); }
+.fnd-card.is-balance { background: linear-gradient(125deg, #2f6fd0, #4f9ae8); }
+
+/* Bottom-right and mostly off the card, as the reference has it — it lifts the
+   corner without sitting under the words. */
+.fnd-card-disc {
+  position: absolute;
+  right: -34px;
+  bottom: -46px;
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  pointer-events: none;
+}
+
+.fnd-card-ico {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.fnd-card-ico svg { width: 21px; height: 21px; stroke-width: 1.8; }
+
+.fnd-card-body { position: relative; z-index: 1; min-width: 0; }
+
+.fnd-card-l {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.012em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+/* Tabular figures so the four cards' amounts line up with each other and with
+   the table below, and a wrap that breaks the number rather than the layout. */
+.fnd-card-v {
+  display: block;
+  margin-top: 4px;
   font-family: var(--font-display, inherit);
-  font-size: 26px; font-weight: 700;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.15;
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
-
-.fnd-stat.is-credit  { border-left-color: var(--f-credit); }
-.fnd-stat.is-debit   { border-left-color: var(--f-debit); }
-.fnd-stat.is-balance { border-left-color: var(--f-balance); }
-.fnd-stat.is-credit .fnd-stat-n  { color: var(--f-credit); }
-.fnd-stat.is-debit .fnd-stat-n   { color: var(--f-debit); }
-.fnd-stat.is-balance .fnd-stat-n { color: var(--f-balance); }
 
 .fnd-months { margin-bottom: 16px; }
 .fnd-months .tbl-title { margin-bottom: 14px; }
@@ -1165,9 +1223,34 @@
 .fnd-in:focus  { border-color: var(--f-credit); box-shadow: 0 0 0 3px rgba(28, 110, 64, 0.14); }
 .fnd-out:focus { border-color: var(--f-debit);  box-shadow: 0 0 0 3px rgba(156, 39, 64, 0.14); }
 
-@media (max-width: 820px) {
-  .fnd-summary { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-  .fnd-stat-n { font-size: 23px; }
+/* Four across, then two, then one. Straight from four to one left the cards
+   enormous on a tablet; two across at 165px wide crushed "₹1,04,000" onto three
+   lines on a phone. */
+@media (max-width: 1180px) {
+  .fnd-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Two per row all the way down, never one. Below 640px that only works if the
+   card stops being a row itself: side by side, an icon and 18px of padding each
+   side leave about 80px for the words, and "Current balance amount" came apart
+   over four lines. Stacked, the text gets the card's full width. */
+@media (max-width: 640px) {
+  .fnd-summary { gap: 10px; }
+
+  .fnd-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 13px 14px;
+    min-height: 0;
+    border-radius: 15px;
+  }
+
+  .fnd-card-ico { flex-basis: 34px; width: 34px; height: 34px; }
+  .fnd-card-ico svg { width: 18px; height: 18px; }
+  .fnd-card-body { width: 100%; }
+  .fnd-card-v { font-size: 17px; }
+  .fnd-card-disc { right: -40px; bottom: -52px; width: 108px; height: 108px; }
 }
 
 /* --------------------------------- drawers ------------------------------- */

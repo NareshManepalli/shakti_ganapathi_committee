@@ -30,3 +30,11 @@ export const IconDownload  = svg(<><path d="M12 4v11" /><path d="m7.5 10.5 4.5 4
 /* A drawn chevron rather than the ▾ character: that glyph renders hairline-thin
    and differently in every font, and at the topbar's size it all but vanished. */
 export const IconChevron   = svg(<path d="m6 9.5 6 6 6-6" />);
+
+// The four summary cards on Annual Funds. Direction is the whole meaning here —
+// money in, money out, what is left — so the arrows point the way the money went
+// rather than decorating a card that already says it in words.
+export const IconYear      = svg(<><rect x="3" y="5" width="18" height="16" rx="2.5" /><path d="M3 10h18M8 3v4M16 3v4" /><path d="M8 15h3" /></>);
+export const IconIn        = svg(<><circle cx="12" cy="12" r="9" /><path d="M12 7.5v9" /><path d="m8.5 13 3.5 3.5 3.5-3.5" /></>);
+export const IconOut       = svg(<><circle cx="12" cy="12" r="9" /><path d="M12 16.5v-9" /><path d="m8.5 11 3.5-3.5 3.5 3.5" /></>);
+export const IconBalance   = svg(<><path d="M12 4v16" /><path d="M6 8h12" /><path d="m3 16 3-8 3 8a3.4 3.4 0 0 1-6 0Z" /><path d="m15 16 3-8 3 8a3.4 3.4 0 0 1-6 0Z" /></>);
