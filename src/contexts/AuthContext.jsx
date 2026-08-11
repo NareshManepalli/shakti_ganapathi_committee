@@ -151,16 +151,33 @@ export const AuthProvider = ({ children }) => {
     if (!token) return null;
     setProfileLoading(true);
     setProfileError('');
-    const res = await getProfile(token);
+
+    let res = await getProfile(token);
+
+    // One refusal is not proof the session is dead.
+    //
+    // This used to sign out on the first UNAUTHORIZED, which meant a single
+    // hiccup from Apps Script — and it is not a reliable service — threw the
+    // member back to the login page seconds after they arrived, with no way to
+    // tell that from the portal being broken. Ask again before believing it.
+    if (!res.ok && res.code === 'UNAUTHORIZED') {
+      await new Promise((r) => { setTimeout(r, 1200); });
+      res = await getProfile(token);
+    }
+
     setProfileLoading(false);
+
     if (res.ok) {
       setProfile(res.profile);
       return res.profile;
     }
+
     setProfileError(res.error || '');
-    // A dead session cannot be fixed by retrying — end it and let the route
-    // guard send them back to sign in.
-    if (res.code === 'UNAUTHORIZED') setTimeout(signOut, 1800);
+
+    // Refused twice, so the token really is spent. Ended here rather than left
+    // to lapse: everything else on the screen would fail the same way, and
+    // saying so once is kinder than failing on every save.
+    if (res.code === 'UNAUTHORIZED') setTimeout(signOut, 2500);
     return null;
   }, [token, signOut]);
 
