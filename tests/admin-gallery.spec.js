@@ -91,7 +91,7 @@ test('the gallery lists year folders from Drive', async ({ page }) => {
   // centred card: icon above the name above the count
   await expect(page.locator('.gal-folder-icon').first()).toBeVisible();
   await expect(page.locator('.gal-folder-name').first()).toBeVisible();
-  await expect(page.locator('.gal-folder-meta').first()).toContainText(/photo/);
+  await expect(page.locator('.gal-folder-meta').first()).toContainText(/file/);
 });
 
 test('a folder opens, showing its photos and a breadcrumb', async ({ page }) => {
@@ -101,8 +101,8 @@ test('a folder opens, showing its photos and a breadcrumb', async ({ page }) => 
 
   await expect(page.locator('.gal-crumb.is-current')).toHaveText('2025');
   // count and limits sit below the divider now, not inside the crumb line
-  await expect(page.locator('.gal-count')).toContainText(/of 30 photos · \d+ left/);
-  await expect(page.locator('.gal-limits')).toContainText(/Up to 30 photos per year/);
+  await expect(page.locator('.gal-count')).toContainText(/of 30 files · \d+ left/);
+  await expect(page.locator('.gal-limits')).toContainText(/Up to 30 files per year/);
   await expect(page.locator('.admin-btn', { hasText: 'Back' })).toHaveCount(0);
   await expect(page.locator('.gal-file').first()).toBeVisible({ timeout: 40000 });
 
@@ -132,9 +132,9 @@ test('upload a photo, see it, then delete it again', async ({ page }) => {
   await page.setInputFiles('input[type=file]', 'public/apple-touch-icon.png');
 
   // uploads run one file at a time through Apps Script, so allow for the round trip
-  await expect(page.locator('.toast-success')).toContainText(/1 photo uploaded/, { timeout: 90000 });
+  await expect(page.locator('.toast-success')).toContainText(/1 file uploaded/, { timeout: 90000 });
   await expect(page.locator('.gal-file')).toHaveCount(countBefore + 1);
-  await expect(page.locator('.gal-count')).toContainText(`${countBefore + 1} of 30 photos`);
+  await expect(page.locator('.gal-count')).toContainText(`${countBefore + 1} of 30 files`);
 
   // The new photo renders from Drive. Polled rather than snap-checked: Drive
   // needs a second or two to produce the thumbnail for a freshly uploaded file,
@@ -180,12 +180,13 @@ test('a funds-only member is not offered the gallery', async ({ page }) => {
   });
   await page.goto('/admin');
 
-  // Monthly Funds and Transactions — nothing that edits the site
+  // Annual Funds and Transactions — nothing that edits the site
   await expect(page.locator('.admin-nav-link')).toHaveCount(2);
   await expect(page.locator('.admin-nav-link', { hasText: 'Gallery' })).toHaveCount(0);
 
-  // Typing the URL still renders the screen. That is deliberate: hiding a route
-  // is not security, and the server refuses the write regardless.
+  // Typing the URL no longer renders it either. The server refusing the write
+  // was always the real gate, but the screen used to open and then sit showing
+  // that refusal — a door held open on a room that was never theirs.
   await page.goto('/admin/gallery');
-  await expect(page.locator('.admin-page-title')).toHaveText('Gallery Management');
+  await expect(page).toHaveURL(/\/admin\/monthly-funds$/);
 });

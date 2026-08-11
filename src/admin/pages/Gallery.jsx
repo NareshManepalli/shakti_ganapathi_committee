@@ -9,7 +9,12 @@ import { useToast } from '../ToastContext';
 import './Gallery.css';
 import Modal from '../../components/Modal';
 
-const MAX_MB = 100;                // matches MAX_UPLOAD_BYTES in the script
+// Two ceilings, because the two are not alike: a committee photo off a phone is
+// three or four megabytes and ten is already generous, while ten seconds of
+// video passes that without trying.
+const MAX_IMAGE_MB = 10;
+const MAX_VIDEO_MB = 100;
+const capFor = (file) => (file.type.startsWith('video/') ? MAX_VIDEO_MB : MAX_IMAGE_MB);
 const PER_YEAR = 30;               // matches MAX_PHOTOS_PER_YEAR
 
 // Apps Script caps a Web App POST at about 50 MB, and the file travels
@@ -96,7 +101,7 @@ const Gallery = () => {
 
     const media = files.filter((f) => f.type.startsWith('image/') || f.type.startsWith('video/'));
     const skippedType = files.length - media.length;
-    const small = media.filter((f) => f.size <= MAX_MB * 1024 * 1024);
+    const small = media.filter((f) => f.size <= capFor(f) * 1024 * 1024);
     const skippedSize = media.length - small.length;
 
     // The server refuses past the cap anyway; stopping here means the member
@@ -106,7 +111,7 @@ const Gallery = () => {
 
     const skips = [];
     if (skippedType) skips.push(`${skippedType} not a photo or video`);
-    if (skippedSize) skips.push(`${skippedSize} over ${MAX_MB} MB`);
+    if (skippedSize) skips.push(`${skippedSize} over the size limit`);
     if (skippedFull) skips.push(`${skippedFull} over the ${PER_YEAR}-per-year limit`);
 
     if (!allowed.length) {
@@ -303,7 +308,8 @@ const Gallery = () => {
         <p className="gal-limits">
           {year
             ? <>
-                Up to <b>{year.limit}</b> files per year · photos and videos ≤ <b>{MAX_MB} MB</b>
+                Up to <b>{year.limit}</b> files per year · photos ≤ <b>{MAX_IMAGE_MB} MB</b>,
+                videos ≤ <b>{MAX_VIDEO_MB} MB</b>
                 {' '}· anything past <b>{POST_SAFE_MB} MB</b> goes straight into the Drive folder
               </>
             : <>One folder per year · up to <b>{PER_YEAR}</b> files each</>}

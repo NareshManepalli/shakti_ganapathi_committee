@@ -97,7 +97,12 @@ var SIGNING_KEY_PROP = 'SESSION_SIGNING_KEY';
 // video is the most that can actually come through this endpoint whatever this
 // number says. Anything bigger has to be dragged straight into the Drive year
 // folder, which the gallery reads either way.
-var MAX_UPLOAD_BYTES = 100 * 1024 * 1024; // 100 MB
+var MAX_IMAGE_BYTES = 10 * 1024 * 1024;   // 10 MB
+var MAX_VIDEO_BYTES = 100 * 1024 * 1024;  // 100 MB
+
+function maxBytesFor(mime) {
+  return String(mime || '').indexOf('video/') === 0 ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+}
 
 // What may be uploaded. Videos are Drive-hosted like the photos, and the same
 // thumbnail endpoint serves a poster frame for them.
@@ -413,8 +418,12 @@ function doPost(e) {
       if (!isAllowedMime(mimeType)) throw new Error('Only photos and videos can be uploaded.');
 
       var bytes = Utilities.base64Decode(data);
-      if (bytes.length > MAX_UPLOAD_BYTES) {
-        throw new Error('File is larger than ' + Math.round(MAX_UPLOAD_BYTES / 1048576) + ' MB.');
+      var cap = maxBytesFor(mimeType);
+      if (bytes.length > cap) {
+        throw new Error(
+          (mimeType.indexOf('video/') === 0 ? 'Video' : 'Photo')
+          + ' is larger than ' + Math.round(cap / 1048576) + ' MB.'
+        );
       }
 
       var yearFolder = getOrCreateChildFolder(root, year);

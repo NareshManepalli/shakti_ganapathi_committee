@@ -25,9 +25,9 @@ const SCREENS = [
   { label: 'Annual Funds',  path: 'monthly-funds', title: 'Annual Funds',         kind: 'live' },
   { label: 'Transactions',  path: 'transactions',  title: 'Transactions',         kind: 'wip' },
   { label: 'About',         path: 'about',         title: 'About Management',     kind: 'editor', loaded: '.ed-bi textarea' },
-  { label: 'Members',       path: 'members',       title: 'Members Management',   kind: 'editor', loaded: '.tbl tbody tr' },
+  { label: 'Members',       path: 'members',       title: 'Members Management',   kind: 'editor', loaded: '.tbl:not(.tbl-ph) tbody tr' },
   { label: 'Gallery',       path: 'gallery',       title: 'Gallery',              kind: 'live' },
-  { label: 'Schedule',      path: 'schedule',      title: 'Schedule Management',  kind: 'editor', loaded: '.tbl tbody tr, .admin-empty-title' },
+  { label: 'Schedule',      path: 'schedule',      title: 'Schedule Management',  kind: 'editor', loaded: '.tbl:not(.tbl-ph) tbody tr, .admin-empty-title' },
   { label: 'Mandapam',      path: 'mandapam',      title: 'Mandapam Management',  kind: 'editor', loaded: '.ed-bi textarea' },
 ];
 
@@ -119,8 +119,12 @@ test('a funds-only member is offered neither editor screen nor its route', async
   });
   await page.goto('/admin');
 
-  await expect(page.locator('.admin-nav-link')).toHaveCount(2);
-  for (const s of SCREENS.filter((x) => x.kind !== 'wip')) {
+  // Annual Funds and Transactions are the two a funds-only member came for;
+  // everything else is an editor screen and stays out of their menu.
+  const OPEN_TO_ALL = ['Annual Funds', 'Transactions'];
+
+  await expect(page.locator('.admin-nav-link')).toHaveCount(OPEN_TO_ALL.length);
+  for (const s of SCREENS.filter((x) => !OPEN_TO_ALL.includes(x.label))) {
     await expect(page.locator('.admin-nav-link', { hasText: new RegExp(`^${s.label}$`) })).toHaveCount(0);
   }
 });
@@ -144,10 +148,10 @@ test('the sheets are fetched once for the whole visit, not once per screen', asy
 
   await openPortal(page);
   await page.locator('.admin-nav-link', { hasText: /^Members$/ }).click();
-  await expect(page.locator('.tbl tbody tr').first()).toBeVisible({ timeout: 60000 });
+  await expect(page.locator('.tbl:not(.tbl-ph) tbody tr').first()).toBeVisible({ timeout: 60000 });
   expect(calls, 'the first screen should fetch').toBe(1);
 
-  for (const label of ['Schedule', 'About', 'Mandapam', 'Settings']) {
+  for (const label of ['Schedule', 'About', 'Mandapam']) {
     await page.locator('.admin-nav-link', { hasText: new RegExp(`^${label}$`) }).click();
     await expect(page.locator('.admin-skel')).toHaveCount(0);
   }
