@@ -5,7 +5,7 @@ import { toMediaUrl } from '../utils/sheetService';
 import logoImg from '../assets/logo.png';
 import {
   IconAbout, IconMembers, IconGallery, IconSchedule,
-  IconMandapam, IconLedger, IconFunds, IconProfile, IconLogout, IconSettings,
+  IconMandapam, IconLedger, IconFunds, IconProfile, IconLogout,
   IconChevron,
 } from './icons';
 import { ToastProvider } from './ToastContext';
@@ -26,6 +26,9 @@ import { SectionBoundary } from '../components/SectionState';
 // signed token, which the server reads on every write.
 // Monthly Funds is first because it is where sign-in lands everyone — it is the
 // one screen every member can reach, admin or not.
+// Settings is gone. Its only field was the festival date, and the countdown now
+// takes that from day 1 of the newest year in the schedule sheet — so the screen
+// edited a cell nothing read, which is worse than no screen at all.
 const NAV = [
   { to: '/admin/monthly-funds', label: 'Annual Funds', Icon: IconFunds,     admin: false },
   { to: '/admin/transactions',  label: 'Transactions',  Icon: IconLedger,    admin: false },
@@ -34,7 +37,6 @@ const NAV = [
   { to: '/admin/gallery',       label: 'Gallery',       Icon: IconGallery,   admin: true },
   { to: '/admin/schedule',      label: 'Schedule',      Icon: IconSchedule,  admin: true },
   { to: '/admin/mandapam',      label: 'Mandapam',      Icon: IconMandapam,  admin: true },
-  { to: '/admin/settings',      label: 'Settings',      Icon: IconSettings,  admin: true },
 ];
 
 const AdminLayout = () => {

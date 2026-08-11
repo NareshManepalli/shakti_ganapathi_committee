@@ -72,7 +72,7 @@ const ImagePreview = ({ link }) => {
 };
 
 const blankDay = (year, dayNo) => ({
-  id: '', year, annual_year: '', day_no: dayNo, date: '', time: '',
+  id: '', year, annual_year: '', annual_yr_id: '', day_no: dayNo, date: '', time: '',
   title_en: '', title_te: '', image: '', day_en: '', day_te: '',
 });
 
@@ -193,7 +193,8 @@ const Schedule = () => {
   // is rejected as malformed — the box renders empty and the next save wipes the
   // day it was meant to edit.
   const edit = (d) => setEditing({
-    id: d.id, year: String(d.year), annual_year: String(d.annual_year || ''), day_no: d.day_no,
+    id: d.id, year: String(d.year), annual_year: String(d.annual_year || ''),
+    annual_yr_id: String(d.annual_yr_id || ''), day_no: d.day_no,
     date: toIsoDate(d.date), time: toIsoTime(d.time),
     title_en: String(d.title_en || ''), title_te: String(d.title_te || ''),
     image: String(d.image || ''), day_en: String(d.day_en || ''), day_te: String(d.day_te || ''),
@@ -347,6 +348,15 @@ const Schedule = () => {
                   <span className="admin-label">Year</span>
                   <input className="admin-input" inputMode="numeric" maxLength={4} value={editing.year}
                          onChange={(e) => setEditing({ ...editing, year: e.target.value.replace(/\D/g, '').slice(0, 4) })} />
+                </label>
+                <label className="ed-field">
+                  <span className="admin-label">Year count</span>
+                  {/* Which celebration this is — 2 for 2025 - 2026. Annual Funds
+                      numbers its years from this rather than by counting rows,
+                      which only held while no year was ever missing. */}
+                  <input className="admin-input" inputMode="numeric" value={editing.annual_yr_id}
+                         placeholder="2"
+                         onChange={(e) => setEditing({ ...editing, annual_yr_id: e.target.value.replace(/\D/g, '').slice(0, 3) })} />
                 </label>
                 <label className="ed-field">
                   <span className="admin-label">Fund year</span>

@@ -21,7 +21,10 @@ const COLUMNS = [
   { w: '70%' }, { w: '65%' }, { w: '85%' }, { w: '55%' }, { w: '55%' }, { w: '60%' }, { w: '90%' },
 ];
 
-const blank = { trnsctn_id: '', date: '', reason: '', credit: '', debit: '', fund_persons: '' };
+const blank = {
+  trnsctn_id: '', date: '', reason: '', credit: '', debit: '', fund_persons: '',
+  annual_year: '', annual_yr_id: '',
+};
 
 /**
  * The committee's money, month by month.
@@ -354,6 +357,8 @@ const MonthlyFunds = () => {
                                     credit: r.credit ? String(r.credit) : '',
                                     debit: r.debit ? String(r.debit) : '',
                                     fund_persons: r.fund_persons || '',
+                                    annual_year: r.annual_year || '',
+                                    annual_yr_id: r.annual_yr_id || '',
                                   })}
                                 >
                                   <IconEdit />
@@ -447,6 +452,24 @@ const MonthlyFunds = () => {
                     : 'The year and month columns are written from this date'}
                 </span>
               </label>
+
+              {/* Left empty these are worked out from the date against the
+                  schedule sheet. Filled in, they are taken as written — the
+                  committee's own numbering wins over anything inferred. */}
+              <div className="ed-grid">
+                <label className="ed-field">
+                  <span className="admin-label">Year count</span>
+                  <input className="admin-input" inputMode="numeric" value={editing.annual_yr_id}
+                         placeholder={current ? String(current.no) : '2'}
+                         onChange={(e) => setEditing({ ...editing, annual_yr_id: e.target.value.replace(/\D/g, '').slice(0, 3) })} />
+                </label>
+                <label className="ed-field">
+                  <span className="admin-label">Fund year</span>
+                  <input className="admin-input" value={editing.annual_year}
+                         placeholder={current && current.annual ? current.annual : '2025 - 2026'}
+                         onChange={(e) => setEditing({ ...editing, annual_year: e.target.value })} />
+                </label>
+              </div>
 
               <label className="ed-field">
                 <span className="admin-label">Remarks</span>

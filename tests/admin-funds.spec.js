@@ -149,8 +149,8 @@ test.describe('monthly funds', () => {
     await expect(balanceOf(page, 'February Amount')).toHaveText('₹21,000');
 
     await page.getByRole('button', { name: /Add entry/ }).click();
-    await page.locator('form.ed-drawer input[type=date]').fill('2026-03-05');
-    await page.locator('form.ed-drawer input').nth(1).fill('March Amount');
+    await page.getByLabel('Date').fill('2026-03-05');
+    await page.getByLabel('Remarks').fill('March Amount');
     await page.locator('.fnd-in').fill('2500');
     await page.locator('form.ed-drawer').getByRole('button', { name: 'Save' }).click();
 
@@ -167,8 +167,8 @@ test.describe('monthly funds', () => {
     await page.goto('/admin/monthly-funds');
 
     await page.getByRole('button', { name: /Add entry/ }).click();
-    await page.locator('form.ed-drawer input[type=date]').fill('2026-02-20');
-    await page.locator('form.ed-drawer input').nth(1).fill('Mandapam repair');
+    await page.getByLabel('Date').fill('2026-02-20');
+    await page.getByLabel('Remarks').fill('Mandapam repair');
     await page.locator('.fnd-out').fill('1500');
     await page.locator('form.ed-drawer').getByRole('button', { name: 'Save' }).click();
 
@@ -184,8 +184,8 @@ test.describe('monthly funds', () => {
     // Between the January collection and Bhogi — the case a stored running
     // total gets wrong, and the reason this one is recomputed.
     await page.getByRole('button', { name: /Add entry/ }).click();
-    await page.locator('form.ed-drawer input[type=date]').fill('2026-01-08');
-    await page.locator('form.ed-drawer input').nth(1).fill('Decorations');
+    await page.getByLabel('Date').fill('2026-01-08');
+    await page.getByLabel('Remarks').fill('Decorations');
     await page.locator('.fnd-out').fill('500');
     await page.locator('form.ed-drawer').getByRole('button', { name: 'Save' }).click();
 

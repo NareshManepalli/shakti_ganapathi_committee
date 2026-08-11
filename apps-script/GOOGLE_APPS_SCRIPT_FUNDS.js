@@ -453,6 +453,7 @@ function ledger() {
         debit: asNumber(r.debit),
         balance: asNumber(r.balance),
         annual_year: String(r.annual_year || ''),
+        annual_yr_id: String(r.annual_yr_id || ''),
         reason: String(r.reason || ''),
         fund_persons: String(r.fund_persons || ''),
         __k: dateKey(date),
@@ -532,6 +533,13 @@ function saveFund(body) {
     u_ts: stamp(),
   };
 
+  // Typed values win. Left blank they are worked out from the date against the
+  // schedule sheet, so the common case needs nothing entered — but a committee
+  // that numbers a year differently from the way this infers it can say so, and
+  // restate() will not argue.
+  if (String(entry.annual_year || '').trim()) fields.annual_year = String(entry.annual_year).trim();
+  if (String(entry.annual_yr_id || '').trim()) fields.annual_yr_id = String(entry.annual_yr_id).trim();
+
   // Found by transaction id, never by line number: sno is renumbered on every
   // write, so the row sitting at line 5 now is not the one that was there when
   // the drawer was opened.
@@ -602,7 +610,7 @@ function restate(sheet) {
     if (colBal >= 0) sheet.getRange(r.__row, colBal + 1).setValue(running);
     // Written rather than typed, so the sheet reads standalone and cannot
     // disagree with the screen about which year a row belongs to.
-    if (colAnnual >= 0) {
+    if (colAnnual >= 0 && !String(r.annual_year || '').trim()) {
       sheet.getRange(r.__row, colAnnual + 1).setValue(annualYearFor(asDateText(r.date)));
     }
     paintRow(sheet, r.__row);

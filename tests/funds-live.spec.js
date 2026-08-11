@@ -93,11 +93,11 @@ test.describe('monthly funds — live', () => {
     await expect(page.locator('.tbl tbody tr').first()).toBeVisible({ timeout: 60000 });
 
     await page.getByRole('button', { name: /Add entry/ }).click();
-    await page.locator('.ed-drawer input[type=date]').fill(DATE_ISO);
-    await page.locator('.ed-drawer input').nth(1).fill(REASON);
+    await page.getByLabel('Date').fill(DATE_ISO);
+    await page.getByLabel('Remarks').fill(REASON);
     await page.locator('.fnd-in').fill('100');
     await page.locator('.fnd-out').fill('');
-    await page.locator('.ed-drawer input').last().fill('Playwright');
+    await page.getByLabel('Fund persons').fill('Playwright');
     await page.locator('.ed-drawer').getByRole('button', { name: 'Save' }).click();
 
     await expect(page.locator('.toast')).toContainText('Entry saved', { timeout: 60000 });

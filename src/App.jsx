@@ -23,7 +23,6 @@ import AdminAbout from './admin/pages/About'
 import AdminMandapam from './admin/pages/Mandapam'
 import AdminSchedule from './admin/pages/Schedule'
 import AdminMembers from './admin/pages/Members'
-import AdminSettings from './admin/pages/Settings'
 import './App.css'
 import { SectionBoundary } from './components/SectionState';
 import { useCopyGuard } from './components/useCopyGuard';
@@ -95,7 +94,9 @@ function App() {
                 <Route path="schedule" element={<AdminSchedule />} />
                 <Route path="mandapam" element={<AdminMandapam />} />
                 <Route path="transactions" element={<WorkInProgress title="Transactions" description="The committee ledger." />} />
-                <Route path="settings" element={<AdminSettings />} />
+                {/* Settings retired: the festival date it edited is now read
+                    from the schedule sheet's day 1, so the screen had nothing
+                    left to change. */}
                 <Route path="monthly-funds" element={<MonthlyFunds />} />
               </Route>
               {/* Anything unknown goes back to the public page rather than a

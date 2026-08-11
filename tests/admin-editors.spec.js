@@ -133,14 +133,6 @@ test.describe('admin content screens', () => {
     await expect(page.locator('.ed-split-view iframe')).toHaveAttribute('src', /Kotilingala/, { timeout: 5000 });
   });
 
-  test('Settings reads the festival date and describes what it means', async ({ page }) => {
-    await stub(page);
-    await page.goto('/admin/settings');
-
-    await expect(page.locator('input[type=date]')).toHaveValue('2026-09-14');
-    await expect(page.locator('.ed-state')).not.toBeEmpty();
-  });
-
   test('Schedule shows one year at a time and can switch years', async ({ page }) => {
     await stub(page);
     await page.goto('/admin/schedule');
@@ -263,10 +255,10 @@ test.describe('admin content screens', () => {
 
   test('every editor screen sends the session token', async ({ page }) => {
     const posts = await stub(page);
-    await page.goto('/admin/settings');
-    await page.locator('input[type=date]').fill('2026-09-15');
+    await page.goto('/admin/about');
+    await page.locator('.ed-bi textarea').first().fill('Rewritten.');
     await page.getByRole('button', { name: 'Update' }).click();
-    await expect(page.locator('.toast')).toContainText('Festival date saved');
+    await expect(page.locator('.toast')).toContainText('About saved');
     expect(posts.at(-1).token).toBe(session.token);
   });
 });
