@@ -6,6 +6,7 @@ const STUB_URL = 'http://localhost:5175';
 // Not a real host. admin-editors.spec.js intercepts every request to it, so
 // nothing is ever sent — the address only has to be one the app will accept.
 export const CONTENT_STUB = 'https://content.stub.invalid/exec';
+export const FUNDS_STUB = 'https://funds.stub.invalid/exec';
 
 export default defineConfig({
   testDir: './tests',
@@ -30,7 +31,7 @@ export default defineConfig({
     // the second server below, the one told an endpoint exists.
     {
       name: 'stubbed',
-      testMatch: /admin-(editors|modals)\.spec\.js/,
+      testMatch: /admin-(editors|modals|funds)\.spec\.js/,
       use: {
         ...devices['Desktop Chrome'],
         baseURL: STUB_URL,
@@ -46,7 +47,7 @@ export default defineConfig({
     {
       name: 'desktop',
       dependencies: ['setup'],
-      testIgnore: /(admin-editors|admin-modals|status-page)\.spec\.js/,
+      testIgnore: /(admin-editors|admin-modals|admin-funds|status-page)\.spec\.js/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 900 } },
     },
   ],
@@ -63,7 +64,7 @@ export default defineConfig({
     {
       command: 'npm run dev -- --port 5175',
       url: STUB_URL,
-      env: { VITE_CONTENT_API: CONTENT_STUB },
+      env: { VITE_CONTENT_API: CONTENT_STUB, VITE_FUNDS_API: FUNDS_STUB },
       reuseExistingServer: true,
       timeout: 120000,
     },

@@ -26,6 +26,7 @@ export const IconTrash     = svg(<><path d="M4 7h16" /><path d="M9 7V4.8A.8.8 0 
 export const IconEdit      = svg(<><path d="M4 20h4l10-10a2.1 2.1 0 0 0-3-3L5 17z" /><path d="M14.5 6.5l3 3" /></>);
 export const IconSettings  = svg(<><circle cx="12" cy="12" r="3.1" /><path d="M12 2.8v2.4M12 18.8v2.4M4.5 7.5l2.1 1.2M17.4 15.3l2.1 1.2M4.5 16.5l2.1-1.2M17.4 8.7l2.1-1.2" /></>);
 export const IconSearch    = svg(<><circle cx="11" cy="11" r="6.2" /><path d="m15.6 15.6 4.4 4.4" /></>);
+export const IconDownload  = svg(<><path d="M12 4v11" /><path d="m7.5 10.5 4.5 4.5 4.5-4.5" /><path d="M4 16v2.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16" /></>);
 /* A drawn chevron rather than the ▾ character: that glyph renders hairline-thin
    and differently in every font, and at the topbar's size it all but vanished. */
 export const IconChevron   = svg(<path d="m6 9.5 6 6 6-6" />);

@@ -1039,6 +1039,127 @@
    a yes/no question is short, and belongs in the middle of the screen. */
 .ed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
 
+/* ============================== monthly funds =============================
+   Money in is green, money out is red, the balance is blue — the same three
+   through the table, the PDF statement and the sheet itself, so a figure keeps
+   its meaning wherever the committee happens to be reading it.
+   ========================================================================= */
+
+.admin-root {
+  --f-credit:    #1c6e40;  --f-credit-bg:  #e7f4ec;  --f-credit-line:  #b6dfc6;
+  --f-debit:     #9c2740;  --f-debit-bg:   #fdecef;  --f-debit-line:   #f3c0c9;
+  --f-balance:   #1c4a86;  --f-balance-bg: #e8f0fb;  --f-balance-line: #c3d5f2;
+}
+
+.fnd-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.fnd-stat {
+  padding: 15px 18px;
+  border-radius: var(--a-radius);
+  border: 1px solid var(--a-border);
+  background: var(--a-surface);
+  box-shadow: var(--a-shadow-sm);
+  border-left-width: 4px;
+}
+
+.fnd-stat-l { display: block; font-size: 12px; color: var(--a-muted); }
+.fnd-stat-n {
+  display: block; margin-top: 5px;
+  font-family: var(--font-display, inherit);
+  font-size: 26px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fnd-stat.is-credit  { border-left-color: var(--f-credit); }
+.fnd-stat.is-debit   { border-left-color: var(--f-debit); }
+.fnd-stat.is-balance { border-left-color: var(--f-balance); }
+.fnd-stat.is-credit .fnd-stat-n  { color: var(--f-credit); }
+.fnd-stat.is-debit .fnd-stat-n   { color: var(--f-debit); }
+.fnd-stat.is-balance .fnd-stat-n { color: var(--f-balance); }
+
+.fnd-months { margin-bottom: 16px; }
+.fnd-months .tbl-title { margin-bottom: 14px; }
+
+.fnd-month-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.fnd-month {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 12px 14px;
+  border-radius: var(--a-radius-sm);
+  border: 1px solid var(--a-border);
+  background: var(--a-surface-2);
+}
+
+.fnd-month-name { font-size: 13.5px; color: var(--a-heading); }
+.fnd-month-row { display: flex; justify-content: space-between; font-size: 12.5px; }
+.fnd-month-row i { font-style: normal; color: var(--a-muted); }
+.fnd-month-row em { font-style: normal; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fnd-month-row em.is-credit { color: var(--f-credit); }
+.fnd-month-row em.is-debit  { color: var(--f-debit); }
+
+/* Two lines at most: seven names is normal and would otherwise make one card
+   twice the height of the eleven beside it. */
+.fnd-month-people {
+  margin-top: 4px;
+  font-size: 11px; line-height: 1.45;
+  color: var(--a-muted-2);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.fnd-history-title { margin-right: auto; }
+
+/* The money columns carry their colour through the head, the body and the
+   totals row, so a column can be followed down the page without reading it. */
+.fnd-num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.tbl td.fnd-num.is-credit  { background: var(--f-credit-bg);  color: var(--f-credit); }
+.tbl td.fnd-num.is-debit   { background: var(--f-debit-bg);   color: var(--f-debit); }
+.tbl td.fnd-num.is-balance { background: var(--f-balance-bg); color: var(--f-balance); font-weight: 600; }
+
+/* Banding would tint these three differently row by row and break the column. */
+.tbl tbody tr:nth-child(even) td.fnd-num.is-credit  { background: #ddeee4; }
+.tbl tbody tr:nth-child(even) td.fnd-num.is-debit   { background: #f9e2e7; }
+.tbl tbody tr:nth-child(even) td.fnd-num.is-balance { background: #dfe9f8; }
+.tbl tbody tr:hover td.fnd-num.is-credit  { background: #d3e9dc; }
+.tbl tbody tr:hover td.fnd-num.is-debit   { background: #f6d8de; }
+.tbl tbody tr:hover td.fnd-num.is-balance { background: #d6e4f6; }
+
+.tbl th.fnd-num.is-credit  { color: #a9e3c2; }
+.tbl th.fnd-num.is-debit   { color: #f5bcc7; }
+.tbl th.fnd-num.is-balance { color: #b9d2f4; }
+
+.fnd-people { font-size: 12.5px; color: var(--a-muted); min-width: 180px; }
+
+.tbl tfoot .fnd-total td {
+  padding: 13px 16px;
+  border-top: 2px solid var(--a-border);
+  font-weight: 700;
+  color: var(--a-heading);
+}
+
+.tbl tfoot .fnd-total td.fnd-num.is-credit  { background: var(--f-credit-bg);  color: var(--f-credit); }
+.tbl tfoot .fnd-total td.fnd-num.is-debit   { background: var(--f-debit-bg);   color: var(--f-debit); }
+.tbl tfoot .fnd-total td.fnd-num.is-balance { background: var(--f-balance-bg); color: var(--f-balance); }
+
+/* The two amount boxes wear their own meaning in the drawer too. */
+.fnd-in:focus  { border-color: var(--f-credit); box-shadow: 0 0 0 3px rgba(28, 110, 64, 0.14); }
+.fnd-out:focus { border-color: var(--f-debit);  box-shadow: 0 0 0 3px rgba(156, 39, 64, 0.14); }
+
+@media (max-width: 820px) {
+  .fnd-summary { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .fnd-stat-n { font-size: 23px; }
+}
+
 /* --------------------------------- drawers ------------------------------- */
 
 /* A form long enough to scroll belongs against an edge, not floating in the
@@ -1209,3 +1330,16 @@
   .tbl-ph-search { width: 100%; }
   .tbl-ph-btn { flex: 1; }
 }
+
+/* The resolved span, shown in the statement drawer before anything is built. */
+.fnd-range {
+  display: flex; flex-direction: column; gap: 3px;
+  margin: -4px 0 16px;
+  padding: 11px 13px;
+  border-radius: var(--a-radius-sm);
+  border: 1px solid var(--f-balance-line);
+  background: var(--f-balance-bg);
+}
+
+.fnd-range b { font-size: 13.5px; color: var(--f-balance); }
+.fnd-range span { font-size: 12px; color: var(--a-muted); }

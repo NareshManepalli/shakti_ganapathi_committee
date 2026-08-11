@@ -100,5 +100,21 @@ export const SHEETS_CONFIG = {
       || 'https://script.google.com/macros/s/AKfycbzJH8kx4HlG1Jmf-pElUnFCOgwQQvsSxv5ozncMHr5_Xy4YKbYdSB6Q4NAhmHfAllxZEQ/exec',
 
     members: 'https://script.google.com/macros/s/AKfycbzB_4OcL26B4SbVkfb1byNV8ZLzqPMHXc0t18hs1ZnlO7iVx7W6jqio6QTGGar-dUdHuw/exec',
+
+    // funds: the Funds Web App (apps-script/GOOGLE_APPS_SCRIPT_FUNDS.js), which
+    //   serves the money ledger behind Monthly Funds.
+    //
+    //   Its own endpoint rather than part of the content one, because the two
+    //   answer different people: the content script refuses anyone without
+    //   adm_in = 1, and Monthly Funds is the single screen a funds-only member
+    //   can open. Here any signed-in member may read and only an admin may
+    //   write. Leave null until it is deployed — the screen then says so
+    //   instead of looking like an empty ledger.
+    //
+    //   VITE_FUNDS_API overrides it, as VITE_CONTENT_API does above: the browser
+    //   tests answer the endpoint themselves rather than write invented money
+    //   into the committee's own ledger.
+    funds: (import.meta.env && import.meta.env.VITE_FUNDS_API)
+      || 'https://script.google.com/macros/s/AKfycbydcYhcll0rOVoH_HGAE4hq1IVic72Mu7wRswy0vhnzzzhoxc4-HnmkD3Zg81EqGV-J0Q/exec',
   },
 };

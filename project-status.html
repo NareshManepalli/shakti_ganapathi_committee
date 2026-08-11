@@ -148,25 +148,25 @@
     <div class="progress-hero">
       <div class="progress-hero-top">
         <span class="progress-hero-label">Built &amp; live-bound</span>
-        <span class="progress-hero-pct">92%</span>
+        <span class="progress-hero-pct">94%</span>
       </div>
-      <div class="progress-hero-track" role="img" aria-label="46 of 50 deliverables done">
-        <span class="progress-hero-fill" style="width: 92%"></span>
+      <div class="progress-hero-track" role="img" aria-label="49 of 52 deliverables done">
+        <span class="progress-hero-fill" style="width: 94%"></span>
       </div>
       <div class="progress-hero-legend">
-        <span><b>46 of 50</b> deliverables</span>
-        <span>every public section, and 9 of 11 portal screens, live on the sheets</span>
+        <span><b>49 of 52</b> deliverables</span>
+        <span>Monthly Funds is live; only the Transactions ledger is left to build</span>
       </div>
     </div>
   </header>
 
   <div class="summary">
-    <div class="stat done"><div class="n">46</div><div class="l">Done &amp; live-bound</div></div>
-    <div class="stat todo"><div class="n">4</div><div class="l">Still to build</div></div>
+    <div class="stat done"><div class="n">49</div><div class="l">Done &amp; live-bound</div></div>
+    <div class="stat todo"><div class="n">3</div><div class="l">Still to build</div></div>
   </div>
-  <div class="bar" role="img" aria-label="46 done, 4 to build">
-    <span class="s-done" style="flex: 46"></span>
-    <span class="s-todo" style="flex: 4"></span>
+  <div class="bar" role="img" aria-label="49 done, 3 to build">
+    <span class="s-done" style="flex: 49"></span>
+    <span class="s-todo" style="flex: 3"></span>
   </div>
 
   <div class="legend">
@@ -204,7 +204,7 @@
   </table></div></div>
 
   <!-- ADMIN -->
-  <h2>Admin Portal <span class="count">9 of 11 screens · read + write live</span></h2>
+  <h2>Admin Portal <span class="count">11 of 12 screens · read + write live</span></h2>
   <div class="tablecard"><div class="scroll"><table>
     <thead><tr><th>Screen</th><th>How it's used</th><th>Source</th><th>Status</th></tr></thead>
     <tbody>
@@ -218,12 +218,13 @@
       <tr><td><span class="name">Profile</span></td><td class="use">The member's own record — name in both languages, mobile and email. Position and the access flags are read-only: a member who could edit <code>adm_in</code> could hand themselves the portal</td><td class="src">Auth Web App</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Settings</span></td><td class="use">The festival date, and deliberately nothing else. Set it and the hero countdown re-arms itself, with no developer involved</td><td class="src">content sheet</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Transactions manager</span></td><td class="use">Insert and update ledger rows, balance computed server-side, with search, paging and soft-delete</td><td class="src">transactions sheet</td><td><span class="pill todo">To build</span></td></tr>
-      <tr><td><span class="name">Monthly Funds manager</span></td><td class="use">Who has paid what, month by month. Reachable by every member whatever their <code>adm_in</code> says — the one screen a funds-only member can use</td><td class="src">transactions sheet</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">Monthly Funds manager</span></td><td class="use">The committee's money as they already kept it: one dated row per movement, so January holds both the collection on the 5th and Bhogi on the 11th. Saved, spent and balance in hand for the year; a month-by-month rollup naming who paid into each; and the ledger as a table card with search, paging and an add/edit drawer. <b>The running balance is arithmetic, not memory</b> — recomputed from the amounts and restated in the sheet on every save, because a stored total goes wrong the moment a date is inserted in the middle. Reachable by every member whatever their <code>adm_in</code> says; only an admin sees the row controls. <b>Live on its own sheet and Web App</b></td><td class="src">funds sheet</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Funds statement (PDF)</span></td><td class="use">The year's ledger as a real PDF — drawn, not screenshotted, so the text stays selectable. Emblem and the committee's name and address in the header, the year it covers, the history table with the same green, red and blue columns as the screen, totals, and the emblem again held back at 12% in the bottom-right corner of every page. jsPDF loads only when the button is pressed, so no other screen carries its 129 kB</td><td class="src">client-side</td><td><span class="pill done">Done</span></td></tr>
     </tbody>
   </table></div></div>
 
   <!-- BACKEND -->
-  <h2>Backend — Sheets, Drive &amp; Apps Script <span class="count">8 of 9 · four Web Apps deployed</span></h2>
+  <h2>Backend — Sheets, Drive &amp; Apps Script <span class="count">9 of 10 · five Web Apps deployed</span></h2>
   <div class="tablecard"><div class="scroll"><table>
     <thead><tr><th>Piece</th><th>How it's used</th><th>Source</th><th>Status</th></tr></thead>
     <tbody>
@@ -235,6 +236,7 @@
       <tr><td><span class="name">Gallery Web App</span></td><td class="use">Folder tree on GET; upload, delete and folder management on POST. <b>Photos and videos</b>, 100 MB a file, 30 a year, deletes recoverable from the bin for 30 days. A second GET serves the event-photo folder by name for the schedule editor — its id is a constant in the script, never a query parameter, or the /exec URL would read any folder its owner can see. <b>Deployed and verified live</b>: both endpoints return the per-file <code>mime</code> the video build added</td><td class="src">Apps Script</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Drive folder tree</span></td><td class="use"><code>/Gallery/&lt;year&gt;/</code> with the media directly inside, plus a flat <b>event-photo folder</b> named after the events. Both shared <i>Anyone with the link → Viewer</i>. Drop a photo into the event folder and the schedule editor offers it; take it out and it stops being offered</td><td class="src">Google Drive</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">React service layer</span></td><td class="use">One fetch serves every editor screen for the visit, and is emptied on sign-out. Drive links are rewritten to the thumbnail host, the only one Chrome will render. Date and time cells come back as UTC instants and are read through the script's own timezone — a real zone, not an offset, since the dates fall in daylight saving and the 1899 time epoch does not</td><td class="src">src/utils · src/contexts</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td><span class="name">Funds Web App</span></td><td class="use">Serves the money ledger. Split by action rather than by endpoint, because Monthly Funds is the one screen a funds-only member opens: <b>any signed-in member may read, only <code>adm_in = 1</code> may write</b>. Rewrites the balance column oldest row down on every save, and paints the money columns green, red and blue so the sheet reads like the screen. Deletes are soft. Transaction ids are generated, not typed — <code>SSGC2025000001</code> upward, counted across the soft-deleted rows too so an id that reached a statement is never handed out twice. <b>Deployed and answering</b></td><td class="src">Apps Script</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Transactions Web App</span></td><td class="use">Read and write the ledger, balances computed server-side, gated on a valid session token</td><td class="src">Apps Script</td><td><span class="pill todo">To build</span></td></tr>
     </tbody>
   </table></div></div>
@@ -298,6 +300,11 @@
 
     <div class="item">
       <h3>Waiting on the committee, not on code</h3>
+      <p><span class="need">Redeploy the funds script once more.</span> Its dates are read in
+      the <i>workbook's</i> timezone now rather than the script project's. The two are separate
+      settings, and a new project defaults to Los Angeles — which would have printed 5 October
+      as the 4th, and the wrong month at the turn of one. Then run
+      <code>paintFundsSheet()</code> to colour the imported rows.</p>
       <p><span class="need">Clear the 2026 names and times.</span> The dates are set; what happens
       on each day is not. The portal now saves a day without them, and the site reads them as
       <code>TBD</code> and a dash until they are decided.</p>

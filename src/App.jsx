@@ -17,6 +17,7 @@ import OtpPage from './pages/OtpPage'
 import AdminLayout from './admin/AdminLayout'
 import Profile from './admin/pages/Profile'
 import WorkInProgress from './admin/pages/WorkInProgress'
+import MonthlyFunds from './admin/pages/MonthlyFunds'
 import AdminGallery from './admin/pages/Gallery'
 import AdminAbout from './admin/pages/About'
 import AdminMandapam from './admin/pages/Mandapam'
@@ -95,7 +96,7 @@ function App() {
                 <Route path="mandapam" element={<AdminMandapam />} />
                 <Route path="transactions" element={<WorkInProgress title="Transactions" description="The committee ledger." />} />
                 <Route path="settings" element={<AdminSettings />} />
-                <Route path="monthly-funds" element={<WorkInProgress title="Monthly Funds" description="Monthly contributions by member." />} />
+                <Route path="monthly-funds" element={<MonthlyFunds />} />
               </Route>
               {/* Anything unknown goes back to the public page rather than a
                   blank screen. */}
