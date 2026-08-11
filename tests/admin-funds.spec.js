@@ -259,3 +259,33 @@ test.describe('monthly funds', () => {
     await expect(balanceOf(page, 'February Amount')).toHaveText('₹21,000');
   });
 });
+
+test.describe('who reaches what', () => {
+  // The sidebar leaving a screen out is tidiness; this is the part that holds.
+  const ADMIN_ONLY = ['about', 'members', 'gallery', 'schedule', 'mandapam'];
+
+  for (const path of ADMIN_ONLY) {
+    test(`a funds-only member typing /admin/${path} is sent back`, async ({ page }) => {
+      await stub(page, { isAdmin: false });
+      await page.goto(`/admin/${path}`);
+      await expect(page).toHaveURL(/\/admin\/monthly-funds$/);
+    });
+  }
+
+  test('an admin reaches those same screens', async ({ page }) => {
+    await stub(page);
+    await page.goto('/admin/members');
+    await expect(page).toHaveURL(/\/admin\/members$/);
+  });
+
+  test('a funds-only member keeps the funds screen and their profile', async ({ page }) => {
+    await stub(page, { isAdmin: false });
+
+    await page.goto('/admin/monthly-funds');
+    await expect(page).toHaveURL(/\/admin\/monthly-funds$/);
+    await expect(page.locator('.tbl tbody tr').first()).toBeVisible();
+
+    await page.goto('/admin/profile');
+    await expect(page).toHaveURL(/\/admin\/profile$/);
+  });
+});

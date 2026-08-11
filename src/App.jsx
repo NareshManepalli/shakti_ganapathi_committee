@@ -69,6 +69,21 @@ const RequireAuth = ({ children }) => {
   return isAuthed ? children : <Navigate to="/funds" replace />
 }
 
+// The editing screens, for adm_in = 1 only.
+//
+// The sidebar already leaves these out for a funds-only member, but a menu is
+// not a lock: typing the path reached the screen, and it would sit there
+// showing an error from an endpoint that had refused it. Nothing leaked — the
+// Content Web App gates its reads on adm_in as well — but a member was being
+// shown a door that was never theirs. They go back to the one screen they came
+// for instead.
+const RequireAdmin = ({ children }) => {
+  const { member } = useAuth()
+  return member && member.isAdmin
+    ? children
+    : <Navigate to="/admin/monthly-funds" replace />
+}
+
 function App() {
   return (
     <LanguageProvider>
@@ -88,11 +103,11 @@ function App() {
                     can reach whatever their adm_in says. */}
                 <Route index element={<Navigate to="/admin/monthly-funds" replace />} />
                 <Route path="profile" element={<Profile />} />
-                <Route path="about" element={<AdminAbout />} />
-                <Route path="members" element={<AdminMembers />} />
-                <Route path="gallery" element={<AdminGallery />} />
-                <Route path="schedule" element={<AdminSchedule />} />
-                <Route path="mandapam" element={<AdminMandapam />} />
+                <Route path="about" element={<RequireAdmin><AdminAbout /></RequireAdmin>} />
+                <Route path="members" element={<RequireAdmin><AdminMembers /></RequireAdmin>} />
+                <Route path="gallery" element={<RequireAdmin><AdminGallery /></RequireAdmin>} />
+                <Route path="schedule" element={<RequireAdmin><AdminSchedule /></RequireAdmin>} />
+                <Route path="mandapam" element={<RequireAdmin><AdminMandapam /></RequireAdmin>} />
                 <Route path="transactions" element={<WorkInProgress title="Transactions" description="The committee ledger." />} />
                 {/* Settings retired: the festival date it edited is now read
                     from the schedule sheet's day 1, so the screen had nothing
