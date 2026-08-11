@@ -119,8 +119,12 @@ test('a funds-only member is offered neither editor screen nor its route', async
   });
   await page.goto('/admin');
 
-  await expect(page.locator('.admin-nav-link')).toHaveCount(2);
-  for (const s of SCREENS.filter((x) => x.kind !== 'wip')) {
+  // Annual Funds and Transactions are the two a funds-only member came for;
+  // everything else is an editor screen and stays out of their menu.
+  const OPEN_TO_ALL = ['Annual Funds', 'Transactions'];
+
+  await expect(page.locator('.admin-nav-link')).toHaveCount(OPEN_TO_ALL.length);
+  for (const s of SCREENS.filter((x) => !OPEN_TO_ALL.includes(x.label))) {
     await expect(page.locator('.admin-nav-link', { hasText: new RegExp(`^${s.label}$`) })).toHaveCount(0);
   }
 });
