@@ -264,9 +264,6 @@ const MonthlyFunds = () => {
             {current && current.festival && ` · celebrations from ${current.festival}`}
           </p>
         </div>
-        <button className="admin-btn" onClick={download} disabled={downloading || !found.length}>
-          <IconDownload /> {downloading ? 'Building…' : 'Download statement'}
-        </button>
       </div>
 
       {error && <p className="admin-msg is-error" role="alert">{error}</p>}
@@ -309,6 +306,37 @@ const MonthlyFunds = () => {
             ))}
           </div>
 
+          {/* The year and the statement sit between the cards and the table, on
+              their own line, because they govern both: the dropdown decides what
+              the four cards count and what the table lists, and the statement is
+              a copy of exactly that. Inside the table's header they read as
+              belonging to the table alone — and the cards above would appear to
+              be answering to nothing. */}
+          <div className="fnd-toolbar">
+            {/* Celebration to celebration, not January to December — the
+                ledger's Oct-to-Jul run is one fund year, and a calendar
+                filter cut it in two. */}
+            {/* .tbl-select keeps its compact-select styling — the height, the
+                tinted ground, the auto width. It is the shape these toolbar
+                selects share, table or not; without it this one stretched the
+                full width of the row. */}
+            <select
+              className="admin-input tbl-select fnd-year-select"
+              value={current ? current.no : ''}
+              aria-label="Fund year"
+              disabled={!offered.length}
+              onChange={(e) => setPickedCycle(e.target.value)}
+            >
+              {offered.length
+                ? offered.map((c) => <option key={c.no} value={c.no}>{cycleLabel(c)}</option>)
+                : <option value="">All entries</option>}
+            </select>
+
+            <button className="admin-btn" onClick={download} disabled={downloading || !found.length}>
+              <IconDownload /> {downloading ? 'Building…' : 'Download statement'}
+            </button>
+          </div>
+
           <div className="admin-card tbl-card">
             <div className="tbl-head">
               <h2 className="tbl-title fnd-history-title">Funds history</h2>
@@ -318,21 +346,6 @@ const MonthlyFunds = () => {
                   <span className="tbl-plus" aria-hidden="true">+</span> Add entry
                 </button>
               )}
-
-              {/* Celebration to celebration, not January to December — the
-                  ledger's Oct-to-Jul run is one fund year, and a calendar
-                  filter cut it in two. */}
-              <select
-                className="admin-input tbl-select fnd-year-select"
-                value={current ? current.no : ''}
-                aria-label="Fund year"
-                disabled={!offered.length}
-                onChange={(e) => setPickedCycle(e.target.value)}
-              >
-                {offered.length
-                  ? offered.map((c) => <option key={c.no} value={c.no}>{cycleLabel(c)}</option>)
-                  : <option value="">All entries</option>}
-              </select>
 
               <div className="tbl-search">
                 <IconSearch />

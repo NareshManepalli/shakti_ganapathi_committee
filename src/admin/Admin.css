@@ -1438,7 +1438,25 @@
 .fnd-range span { font-size: 12px; color: var(--a-muted); }
 
 /* "2nd year (2025 - 2026)" needs more room than "2026" ever did. */
-.fnd-year-select { min-width: 170px; }
+/* The fund year and the statement, on their own line between the cards and the
+   table. Right-aligned to sit under the cards' right edge and above the table's
+   own controls, so the column of actions reads down the page. */
+.fnd-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.fnd-year-select { min-width: 170px; flex: 0 0 auto; }
+
+/* Kept to their own widths on a phone rather than stretched across it: these
+   two govern the whole screen, and a full-width bar reads as its subject. */
+@media (max-width: 640px) {
+  .fnd-toolbar .admin-btn, .fnd-year-select { width: auto; }
+}
 
 /* The seconds left in the idle warning — tabular, so the number does not
    jitter the line as it counts down. */

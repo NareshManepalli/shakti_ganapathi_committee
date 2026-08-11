@@ -137,7 +137,7 @@ test.describe('monthly funds', () => {
     // Oct 2025 to Feb 2026 is ONE fund year — celebration to celebration — so
     // the whole seed counts, where a calendar filter would have shown only the
     // three rows dated 2026.
-    await expect(page.locator('.tbl-select')).toHaveValue('2');
+    await expect(page.locator('.fnd-year-select')).toHaveValue('2');
     await expect(page.locator('.fnd-card.is-credit')).toContainText('23,000');
     await expect(page.locator('.fnd-card.is-debit')).toContainText('2,000');
     await expect(page.locator('.fnd-card.is-balance')).toContainText('21,000');
@@ -169,7 +169,7 @@ test.describe('monthly funds', () => {
     await expect(page.locator('.fnd-card.is-balance')).toContainText('₹26,000');
 
     // All four move together, the year card included.
-    await page.locator('.tbl-select').selectOption('1');
+    await page.locator('.fnd-year-select').selectOption('1');
     await expect(year).not.toContainText('2025 - 2026');
     await expect(page.locator('.fnd-card.is-credit')).toContainText('₹5,000');
     await expect(page.locator('.fnd-card.is-debit')).toContainText('₹0');
@@ -321,12 +321,4 @@ test.describe('who reaches what', () => {
     await page.goto('/admin/profile');
     await expect(page).toHaveURL(/\/admin\/profile$/);
   });
-});
-
-test('OPTS', async ({ page }) => {
-  await stub(page);
-  await page.goto('/admin/monthly-funds');
-  await expect(page.locator('.fnd-card').first()).toBeVisible({ timeout: 20000 });
-  console.log('OPTIONS ' + JSON.stringify(await page.locator('.tbl-select option').evaluateAll(
-    (els) => els.map((e) => `${e.value}=${e.textContent}`))));
 });
