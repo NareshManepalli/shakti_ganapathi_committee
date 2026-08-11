@@ -201,6 +201,21 @@ body.lang-te .gallery-year-label {
   display: block;
 }
 
+/* Stands in for a picture Drive has not produced yet — a video's poster frame
+   is generated after the upload, and the endpoint 404s until it exists. The
+   emblem, dimmed, rather than a broken-image icon: the tile still reads as the
+   committee's, and the ▶ badge on top says what is waiting inside it. */
+.gallery-item-blank {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background:
+    linear-gradient(rgba(8, 19, 38, 0.55), rgba(8, 19, 38, 0.55)),
+    url('../assets/logo.png') center / 55% no-repeat,
+    #0d1b33;
+  opacity: 0.7;
+}
+
 /* ---- Empty / not-yet states ------------------------------------------- */
 .gallery-notice {
   text-align: center;

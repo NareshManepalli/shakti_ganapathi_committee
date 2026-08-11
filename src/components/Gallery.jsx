@@ -26,6 +26,41 @@ const IconDownload = () => (
   </svg>
 );
 
+/**
+ * One tile's picture, with something to show when there is no picture yet.
+ *
+ * Drive generates a video's poster frame after the upload finishes, not with
+ * it, and serves 404 from the thumbnail endpoint until it has. A video added
+ * minutes before a visitor arrives therefore rendered as a broken-image icon on
+ * the public page — the committee's first sight of a new upload was the site
+ * looking broken. The admin gallery already had this fallback; the public one
+ * is where it actually matters.
+ *
+ * It resolves itself: the poster appears on the next load once Drive catches
+ * up, so this is what the gap looks like rather than a permanent state.
+ */
+const Tile = ({ img, alt }) => {
+  const [failed, setFailed] = useState(false);
+  return (
+    <>
+      {failed ? (
+        <span className="gallery-item-blank" aria-hidden="true" />
+      ) : (
+        <img
+          src={img.thumb || img.url}
+          alt={alt}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
+      )}
+      {/* Drive's poster frame makes a video look like a photo until something
+          says otherwise — and when there is no poster, this is all there is. */}
+      {img.isVideo && <span className="gallery-play" aria-hidden="true">▶</span>}
+    </>
+  );
+};
+
 const Gallery = () => {
   const { language } = useLanguage();
   const t = translations[language];
@@ -243,10 +278,7 @@ const Gallery = () => {
                       onClick={() => setSelectedImage(img)}
                       aria-label={`${t.galleryTitle} ${img.index + 1}`}
                     >
-                      <img src={img.thumb || img.url} alt="" loading="lazy" referrerPolicy="no-referrer" />
-                      {/* Drive's poster frame makes a video look like a photo
-                          until something says otherwise. */}
-                      {img.isVideo && <span className="gallery-play" aria-hidden="true">▶</span>}
+                      <Tile img={img} alt="" />
                     </button>
                   ))}
                 </div>

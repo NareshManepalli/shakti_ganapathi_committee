@@ -97,11 +97,24 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Drop the session the moment it lapses, rather than on the next click.
+  //
+  // Armed in chunks rather than one long sleep. A setTimeout delay past
+  // 2^31-1 ms overflows the browser's 32-bit timer and fires immediately, so a
+  // session issued for anything beyond about 24 days would end the instant it
+  // began — signed in, then thrown straight back to the gate. The hour the auth
+  // script issues today is nowhere near that, but the failure is silent and the
+  // guard costs a re-arm.
   useEffect(() => {
     if (!session) return undefined;
-    const ms = session.expiresAt - Date.now();
-    if (ms <= 0) { signOut(); return undefined; }
-    const t = setTimeout(signOut, ms);
+
+    let t;
+    const arm = () => {
+      const ms = session.expiresAt - Date.now();
+      if (ms <= 0) { signOut(); return; }
+      t = setTimeout(arm, Math.min(ms, 2147483647));
+    };
+    arm();
+
     return () => clearTimeout(t);
   }, [session, signOut]);
 

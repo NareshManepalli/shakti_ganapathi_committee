@@ -10,7 +10,32 @@ import { adminMobile } from './config';
 // job. Signing in once is also closer to how a member actually works.
 const FILE = 'tests/.session.json';
 
+/**
+ * True when the session already on disk still has real time left on it.
+ *
+ * The Web App allows one code a minute and five an hour, and this file asks for
+ * one on every run — so a second run inside a minute fails at the gate, and the
+ * whole suite reports as broken when nothing is. Re-using a session that has not
+ * lapsed costs nothing and is what a member does anyway; a run more than an hour
+ * later signs in properly.
+ *
+ * Five minutes of headroom, so a long suite cannot expire mid-run.
+ */
+const stillValid = () => {
+  try {
+    const s = JSON.parse(fs.readFileSync('tests/.session-value.json', 'utf8'));
+    return Boolean(s && s.token && s.expiresAt - Date.now() > 5 * 60 * 1000);
+  } catch {
+    return false;
+  }
+};
+
 setup('sign in once', async ({ page }) => {
+  if (stillValid() && fs.existsSync(FILE)) {
+    setup.info().annotations.push({ type: 'note', description: 'reused the stored session' });
+    return;
+  }
+
   await page.goto('/funds');
   await page.locator('input[type=tel]').fill(adminMobile());
   const captcha = (await page.locator('.auth-captcha-d').allTextContents()).join('');

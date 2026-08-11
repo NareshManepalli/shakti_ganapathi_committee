@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import { SHEETS_CONFIG } from '../src/config/sheetsConfig.js';
 
 const MEMBERS_API = SHEETS_CONFIG.api.members;
+const AUTH_API = SHEETS_CONFIG.auth.url;
 
 // The profile screen against the LIVE auth endpoint and the real members sheet.
 //
@@ -155,6 +156,68 @@ test('a malformed email never leaves the browser', async ({ page }) => {
 // mid-flight at once would each restore what the other had just changed. The
 // read-only tests above have no such need and are left to run normally, so a
 // sheet fault in one of them no longer takes the whole file down with it.
+/**
+ * The member's own record, from the endpoint the profile screen itself reads.
+ *
+ * Not the members API: that one deliberately withholds `email`, since it is
+ * where the sign-in code is sent — so a restore checked against it can never
+ * confirm the email, and a restore built from it would blank the field it could
+ * not see.
+ */
+const profileFromServer = async (page) => {
+  const token = JSON.parse(session()).token;
+  return page.evaluate(async ([url, tok]) => {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'getProfile', token: tok }),
+    });
+    const data = await res.json();
+    const p = data.profile || {};
+    return { name: p.name || '', nameTe: p.nameTe || '', mobile: String(p.mobile || ''), email: p.email || '' };
+  }, [AUTH_API, token]);
+};
+
+/**
+ * Puts the row back, and does not finish until the server agrees.
+ *
+ * The restore used to be four UI steps in a `finally` with nothing checking the
+ * outcome — and when one of them silently did nothing, a run ended with
+ * "Venkat Naresh QA" as the President's name on the live public site. A test
+ * that writes to production has to guarantee the undo, not attempt it.
+ *
+ * So the server is the judge, not the screen: poll it, and if the UI path did
+ * not land, write the original values through the same endpoint the screen uses
+ * and poll again. Either way the test still fails — repairing the data is not
+ * the same as passing — but the committee's own record is never left holding a
+ * marker string.
+ */
+const restoreProfile = async (page, want) => {
+  const matches = async () => {
+    const now = await profileFromServer(page);
+    return Object.keys(want).every((k) => String(now[k] ?? '') === String(want[k] ?? ''));
+  };
+
+  // Generous, because this begins the instant Update is clicked and Apps Script
+  // takes seconds to answer on a good day. Too short a wait would report the
+  // screen as broken every time the service was merely slow.
+  for (let i = 0; i < 20; i++) {
+    if (await matches()) return true;
+    await page.waitForTimeout(1500);
+  }
+
+  const token = JSON.parse(session()).token;
+  await page.evaluate(async ([url, body]) => {
+    await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body) });
+  }, [AUTH_API, { action: 'updateProfile', token, ...want }]);
+
+  for (let i = 0; i < 10; i++) {
+    if (await matches()) return false;
+    await page.waitForTimeout(1500);
+  }
+  return false;
+};
+
 test.describe('writes to the live row', () => {
   test.describe.configure({ mode: 'serial' });
 
@@ -169,7 +232,11 @@ test.describe('writes to the live row', () => {
     const before = await factRows(page);
     const original = before.Name;
     const changed = `${original} QA`;
+    // Everything the row holds, captured before anything is touched — the undo
+    // needs all of it, not just the field under test.
+    const was = await profileFromServer(page);
 
+    let cleanly = true;
     try {
       await startEdit(page);
       await field(page, 'Name').fill(changed);
@@ -186,9 +253,9 @@ test.describe('writes to the live row', () => {
       await startEdit(page);
       await field(page, 'Name').fill(original);
       await page.locator('.admin-btn', { hasText: 'Update' }).click();
-      await expect(page.locator('.toast-success')).toContainText(/Profile saved/, { timeout: 45000 });
-      await expectName(page, original);
+      cleanly = await restoreProfile(page, { ...was, name: original });
     }
+    expect(cleanly, 'the screen did not put the name back — the sheet was repaired directly').toBe(true);
   });
 
   // The Telugu name is not in the read-only block above, so this reads it back
@@ -206,7 +273,9 @@ test.describe('writes to the live row', () => {
     const box = () => field(page, 'Name (Telugu)');
     const original = await box().inputValue();
     const changed = 'పరీక్ష పేరు';
+    const was = await profileFromServer(page);
 
+    let cleanly = true;
     try {
       await startEdit(page);
       await box().fill(changed);
@@ -225,11 +294,9 @@ test.describe('writes to the live row', () => {
       await startEdit(page);
       await box().fill(original);
       await page.locator('.admin-btn', { hasText: 'Update' }).click();
-      await expect(page.locator('.toast-success')).toContainText(/Profile saved/, { timeout: 45000 });
-      await page.reload();
-      await expect(page.locator('.prof-fact').first()).toBeVisible({ timeout: 45000 });
-      await expect(box()).toHaveValue(original, { timeout: 45000 });
+      cleanly = await restoreProfile(page, { ...was, nameTe: original });
     }
+    expect(cleanly, 'the screen did not put the Telugu name back — the sheet was repaired directly').toBe(true);
   });
 });
 
