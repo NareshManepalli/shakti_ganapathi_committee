@@ -25,9 +25,9 @@ const SCREENS = [
   { label: 'Annual Funds',  path: 'monthly-funds', title: 'Annual Funds',         kind: 'live' },
   { label: 'Transactions',  path: 'transactions',  title: 'Transactions',         kind: 'wip' },
   { label: 'About',         path: 'about',         title: 'About Management',     kind: 'editor', loaded: '.ed-bi textarea' },
-  { label: 'Members',       path: 'members',       title: 'Members Management',   kind: 'editor', loaded: '.tbl tbody tr' },
+  { label: 'Members',       path: 'members',       title: 'Members Management',   kind: 'editor', loaded: '.tbl:not(.tbl-ph) tbody tr' },
   { label: 'Gallery',       path: 'gallery',       title: 'Gallery',              kind: 'live' },
-  { label: 'Schedule',      path: 'schedule',      title: 'Schedule Management',  kind: 'editor', loaded: '.tbl tbody tr, .admin-empty-title' },
+  { label: 'Schedule',      path: 'schedule',      title: 'Schedule Management',  kind: 'editor', loaded: '.tbl:not(.tbl-ph) tbody tr, .admin-empty-title' },
   { label: 'Mandapam',      path: 'mandapam',      title: 'Mandapam Management',  kind: 'editor', loaded: '.ed-bi textarea' },
 ];
 
@@ -148,10 +148,10 @@ test('the sheets are fetched once for the whole visit, not once per screen', asy
 
   await openPortal(page);
   await page.locator('.admin-nav-link', { hasText: /^Members$/ }).click();
-  await expect(page.locator('.tbl tbody tr').first()).toBeVisible({ timeout: 60000 });
+  await expect(page.locator('.tbl:not(.tbl-ph) tbody tr').first()).toBeVisible({ timeout: 60000 });
   expect(calls, 'the first screen should fetch').toBe(1);
 
-  for (const label of ['Schedule', 'About', 'Mandapam', 'Settings']) {
+  for (const label of ['Schedule', 'About', 'Mandapam']) {
     await page.locator('.admin-nav-link', { hasText: new RegExp(`^${label}$`) }).click();
     await expect(page.locator('.admin-skel')).toHaveCount(0);
   }

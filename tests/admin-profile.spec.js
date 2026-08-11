@@ -17,7 +17,10 @@ const session = () => fs.readFileSync('tests/.session-value.json', 'utf8');
 
 // .admin-input order on the screen: Name, Name (Telugu), Mobile, Email.
 // Indices rather than labels because the labels carry a '*' node.
-const NAME = 0, NAME_TE = 1, MOBILE = 2, EMAIL = 3;
+// By label, not by position. Counting inputs broke the moment anything else on
+// the card gained one, and the failure was silent: the wrong field was filled
+// and the assertion simply disagreed with a value nobody had typed.
+const field = (page, label) => page.getByLabel(new RegExp(`^${label}`));
 
 async function open(page, path = '/admin/profile') {
   await page.addInitScript((v) => sessionStorage.setItem('ssgc.session', v), session());
@@ -88,7 +91,7 @@ test('a malformed email never leaves the browser', async ({ page }) => {
   await open(page);
   await page.locator('.admin-btn', { hasText: 'Edit Profile' }).click();
 
-  const email = page.locator('.admin-input').nth(EMAIL);
+  const email = field(page, 'Email');
   await email.fill('not-an-email');
   await page.locator('.admin-btn', { hasText: 'Update' }).click();
 
@@ -108,7 +111,7 @@ test('saving a new name reaches the sheet and survives a reload', async ({ page 
 
   try {
     await page.locator('.admin-btn', { hasText: 'Edit Profile' }).click();
-    await page.locator('.admin-input').nth(NAME).fill(changed);
+    await field(page, 'Name').fill(changed);
     await page.locator('.admin-btn', { hasText: 'Update' }).click();
 
     await expect(page.locator('.toast-success')).toContainText(/Profile saved/, { timeout: 45000 });
@@ -120,7 +123,7 @@ test('saving a new name reaches the sheet and survives a reload', async ({ page 
     await expectName(page, changed);
   } finally {
     await page.locator('.admin-btn', { hasText: 'Edit Profile' }).click();
-    await page.locator('.admin-input').nth(NAME).fill(original);
+    await field(page, 'Name').fill(original);
     await page.locator('.admin-btn', { hasText: 'Update' }).click();
     await expect(page.locator('.toast-success')).toContainText(/Profile saved/, { timeout: 45000 });
     await expectName(page, original);
@@ -133,7 +136,7 @@ test('saving a new name reaches the sheet and survives a reload', async ({ page 
 // site showing a test string as somebody's name in Telugu.
 test('a Telugu name reaches the name_te column and survives a reload', async ({ page }) => {
   await open(page);
-  const box = () => page.locator('.admin-input').nth(NAME_TE);
+  const box = () => field(page, 'Name \(Telugu\)');
   const original = await box().inputValue();
   const changed = 'పరీక్ష పేరు';
 

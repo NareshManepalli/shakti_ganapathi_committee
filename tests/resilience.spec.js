@@ -98,7 +98,7 @@ test.describe('the admin portal', () => {
 
     // the screen reports it; the chrome around it is untouched
     await expect(page.locator('.admin-msg.is-error, .sec-state')).toBeVisible({ timeout: 45000 });
-    await expect(page.locator('.admin-nav-link')).toHaveCount(8);
+    await expect(page.locator('.admin-nav-link')).toHaveCount(7);
 
     // and another screen is still reachable
     await page.locator('.admin-nav-link', { hasText: /^Gallery$/ }).click();

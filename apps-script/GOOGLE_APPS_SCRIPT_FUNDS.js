@@ -60,6 +60,18 @@ var FUNDS_SHEET_ID = '1qGY_P2g8Fg2pmWuj9iDGxW9Lc_GJplb3WxKYBxcZIg0';
 // it is what the committee calls the span it closes.
 var SCHEDULE_SHEET_ID = '1rtsurWepUJlzebf2LczLO_2f_EZ0YXJ7M06plNLtGV8';
 
+
+// Audit stamps are written in the committee's own time, not the workbook's.
+//
+// The funds workbook sits on America/Los_Angeles — Google's default, and not
+// something worth changing under a sheet people already read — which put every
+// i_ts and u_ts about thirteen and a half hours behind the person who caused
+// it. A row added on Tuesday evening was stamped Monday afternoon.
+//
+// Date CELLS still use the workbook's zone: those have to round-trip to the day
+// the sheet displays, and that is a different question from what time it is.
+var COMMITTEE_TZ = 'Asia/Kolkata';
+
 var SIGNING_KEY_PROP = 'SESSION_SIGNING_KEY';
 
 // The same three fills the screen and the PDF statement use, so the sheet, the
@@ -149,7 +161,7 @@ function readRows(sheet) {
 }
 
 function stamp() {
-  return Utilities.formatDate(new Date(), sheetTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+  return Utilities.formatDate(new Date(), COMMITTEE_TZ, 'yyyy-MM-dd HH:mm:ss');
 }
 
 /**

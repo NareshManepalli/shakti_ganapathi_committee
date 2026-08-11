@@ -34,6 +34,11 @@ var CONTENT_SHEET_ID  = '1KYhZ-3pImxBIW68f3ZljQi3RivM51O7kwKR1awC0UbA';
 var SCHEDULE_SHEET_ID = '1rtsurWepUJlzebf2LczLO_2f_EZ0YXJ7M06plNLtGV8';
 var MEMBERS_SHEET_ID  = '1nzynJzTm72i7C0lmfR50VZ6lONArSrh7ncbejMSiYyc';
 
+// Audit stamps in the committee's own time. A new Apps Script project defaults
+// to America/Los_Angeles, which would date every i_ts and u_ts to the previous
+// afternoon for anyone entering rows from India.
+var COMMITTEE_TZ = 'Asia/Kolkata';
+
 var SIGNING_KEY_PROP = 'SESSION_SIGNING_KEY';
 
 /* ------------------------------------------------------------------ utils */
@@ -94,7 +99,7 @@ function readRows(sheet) {
 }
 
 function stamp() {
-  return Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+  return Utilities.formatDate(new Date(), COMMITTEE_TZ, 'yyyy-MM-dd HH:mm:ss');
 }
 
 /** Writes the given fields onto one row, ignoring columns the sheet lacks. */
