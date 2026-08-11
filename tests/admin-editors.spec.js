@@ -103,22 +103,34 @@ test.describe('admin content screens', () => {
     await expect(toast).toContainText('locked by another editor');
   });
 
-  test('Mandapam keeps the five address lines and previews them', async ({ page }) => {
+  test('Mandapam keeps the address line breaks and points the map at them', async ({ page }) => {
     await stub(page);
     await page.goto('/admin/mandapam');
 
-    await expect(page.locator('.ed-bi textarea').first()).toHaveValue(/Sri Shakthi Nilayam/);
-    // one <span> per line — the site breaks where the box breaks
-    await expect(page.locator('.ed-preview-card span')).toHaveCount(5);
-    await expect(page.locator('.ed-preview-card span').last()).toHaveText('Rajamahendravaram - 533101.');
+    // The line breaks are the whole point: each one is a line on the public
+    // card, so they have to survive the round trip through the sheet.
+    const box = page.locator('.ed-bi textarea').first();
+    await expect(box).toHaveValue(/Sri Shakthi Nilayam/);
+    const lines = (await box.inputValue()).split(/\r?\n/).filter((l) => l.trim());
+    expect(lines).toHaveLength(5);
+    expect(lines.at(-1)).toBe('Rajamahendravaram - 533101.');
+
+    // The preview is the same embed the public card uses, so it is a preview
+    // rather than an approximation — and it resolves from the address itself.
+    const map = page.locator('.ed-split-view iframe');
+    await expect(map).toBeVisible();
+    await expect(map).toHaveAttribute('src', /Rajamahendravaram/);
   });
 
-  test('Settings reads the festival date and describes what it means', async ({ page }) => {
+  test('the map preview follows an edited address, a beat behind the typing', async ({ page }) => {
     await stub(page);
-    await page.goto('/admin/settings');
+    await page.goto('/admin/mandapam');
+    await expect(page.locator('.ed-split-view iframe')).toBeVisible();
 
-    await expect(page.locator('input[type=date]')).toHaveValue('2026-09-14');
-    await expect(page.locator('.ed-state')).not.toBeEmpty();
+    await page.locator('.ed-bi textarea').first().fill('Kotilingala Revu, Rajahmundry');
+    // deliberately debounced — keying the iframe to every character would be a
+    // request to Google per keystroke
+    await expect(page.locator('.ed-split-view iframe')).toHaveAttribute('src', /Kotilingala/, { timeout: 5000 });
   });
 
   test('Schedule shows one year at a time and can switch years', async ({ page }) => {
@@ -126,36 +138,60 @@ test.describe('admin content screens', () => {
     await page.goto('/admin/schedule');
 
     // newest year first, so 2025 is what opens
-    await expect(page.locator('.ed-table tbody tr')).toHaveCount(2);
-    await expect(page.locator('.ed-inline-note')).toContainText('missing 3, 4, 5, 6, 7, 8, 9');
+    await expect(page.locator('.tbl tbody tr')).toHaveCount(2);
+    // the day count and what is missing moved into the page subtitle when the
+    // card became a table card with its own toolbar
+    await expect(page.locator('.admin-page-sub')).toContainText('missing 3, 4, 5, 6, 7, 8, 9');
 
-    await page.locator('select').selectOption('2024');
-    await expect(page.locator('.ed-table tbody tr')).toHaveCount(1);
+    await page.locator('.tbl-select').selectOption('2024');
+    await expect(page.locator('.tbl tbody tr')).toHaveCount(1);
   });
 
-  test('Schedule copies a year forward and reports how many days moved', async ({ page }) => {
-    const posts = await stub(page);
+  test('Schedule reads a stored date and time back in the display formats', async ({ page }) => {
+    await stub(page);
     await page.goto('/admin/schedule');
 
-    await page.getByRole('button', { name: /Copy 2025 forward/ }).click();
-    await page.locator('.ed-strip input').fill('2026');
-    await page.locator('.ed-strip').getByRole('button', { name: 'Copy' }).click();
-
-    await expect(page.locator('.toast')).toContainText('2 days copied');
-    expect(posts.at(-1)).toMatchObject({ action: 'copyYear', fromYear: '2025', toYear: '2026' });
+    // dd-mm-yyyy and hh:mm AM/PM, whatever notation the sheet happens to hold —
+    // these fixtures are a bare date and a 12-hour time, and the live sheet
+    // hands the same cells back as UTC instants.
+    const first = page.locator('.tbl tbody tr').first();
+    await expect(first).toContainText('DAY-1');
+    await expect(first).toContainText('27-08-2025');
+    await expect(first).toContainText('06:00 AM');
+    // the weekday is derived from the date rather than stored
+    await expect(first).toContainText('Wednesday');
   });
 
-  test('Members hides soft-deleted rows and labels each level of access', async ({ page }) => {
+  test('Schedule pages the table rather than growing it', async ({ page }) => {
+    await stub(page);
+    await page.goto('/admin/schedule');
+    // two days in 2025, so one page and no pager at all
+    await expect(page.locator('.tbl-count')).toContainText('Showing 1–2 of 2');
+    await expect(page.locator('.tbl-page')).toHaveCount(0);
+  });
+
+  test('Schedule searches on what the row reads as, not the stored cell', async ({ page }) => {
+    await stub(page);
+    await page.goto('/admin/schedule');
+
+    // "28-08" is nowhere in the sheet — the cell holds 2025-08-28
+    await page.getByRole('searchbox', { name: 'Search days' }).fill('28-08');
+    await expect(page.locator('.tbl tbody tr')).toHaveCount(1);
+    await expect(page.locator('.tbl tbody tr')).toContainText('Bhajans');
+
+    await page.getByRole('searchbox', { name: 'Search days' }).fill('nothing matches this');
+    await expect(page.locator('.tbl-none')).toBeVisible();
+  });
+
+  test('Members hides soft-deleted rows', async ({ page }) => {
     await stub(page);
     await page.goto('/admin/members');
 
     // a_in = 0 is hidden, so four rows in the sheet show as three
-    await expect(page.locator('.ed-table tbody tr')).toHaveCount(3);
-    // the sixth cell is Access — the name cell carries chips of its own
-    const access = (n) => page.locator('tbody tr').nth(n).locator('td:nth-child(6) .ed-chip');
-    await expect(access(0)).toHaveText(['Full access', 'bypass']);
-    await expect(access(1)).toHaveText(['Funds only']);
-    await expect(access(2)).toHaveText(['No sign-in']);
+    await expect(page.locator('.tbl tbody tr')).toHaveCount(3);
+    // Access is set in the drawer rather than shown as a column, so the row is
+    // the eight columns the committee asked for and nothing else
+    await expect(page.locator('.tbl thead th')).toHaveCount(8);
   });
 
   test('Members warns that a development sign-in is still switched on', async ({ page }) => {
@@ -168,14 +204,16 @@ test.describe('admin content screens', () => {
     await stub(page);
     await page.goto('/admin/members');
 
-    await expect(page.locator('tbody tr').nth(0).locator('.ed-del')).toBeDisabled();
-    await expect(page.locator('tbody tr').nth(1).locator('.ed-del')).toBeEnabled();
+    // Named rather than positional: the row controls are icons now, and their
+    // accessible names are the only thing that says which member they act on.
+    await expect(page.getByRole('button', { name: 'Remove Venkat Naresh' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Remove Ramesh Kumar' })).toBeEnabled();
   });
 
   test('Full access cannot be granted to someone who cannot sign in', async ({ page }) => {
     await stub(page);
     await page.goto('/admin/members');
-    await page.locator('tbody tr').nth(2).getByRole('button', { name: 'Edit' }).click();
+    await page.getByRole('button', { name: 'Edit Suresh Babu' }).click();
 
     const flags = page.locator('.ed-flag');
     await expect(flags.nth(2).locator('input')).toBeDisabled();
@@ -191,10 +229,11 @@ test.describe('admin content screens', () => {
   test('Members saves an edited row through the Content Web App', async ({ page }) => {
     const posts = await stub(page);
     await page.goto('/admin/members');
-    await page.locator('tbody tr').nth(1).getByRole('button', { name: 'Edit' }).click();
+    await page.getByRole('button', { name: 'Edit Ramesh Kumar' }).click();
 
-    await page.locator('.ed-modal input').first().fill('Ramesh K');
-    await page.locator('.ed-modal').getByRole('button', { name: 'Save' }).click();
+    // the form is a side drawer now, not a centred dialog
+    await page.locator('.ed-drawer input').first().fill('Ramesh K');
+    await page.locator('.ed-drawer').getByRole('button', { name: 'Save' }).click();
 
     await expect(page.locator('.toast')).toContainText('Ramesh K saved');
     expect(posts.at(-1).action).toBe('saveMember');
@@ -204,7 +243,7 @@ test.describe('admin content screens', () => {
   test('Removing a member asks first and says the row survives', async ({ page }) => {
     const posts = await stub(page);
     await page.goto('/admin/members');
-    await page.locator('tbody tr').nth(1).locator('.ed-del').click();
+    await page.getByRole('button', { name: 'Remove Ramesh Kumar' }).click();
 
     const confirm = page.locator('.admin-confirm');
     await expect(confirm).toContainText('Remove Ramesh Kumar?');
@@ -216,10 +255,10 @@ test.describe('admin content screens', () => {
 
   test('every editor screen sends the session token', async ({ page }) => {
     const posts = await stub(page);
-    await page.goto('/admin/settings');
-    await page.locator('input[type=date]').fill('2026-09-15');
+    await page.goto('/admin/about');
+    await page.locator('.ed-bi textarea').first().fill('Rewritten.');
     await page.getByRole('button', { name: 'Update' }).click();
-    await expect(page.locator('.toast')).toContainText('Festival date saved');
+    await expect(page.locator('.toast')).toContainText('About saved');
     expect(posts.at(-1).token).toBe(session.token);
   });
 });

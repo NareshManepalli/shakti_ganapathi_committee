@@ -1,14 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useAuth, roleLabelFor } from '../contexts/AuthContext';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth, roleLabelFor, IDLE_LOGOUT_MS, IDLE_WARN_MS } from '../contexts/AuthContext';
+import Modal from '../components/Modal';
 import { toMediaUrl } from '../utils/sheetService';
 import logoImg from '../assets/logo.png';
 import {
   IconAbout, IconMembers, IconGallery, IconSchedule,
-  IconMandapam, IconLedger, IconFunds, IconProfile, IconLogout, IconSettings,
+  IconMandapam, IconLedger, IconFunds, IconProfile, IconLogout,
+  IconChevron,
 } from './icons';
 import { ToastProvider } from './ToastContext';
 import './Admin.css';
+import { SectionBoundary } from '../components/SectionState';
 
 // The portal shell: a fixed sidebar on desktop, a drawer on phones, and a
 // topbar carrying the profile menu. Same navy and gold as the public site —
@@ -24,20 +27,33 @@ import './Admin.css';
 // signed token, which the server reads on every write.
 // Monthly Funds is first because it is where sign-in lands everyone — it is the
 // one screen every member can reach, admin or not.
+// Settings is gone. Its only field was the festival date, and the countdown now
+// takes that from day 1 of the newest year in the schedule sheet — so the screen
+// edited a cell nothing read, which is worse than no screen at all.
 const NAV = [
-  { to: '/admin/monthly-funds', label: 'Monthly Funds', Icon: IconFunds,     admin: false },
+  { to: '/admin/monthly-funds', label: 'Annual Funds', Icon: IconFunds,     admin: false },
   { to: '/admin/transactions',  label: 'Transactions',  Icon: IconLedger,    admin: false },
   { to: '/admin/about',         label: 'About',         Icon: IconAbout,     admin: true },
   { to: '/admin/members',       label: 'Members',       Icon: IconMembers,   admin: true },
   { to: '/admin/gallery',       label: 'Gallery',       Icon: IconGallery,   admin: true },
   { to: '/admin/schedule',      label: 'Schedule',      Icon: IconSchedule,  admin: true },
   { to: '/admin/mandapam',      label: 'Mandapam',      Icon: IconMandapam,  admin: true },
-  { to: '/admin/settings',      label: 'Settings',      Icon: IconSettings,  admin: true },
 ];
 
 const AdminLayout = () => {
   const navigate = useNavigate();
-  const { member, profile, signOut, bypass } = useAuth();
+  const { pathname } = useLocation();
+  const { member, profile, signOut, idleWarning, staySignedIn } = useAuth();
+
+  // Counts down inside the warning, so "a minute" is a number going down
+  // rather than a claim the member has to take on trust.
+  const [left, setLeft] = useState(Math.round((IDLE_LOGOUT_MS - IDLE_WARN_MS) / 1000));
+
+  useEffect(() => {
+    if (!idleWarning) { setLeft(Math.round((IDLE_LOGOUT_MS - IDLE_WARN_MS) / 1000)); return undefined; }
+    const t = setInterval(() => setLeft((n) => Math.max(0, n - 1)), 1000);
+    return () => clearInterval(t);
+  }, [idleWarning]);
 
   const [drawer, setDrawer] = useState(false);
   const [menu, setMenu] = useState(false);
@@ -140,7 +156,9 @@ const AdminLayout = () => {
                     the pill does not resize under the cursor when it arrives. */}
                 <i>{role}</i>
               </span>
-              <span className={`admin-caret${menu ? ' is-up' : ''}`} aria-hidden="true">▾</span>
+              <span className={`admin-caret${menu ? ' is-up' : ''}`} aria-hidden="true">
+                <IconChevron />
+              </span>
             </button>
 
             {menu && (
@@ -164,16 +182,32 @@ const AdminLayout = () => {
           </div>
         </header>
 
-        {bypass && (
-          <p className="admin-devbanner" role="alert">
-            <b>Development sign-in.</b> This member has <code>bypass_in = 1</code>, so a
-            fixed code signs them in and no email is sent. Set it back to 0 in the members
-            sheet before the site goes public.
-          </p>
+        {idleWarning && (
+          <Modal onClose={staySignedIn} label="Still there?">
+            <div className="admin-card admin-confirm">
+              <h2 className="admin-empty-title">Still there?</h2>
+              <p className="admin-empty-text">
+                Nothing has been touched for nine minutes. The portal signs itself out after
+                ten, so anything half-typed is lost — this is the warning before that.
+              </p>
+              <p className="idle-count" aria-live="polite">
+                Signing out in {left}s
+              </p>
+              <div className="admin-btn-row" style={{ justifyContent: 'center', marginTop: 14 }}>
+                <button className="admin-btn" onClick={staySignedIn}>Stay signed in</button>
+                <button className="admin-btn admin-btn-ghost" onClick={leave}>Log out now</button>
+              </div>
+            </div>
+          </Modal>
         )}
 
         <main className="admin-content">
-          <Outlet />
+          {/* Keyed on the path so moving to another screen clears a caught
+              error; without that the boundary stays broken for the rest of
+              the visit and every screen looks broken with it. */}
+          <SectionBoundary key={pathname} label={`admin${pathname}`}>
+            <Outlet />
+          </SectionBoundary>
         </main>
       </div>
     </div>

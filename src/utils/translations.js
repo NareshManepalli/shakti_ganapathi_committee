@@ -19,6 +19,13 @@ export const translations = {
     countdownMinutes: "Minutes",
     countdownSeconds: "Seconds",
 
+    // Shared loading / empty / error states (SectionState.jsx)
+    sectionErrorTitle: "This section could not be loaded",
+    sectionErrorText: "Something went wrong while fetching it. The rest of the page is unaffected.",
+    sectionEmptyTitle: "Nothing here yet",
+    sectionEmptyText: "This section has not been filled in.",
+    tryAgain: "Try again",
+
     // About Section
     aboutTitle: "About Us",
     aboutSubtitle: "Learn more about our community and mission",
@@ -34,9 +41,14 @@ export const translations = {
     scheduleSubtitle: "The full festival schedule, day by day",
     scheduleAt: "at",
     scheduleDay: "Day",
+    // Stands in for a day whose programme the committee has not settled yet.
+    // The dates go up months ahead of what happens on them.
+    scheduleTbd: "TBD",
 
     // Gallery Section
     galleryTitle: "Photo Gallery",
+    galleryDownload: "Download",
+    close: "Close",
     gallerySubtitle: "Browse through our memorable moments and events",
     selectYear: "Select Year",
     showLess: "Show Less",
@@ -107,6 +119,13 @@ export const translations = {
     countdownMinutes: "నిమిషాలు",
     countdownSeconds: "సెకన్లు",
 
+    // Shared loading / empty / error states (SectionState.jsx)
+    sectionErrorTitle: "ఈ విభాగం లోడ్ కాలేదు",
+    sectionErrorText: "దీన్ని తెచ్చేటప్పుడు సమస్య ఏర్పడింది. మిగిలిన పేజీకి ఎలాంటి ఇబ్బంది లేదు.",
+    sectionEmptyTitle: "ఇంకా ఏమీ లేదు",
+    sectionEmptyText: "ఈ విభాగం ఇంకా నింపలేదు.",
+    tryAgain: "మళ్లీ ప్రయత్నించండి",
+
     // About Section
     aboutTitle: "మా గురించి",
     aboutSubtitle: "మా సమాజం మరియు లక్ష్యం గురించి తెలుసుకోండి",
@@ -122,9 +141,12 @@ export const translations = {
     scheduleSubtitle: "పండుగ కార్యక్రమాల పూర్తి వివరాలు, రోజువారీగా",
     scheduleAt: "",
     scheduleDay: "రోజు",
+    scheduleTbd: "TBD",
 
     // Gallery Section
     galleryTitle: "ఫోటో గ్యాలరీ",
+    galleryDownload: "డౌన్‌లోడ్",
+    close: "మూసివేయండి",
     gallerySubtitle: "మా గుర్తుంచుకోదగిన క్షణాలు మరియు కార్యక్రమాలను బ్రౌజ్ చేయండి",
     selectYear: "సంవత్సరాన్ని ఎంచుకోండి",
     showLess: "తక్కువ చూపించు",

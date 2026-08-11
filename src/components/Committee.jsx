@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
 import { useSectionContent } from '../contexts/ContentContext';
+import { SectionMessage } from './SectionState';
+import { useDialogFocus } from './useDialogFocus';
 import logoImg from '../assets/logo.png';
 import './Committee.css';
 
@@ -100,6 +102,10 @@ const Committee = () => {
     };
   }, [selectedMember]);
 
+  // Hold the keyboard inside the card while it is open, and hand focus back to
+  // the member it was opened from.
+  useDialogFocus(cardRef, Boolean(selectedMember));
+
   // Close on Escape.
   useEffect(() => {
     if (!selectedMember) return undefined;
@@ -110,7 +116,7 @@ const Committee = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, [selectedMember]);
 
-  const { data: memberRows, loading } = useSectionContent('members');
+  const { data: memberRows, error, loading, reload } = useSectionContent('members');
   const allMembers = memberRows || [];
 
   // is_executive puts a member in the left column; everyone else fills the grid.
@@ -196,6 +202,10 @@ const Committee = () => {
         <div className="committee-container">
           <h2 className="committee-section-title">{t.committeeTitle}</h2>
           <p className="committee-section-subtitle">{t.committeeSubtitle}</p>
+
+          {!allMembers.length && (
+            <SectionMessage tone={error ? 'error' : 'empty'} onRetry={error ? reload : undefined} />
+          )}
 
           <div className="committee-layout">
             {/* Left — President and Vice President, stacked */}

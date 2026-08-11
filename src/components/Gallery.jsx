@@ -3,8 +3,9 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
 import { GALLERY_START_YEAR, getFestivalState } from '../config/festival';
 import { useSectionContent } from '../contexts/ContentContext';
+import { useDialogFocus } from './useDialogFocus';
 import { SHEETS_CONFIG } from '../config/sheetsConfig';
-import { fetchGalleryTree } from '../utils/sheetService';
+import { fetchGalleryTree, driveDownloadUrl } from '../utils/sheetService';
 import { useRevalidate } from '../hooks/useRevalidate';
 import './Gallery.css';
 
@@ -15,6 +16,15 @@ const getRowCount = () =>
 
 // The Drive gallery Web App, or null while it is still being set up.
 const GALLERY_API = (SHEETS_CONFIG.media && SHEETS_CONFIG.media.gallery) || null;
+
+const IconDownload = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 3v12" />
+    <path d="M7 11l5 5 5-5" />
+    <path d="M5 21h14" />
+  </svg>
+);
 
 const Gallery = () => {
   const { language } = useLanguage();
@@ -39,6 +49,9 @@ const Gallery = () => {
   const [yearPicked, setYearPicked] = useState(false);
   const [rowCount, setRowCount] = useState(getRowCount);
   const [selectedImage, setSelectedImage] = useState(null);
+  const lightboxRef = useRef(null);
+  // The picture and its controls only; Tab must not walk the page behind it.
+  useDialogFocus(lightboxRef, Boolean(selectedImage));
   const { data: content, loading: contentLoading } = useSectionContent('content');
   const festivalState = getFestivalState(
     (content && content.festival && content.festival.en) || ''
@@ -231,6 +244,9 @@ const Gallery = () => {
                       aria-label={`${t.galleryTitle} ${img.index + 1}`}
                     >
                       <img src={img.thumb || img.url} alt="" loading="lazy" referrerPolicy="no-referrer" />
+                      {/* Drive's poster frame makes a video look like a photo
+                          until something says otherwise. */}
+                      {img.isVideo && <span className="gallery-play" aria-hidden="true">▶</span>}
                     </button>
                   ))}
                 </div>
@@ -242,18 +258,36 @@ const Gallery = () => {
 
       {selectedImage && (
         <div
+          ref={lightboxRef}
           className="gallery-lightbox"
           onClick={() => setSelectedImage(null)}
           role="dialog"
           aria-modal="true"
+          aria-label="Photograph"
         >
-          <button
-            className="gallery-lb-btn gallery-lb-close"
-            onClick={() => setSelectedImage(null)}
-            aria-label="Close"
-          >
-            ×
-          </button>
+          {/* Top-right: download, then close. An <a download> rather than a
+              button — the browser handles the save itself, which keeps working
+              when a popup blocker would have stopped a scripted one. */}
+          <div className="gallery-lb-actions" onClick={(e) => e.stopPropagation()}>
+            <a
+              className="gallery-lb-btn gallery-lb-download"
+              href={driveDownloadUrl(selectedImage.id)}
+              download={selectedImage.name || undefined}
+              target="_blank"
+              rel="noreferrer noopener"
+              aria-label={t.galleryDownload}
+              title={t.galleryDownload}
+            >
+              <IconDownload />
+            </a>
+            <button
+              className="gallery-lb-btn gallery-lb-close"
+              onClick={() => setSelectedImage(null)}
+              aria-label={t.close}
+            >
+              ×
+            </button>
+          </div>
           <button
             className="gallery-lb-btn gallery-lb-prev"
             onClick={(e) => { e.stopPropagation(); navigate('prev'); }}
@@ -262,7 +296,20 @@ const Gallery = () => {
             ‹
           </button>
           <figure className="gallery-lb-figure" onClick={(e) => e.stopPropagation()}>
-            <img src={selectedImage.url} alt="" referrerPolicy="no-referrer" />
+            {selectedImage.isVideo ? (
+              /* Drive's own player, not a <video src>: the file is not served
+                 as a plain stream, and a bare <video> pointed at Drive plays
+                 nothing at all. */
+              <iframe
+                className="gallery-lb-video"
+                src={selectedImage.play}
+                title={selectedImage.name || 'Video'}
+                allow="autoplay; fullscreen"
+                allowFullScreen
+              />
+            ) : (
+              <img src={selectedImage.url} alt="" referrerPolicy="no-referrer" />
+            )}
             <figcaption className="gallery-lb-count">
               {(selectedImage.index ?? 0) + 1} / {images.length}
             </figcaption>

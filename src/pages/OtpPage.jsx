@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { requestOtp, verifyOtp } from '../utils/authService';
 import logoImg from '../assets/logo.png';
 import './AuthPages.css';
+import { useCopyGuard } from '../components/useCopyGuard';
 
 const mmss = (s) => {
   const m = Math.floor(Math.max(0, s) / 60);
@@ -18,6 +19,9 @@ const mmss = (s) => {
 // mirrors of limits the server enforces; the display is a courtesy, not the
 // control.
 const OtpPage = () => {
+  // The sign-in screens are public too — see useCopyGuard.
+  useCopyGuard();
+
   const { language } = useLanguage();
   const t = translations[language];
   const navigate = useNavigate();

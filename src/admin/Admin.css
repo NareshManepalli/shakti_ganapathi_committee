@@ -38,6 +38,14 @@
   --a-shadow: 0 6px 22px rgba(15, 30, 60, 0.08);
   --a-shadow-sm: 0 2px 10px rgba(15, 30, 60, 0.06);
 
+  /* Character for character the stack the public site sets on body.lang-te.
+     Josefin Sans carries no Telugu glyphs, so without naming a face the portal
+     falls through to whatever the browser has — and a name typed here would not
+     look like the name that appears on the site. */
+  --a-font-te: 'Anek Telugu', 'Josefin Sans', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans',
+    'Droid Sans', 'Helvetica Neue', sans-serif;
+
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
@@ -46,6 +54,10 @@
 }
 
 .admin-root * { box-sizing: border-box; }
+
+/* Anything marked Telugu, not just the inputs — the column tags and previews
+   are Telugu too, and one of them in a fallback face gives the whole pair away. */
+.admin-root [lang="te"] { font-family: var(--a-font-te); }
 
 /* ============================ sidebar (dark) ============================ */
 
@@ -172,11 +184,9 @@
   align-items: center;
   gap: 12px;
   padding: 0 24px;
-  /* A woven navy rather than a flat bar: peetam carries a banner image here,
-     which is their artwork, so this stands in with the committee's own colours. */
-  background:
-    radial-gradient(120% 200% at 12% 50%, rgba(223, 174, 77, 0.16) 0%, transparent 55%),
-    linear-gradient(120deg, #0b1730 0%, #16274a 55%, #0e1b33 100%);
+  /* One flat navy, no gradient and no gold bloom behind the title: the bar is
+     chrome, and anything glowing in it competes with the screen's own content. */
+  background: var(--a-navy);
   border-bottom: 1px solid rgba(223, 174, 77, 0.22);
   position: sticky;
   top: 0;
@@ -189,7 +199,6 @@
   font-weight: 600;
   color: var(--a-gold-soft);
   letter-spacing: 0.02em;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
 }
 
 .admin-hamburger {
@@ -250,8 +259,12 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-.admin-caret { color: #a9bada; font-size: 11px; transition: transform 0.18s; }
+/* Light enough to read against the navy, and given its own box so the rotation
+   turns the chevron about its own centre rather than the text baseline. */
+.admin-caret { display: grid; place-items: center; color: #d7e0f2; transition: transform 0.18s; }
+.admin-caret svg { width: 15px; height: 15px; stroke-width: 2.2; }
 .admin-caret.is-up { transform: rotate(180deg); }
+.admin-profile-btn:hover .admin-caret { color: var(--a-gold-soft); }
 
 /* Identity card rather than a bare menu — avatar, name, role, then the two
    actions as full-width tiles. */
@@ -326,7 +339,12 @@
 
 /* ========================== content (light) ========================== */
 
-.admin-content { flex: 1; padding: 22px 22px 44px; max-width: 1120px; width: 100%; }
+/* No reading-measure cap on the workspace. It was 1120px, which suits a column
+   of form fields and starves a ten-column table — and the tables are what this
+   portal is mostly for. Prose that does need a measure caps itself
+   (.admin-readonly-note, .admin-empty-text) rather than making every screen
+   narrow on its behalf. */
+.admin-content { flex: 1; padding: 22px 22px 44px; width: 100%; }
 
 .admin-page-head {
   margin-bottom: 18px;
@@ -372,10 +390,6 @@
   color: var(--a-text);
   font: inherit; font-size: 14.5px;
 }
-
-/* Josefin Sans carries no Telugu glyphs, so name the face explicitly rather
-   than leave the Telugu name box to whatever the browser falls back to. */
-.admin-input[lang="te"] { font-family: 'Anek Telugu', var(--font-display, inherit), sans-serif; }
 
 .admin-input:focus { outline: none; border-color: var(--a-gold); box-shadow: 0 0 0 3px rgba(223, 174, 77, 0.18); }
 .admin-input:disabled { background: var(--a-surface-2); color: var(--a-muted); cursor: not-allowed; }
@@ -469,6 +483,12 @@
     position: fixed; inset: 0 auto 0 0;
     transform: translateX(-100%);
     transition: transform 0.24s ease;
+    /* Wider than the desktop rail because the drawer carries a close button the
+       rail does not, and its ~30px came straight out of the brand line — which
+       was sized to fit "GANAPATHI COMMITTEE" in one pass with nothing spare.
+       The cap keeps a strip of scrim tappable on the narrowest phones. */
+    width: 296px;
+    max-width: calc(100vw - 52px);
   }
   .admin-sidebar.is-open { transform: translateX(0); }
   .admin-drawer-close { display: block; }
@@ -525,26 +545,6 @@
   .prof-grid .admin-input { flex: 1; min-width: 0; }
 
   .admin-page-head { flex-direction: column; align-items: stretch; }
-}
-
-/* Shown across every portal screen while the development sign-in bypass is on.
-   Loud on purpose: a bypass that reaches production lets anyone sign in as any
-   member, so it must be impossible to overlook. */
-.admin-devbanner {
-  margin: 0;
-  padding: 10px 20px;
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: #4a2a00;
-  background: repeating-linear-gradient(135deg, #ffe6a8 0 12px, #ffdf90 12px 24px);
-  border-bottom: 1px solid #d9a83a;
-}
-
-.admin-devbanner code {
-  background: rgba(0, 0, 0, 0.09);
-  padding: 1px 5px;
-  border-radius: 4px;
-  font-size: 11.8px;
 }
 
 /* ============================== toasts ============================== */
@@ -651,20 +651,8 @@
 
 .ed-textarea { resize: vertical; line-height: 1.6; font-size: 14px; }
 
-.ed-image-row { display: flex; gap: 12px; align-items: stretch; }
-.ed-image-row .admin-input { flex: 1; }
-
-.ed-image-preview {
-  width: 92px; height: 62px; flex: none;
-  border-radius: var(--a-radius-sm);
-  overflow: hidden;
-  border: 1px solid var(--a-border);
-  background: var(--a-surface-2);
-  display: grid; place-items: center;
-}
-
-.ed-image-preview img { width: 100%; height: 100%; object-fit: cover; }
-.ed-image-empty { font-size: 11.5px; color: var(--a-muted-2); }
+/* The 92×62 thumbnail beside a link input is gone: About was its only user, and
+   it now shows the picture at the size the section crops it to. */
 
 .ed-preview-card {
   display: flex; flex-direction: column; gap: 3px;
@@ -679,74 +667,354 @@
 .ed-state { margin: 0 0 12px; font-size: 13px; color: var(--a-green); font-weight: 600; }
 .ed-state.is-warn { color: var(--a-red); }
 
-/* -------------------------------- toolbars ------------------------------- */
+/* ---------------------------- settings screen ---------------------------- */
 
-.ed-toolbar {
-  display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap;
-  padding-bottom: 14px; margin-bottom: 16px;
-  border-bottom: 1px solid var(--a-border-soft);
+/* The date and the button are one action, so they share a line; the explicit
+   height is what puts them on it as a pair, since a date input measures itself
+   and would otherwise sit a pixel or two off the button. */
+.set-row { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.set-row .ed-field { flex: 0 1 260px; min-width: 0; margin-bottom: 0; }
+.set-row .admin-input, .set-row .admin-btn { height: 42px; }
+.set-row .admin-btn { flex: none; }
+
+/* Both lines run the card's full width — the note is a single explanation of
+   the field above it, not a column of prose to be capped at a reading measure. */
+.set-state { margin: 18px 0 6px; }
+.set-note { max-width: none; margin: 0; }
+
+/* ============================ split-card screens ==========================
+   Fields on the left, what those fields produce on the right: the address and
+   its map, the About text and its image. A change and its consequence belong
+   in the same glance, which is the whole reason these two screens are not the
+   plain stack of fields the other editors use.
+   ========================================================================== */
+
+.ed-split-card { padding: 0; overflow: hidden; }
+
+.ed-split-title {
+  margin: 0;
+  padding: 15px 22px;
+  border-bottom: 1px solid var(--a-border);
+  font-family: var(--font-display, inherit);
+  font-size: 16px; font-weight: 600;
+  color: var(--a-heading);
 }
 
-.ed-inline { display: block; }
-.ed-inline .admin-input { min-width: 130px; }
-.ed-inline-note { font-size: 12.5px; color: var(--a-muted); padding-bottom: 10px; }
+.ed-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 26px;
+  padding: 22px 22px 12px;
+}
 
-.ed-strip {
-  display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;
-  padding: 14px; margin-bottom: 16px;
+/* Column, so the preview can take whatever height the fields beside it come
+   to — the alternative is a fixed height that is wrong on one side or the other
+   every time the text gains a line. */
+.ed-split-col { display: flex; flex-direction: column; min-width: 0; }
+
+/* The text boxes are the last thing in their column, so their field's usual
+   bottom margin has nothing to separate them from — and the preview, which
+   grows to the column, would sit exactly that far below them. */
+.ed-split-col > .ed-field:last-child { margin-bottom: 0; }
+
+/* Sentence case here, not the uppercase caption used elsewhere in the portal:
+   on these screens the labels sit inside a titled card and read as field names
+   rather than as headings over sections. */
+.ed-split .admin-label {
+  margin-bottom: 8px;
+  font-size: 13.5px;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--a-muted);
+}
+
+/* The language markers are a caption on one box each, so plain text rather than
+   the pill the other editors use — a pill reads as something you can press. */
+.ed-split .ed-bi-tag {
+  display: block;
+  margin-bottom: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--a-muted-2);
+}
+
+/* One under the other rather than side by side: half a column each left both
+   boxes too narrow to see where the committee had chosen to break the lines. */
+.ed-split .ed-bi { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.ed-split .ed-bi-col { display: flex; flex-direction: column; }
+.ed-split .ed-textarea { flex: 1; }
+
+/* One line, as on the peetam contact card. A Drive link or an embed tag runs
+   past the end of it, which is fine — the value is pasted once and checked
+   against the preview below rather than read in the box. */
+.ed-split-field { margin-bottom: 12px; }
+.ed-split-input { font-size: 13px; text-overflow: ellipsis; }
+.ed-split-input:focus { text-overflow: clip; }
+.ed-split-hint { display: block; margin-top: 6px; font-size: 11.5px; color: var(--a-muted-2); }
+
+/* flex: 1 so it grows to whatever the boxes beside it come to. The floor is
+   only for the stacked layout, and has to stay under that height or the
+   preview starts driving the row and hangs below the fields instead. */
+.ed-split-view {
+  position: relative;
+  flex: 1;
+  min-height: 210px;
+  margin-top: 2px;
   border-radius: var(--a-radius-sm);
-  background: var(--a-surface-2);
   border: 1px solid var(--a-border);
+  background: var(--a-surface-2);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
 }
 
-/* --------------------------------- tables -------------------------------- */
+/* Absolute, as .mandapam-map-card does on the site, so the box has no natural
+   height of its own. In flow, an image's own height would set the column, the
+   column would set the grid row, and a tall picture would drag the whole card
+   down the page with it — height: 100% cannot stop that, because a percentage
+   against a box that is still being measured resolves to auto. */
+.ed-split-view iframe,
+.ed-split-view img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
 
-.ed-table-wrap { overflow-x: auto; }
-.ed-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+/* cover, as .about-media img does on the site — a preview that fits the whole
+   picture in would not be showing what the section actually crops to. */
+.ed-split-view img { object-fit: cover; }
+.ed-split-empty { margin: 0; padding: 0 16px; text-align: center; font-size: 12.5px; color: var(--a-muted-2); }
 
-.ed-table th {
+/* Bottom right, past both columns — the actions belong to the whole card. */
+.ed-split-actions { justify-content: flex-end; margin: 0; padding: 4px 22px 20px; }
+
+/* Placeholders measured against the control each stands in for, so the card
+   holds its height and the row lands into the shape already on screen.
+   Heights are the real line boxes, not the ink: a label is 17px of line even
+   though the grey bar standing in for it need not look that tall. */
+.ed-ph-title { display: block; width: 158px; height: 19px; }
+.ed-ph-label { flex: none; width: 84px; height: 17px; margin-bottom: 8px; }
+.ed-ph-tag   { flex: none; width: 52px; height: 16px; margin-bottom: 6px; }
+.ed-ph-box   { flex: none; height: 134px; margin-bottom: 14px; border-radius: var(--a-radius-sm); }
+.ed-ph-box.is-last { margin-bottom: 0; }
+/* The input, plus the hint line under it and .ed-split-field's own bottom
+   margin — without the sum the preview starts higher in the skeleton than in
+   the card and slides down on arrival. */
+.ed-ph-input { flex: none; height: 42px; margin-bottom: 32px; border-radius: var(--a-radius-sm); }
+.ed-ph-btn   { flex: none; width: 104px; height: 40px; border-radius: var(--a-radius-sm); }
+
+/* Well above the portal's usual breakpoint: two textareas and a preview in
+   three columns of a workspace that has already given 250px to the sidebar are
+   cramped long before a phone width. */
+@media (max-width: 1180px) {
+  .ed-split { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .ed-split-view { min-height: 300px; }
+}
+
+@media (max-width: 620px) {
+  .ed-split-title { padding: 13px 16px; font-size: 15px; }
+  .ed-split { padding: 16px 16px 10px; }
+  .ed-split-actions { padding: 4px 16px 16px; }
+  .ed-split-actions .admin-btn { flex: 1; justify-content: center; }
+  .ed-split-view { min-height: 230px; }
+}
+
+/* =============================== table cards =============================
+   The table sits inside the card rather than filling it: tools above, rows in
+   their own rounded panel with a navy head, pager below. The panel edge is what
+   makes a row a row here — banded rows on a white card need something to say
+   where the table starts and the card ends.
+   ========================================================================= */
+
+.tbl-head {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 10px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.tbl-head .admin-btn { height: 40px; }
+.tbl-plus { font-size: 16px; line-height: 1; margin-right: -2px; }
+
+.tbl-select {
+  width: auto; height: 40px;
+  padding: 0 10px;
+  font-size: 13px;
+  background: var(--a-surface-2);
+  cursor: pointer;
+}
+
+/* The icon is inside the box rather than beside it, so the search reads as one
+   control at the width of a field instead of two things sharing a row. */
+.tbl-search { position: relative; }
+
+.tbl-search svg {
+  position: absolute; left: 12px; top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  color: var(--a-muted-2);
+  pointer-events: none;
+}
+
+.tbl-search .admin-input {
+  width: 230px; height: 40px;
+  padding: 0 12px 0 36px;
+  font-size: 13px;
+}
+
+.tbl-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--a-border);
+  border-radius: var(--a-radius-sm);
+}
+
+.tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+
+.tbl th {
   text-align: left;
-  padding: 10px 12px;
-  font-size: 11.5px;
-  letter-spacing: 0.06em;
+  padding: 14px 18px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: #cdd8ec;
-  background: linear-gradient(140deg, var(--a-navy-2), var(--a-navy));
+  color: #dbe3f5;
+  background: var(--a-navy);
   white-space: nowrap;
 }
 
-.ed-table th:first-child { border-radius: var(--a-radius-sm) 0 0 var(--a-radius-sm); }
-.ed-table th:last-child { border-radius: 0 var(--a-radius-sm) var(--a-radius-sm) 0; }
-
-.ed-table td {
-  padding: 11px 12px;
-  border-bottom: 1px solid var(--a-border-soft);
+.tbl td {
+  padding: 15px 18px;
   vertical-align: middle;
+  color: var(--a-text);
 }
 
-.ed-table tbody tr:hover { background: var(--a-surface-2); }
-.ed-table td b { display: block; color: var(--a-text); font-weight: 600; }
-.ed-te { display: block; font-style: normal; font-size: 12px; color: var(--a-muted); margin-top: 1px; }
-.ed-day-no { font-weight: 700; color: var(--a-heading); }
-.ed-email { word-break: break-all; max-width: 200px; }
-.ed-empty-cell { text-align: center; color: var(--a-muted); padding: 28px 12px; }
+/* Banding rather than rules between rows: seven columns of short values read
+   more easily along a tinted band than between two hairlines. */
+.tbl tbody tr:nth-child(even) { background: var(--a-surface-2); }
+.tbl tbody tr:hover { background: #eef3fa; }
 
-.ed-row-actions { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
-.ed-sm { padding: 6px 12px; font-size: 12.5px; }
+.tbl-sno { width: 66px; color: var(--a-muted); }
+.tbl-acts { width: 104px; }
+.tbl-acts div { display: flex; gap: 8px; }
 
-.ed-del {
-  width: 30px; height: 30px; flex: none;
+.tbl-img { width: 76px; }
+
+.tbl-thumb {
+  width: 44px; height: 44px;
   display: grid; place-items: center;
-  border-radius: 8px; border: 1px solid transparent;
-  background: none; color: var(--a-muted-2); cursor: pointer;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--a-border);
+  background: var(--a-surface-2);
+}
+
+.tbl-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.tbl-thumb.is-empty { color: var(--a-muted-2); font-size: 12.5px; }
+
+/* The committee emblem where a photo has not been chosen. contain, not cover:
+   it is a circle on transparent, and cropping it to fill would cut the ring
+   off. Held back at 70% so it reads as a stand-in rather than as the picture. */
+.ed-preview .ed-fallback {
+  width: 78%; height: 78%;
+  object-fit: contain;
+  opacity: 0.7;
+  display: block;
+}
+.tbl-day { font-weight: 600; color: var(--a-heading); white-space: nowrap; }
+.tbl-nowrap { white-space: nowrap; }
+.tbl-none { text-align: center; color: var(--a-muted); padding: 34px 18px; }
+
+/* Tinted, not grey: the two sit side by side in every row, and colour tells
+   them apart faster than the difference between a pencil and a bin at 15px. */
+.tbl-icon {
+  width: 32px; height: 32px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 8px;
+  border: 1px solid #c3d5f2;
+  background: #eaf1fd;
+  color: #2c5fb8;
+  cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.ed-del svg { width: 16px; height: 16px; }
-.ed-del:hover:not(:disabled) { background: var(--a-red-bg); color: var(--a-red); border-color: rgba(209, 67, 95, 0.3); }
-.ed-del:disabled { opacity: 0.3; cursor: not-allowed; }
+.tbl-icon svg { width: 15px; height: 15px; }
+.tbl-icon:hover:not(:disabled) { background: #d9e6fb; border-color: #9cbcea; }
+
+.tbl-icon.is-danger { border-color: #f3c0c9; background: #fdedf0; color: var(--a-red); }
+.tbl-icon.is-danger:hover:not(:disabled) { background: #fadbe1; border-color: #eba3b1; }
+
+.tbl-icon:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.tbl-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.tbl-count { font-size: 12.5px; color: var(--a-muted); }
+.tbl-pager { display: flex; gap: 7px; margin-left: auto; }
+
+.tbl-page {
+  min-width: 34px; height: 34px;
+  padding: 0 9px;
+  border-radius: 8px;
+  border: 1px solid var(--a-border);
+  background: var(--a-surface);
+  color: var(--a-text);
+  font: inherit; font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.tbl-page:hover:not(:disabled):not(.is-current) { background: var(--a-surface-2); }
+.tbl-page.is-current { background: var(--a-navy); border-color: var(--a-navy); color: #fff; font-weight: 600; }
+.tbl-page:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Placeholder pieces for TableSkeleton. Measured against the real controls, so
+   the card is the height it will be once the rows arrive and nothing shifts
+   under the cursor when they do. */
+.tbl-ph-btn    { display: block; width: 118px; height: 40px; border-radius: var(--a-radius-sm); }
+.tbl-ph-select { display: block; width: 74px;  height: 40px; border-radius: var(--a-radius-sm); }
+.tbl-ph-search { display: block; width: 230px; height: 40px; border-radius: var(--a-radius-sm); }
+
+/* The head is navy, and the grey used everywhere else reads as a hole punched
+   in it. A pale wash instead, so the bars look like text about to arrive. */
+.tbl-ph th .admin-skel { background: rgba(255, 255, 255, 0.2); }
+
+.tbl-ph-th    { display: block; height: 9px; border-radius: 3px; }
+.tbl-ph-cell  { display: block; height: 11px; border-radius: 4px; }
+/* The picture column keeps its square, so the placeholder row is as tall as the
+   real one — every other cell is shorter than the thumbnail beside it. */
+.tbl-ph-thumb { display: block; width: 44px; height: 44px; border-radius: 6px; }
+
+.tbl-ph-count { display: block; width: 130px; height: 12px; }
+.tbl-ph-pager { display: block; width: 150px; height: 34px; border-radius: 8px; margin-left: auto; }
+
+@media (max-width: 760px) {
+  .tbl-head { justify-content: space-between; }
+  .tbl-ph-search { width: 100%; }
+  .tbl-search { flex: 1 1 160px; }
+  .tbl-search .admin-input { width: 100%; }
+  .tbl-foot { justify-content: center; }
+  .tbl-pager { margin-left: 0; }
+  .tbl th { padding: 12px 14px; }
+  .tbl td { padding: 13px 14px; }
+}
+
+/* The older .ed-table and its row controls are gone — Schedule and Members were
+   its only two screens and both now use the .tbl card above. */
+.ed-email { word-break: break-all; max-width: 220px; }
 
 /* ---------------------------------- chips -------------------------------- */
+/* Kept though nothing renders one at the moment: the access badges came off the
+   Members table when its columns were cut to eight, and this is what they wore. */
 
 .ed-chip {
   display: inline-block;
@@ -766,8 +1034,217 @@
 
 /* --------------------------------- modals -------------------------------- */
 
-.ed-modal { width: min(640px, 100%); max-height: 88vh; overflow-y: auto; }
+/* The wide centred edit dialog is gone — Schedule and Members were its only two
+   users and both open a drawer now. .admin-confirm below is still a dialog:
+   a yes/no question is short, and belongs in the middle of the screen. */
 .ed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+
+/* ============================== monthly funds =============================
+   Money in is green, money out is red, the balance is blue — the same three
+   through the table, the PDF statement and the sheet itself, so a figure keeps
+   its meaning wherever the committee happens to be reading it.
+   ========================================================================= */
+
+.admin-root {
+  --f-credit:    #1c6e40;  --f-credit-bg:  #e7f4ec;  --f-credit-line:  #b6dfc6;
+  --f-debit:     #9c2740;  --f-debit-bg:   #fdecef;  --f-debit-line:   #f3c0c9;
+  --f-balance:   #1c4a86;  --f-balance-bg: #e8f0fb;  --f-balance-line: #c3d5f2;
+}
+
+.fnd-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.fnd-stat {
+  padding: 15px 18px;
+  border-radius: var(--a-radius);
+  border: 1px solid var(--a-border);
+  background: var(--a-surface);
+  box-shadow: var(--a-shadow-sm);
+  border-left-width: 4px;
+}
+
+.fnd-stat-l { display: block; font-size: 12px; color: var(--a-muted); }
+.fnd-stat-n {
+  display: block; margin-top: 5px;
+  font-family: var(--font-display, inherit);
+  font-size: 26px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fnd-stat.is-credit  { border-left-color: var(--f-credit); }
+.fnd-stat.is-debit   { border-left-color: var(--f-debit); }
+.fnd-stat.is-balance { border-left-color: var(--f-balance); }
+.fnd-stat.is-credit .fnd-stat-n  { color: var(--f-credit); }
+.fnd-stat.is-debit .fnd-stat-n   { color: var(--f-debit); }
+.fnd-stat.is-balance .fnd-stat-n { color: var(--f-balance); }
+
+.fnd-months { margin-bottom: 16px; }
+.fnd-months .tbl-title { margin-bottom: 14px; }
+
+.fnd-month-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.fnd-month {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 12px 14px;
+  border-radius: var(--a-radius-sm);
+  border: 1px solid var(--a-border);
+  background: var(--a-surface-2);
+}
+
+.fnd-month-name { font-size: 13.5px; color: var(--a-heading); }
+.fnd-month-row { display: flex; justify-content: space-between; font-size: 12.5px; }
+.fnd-month-row i { font-style: normal; color: var(--a-muted); }
+.fnd-month-row em { font-style: normal; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fnd-month-row em.is-credit { color: var(--f-credit); }
+.fnd-month-row em.is-debit  { color: var(--f-debit); }
+
+/* Two lines at most: seven names is normal and would otherwise make one card
+   twice the height of the eleven beside it. */
+.fnd-month-people {
+  margin-top: 4px;
+  font-size: 11px; line-height: 1.45;
+  color: var(--a-muted-2);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.fnd-history-title { margin-right: auto; }
+
+/* The money columns carry their colour through the head, the body and the
+   totals row, so a column can be followed down the page without reading it. */
+.fnd-num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.tbl td.fnd-num.is-credit  { background: var(--f-credit-bg);  color: var(--f-credit); }
+.tbl td.fnd-num.is-debit   { background: var(--f-debit-bg);   color: var(--f-debit); }
+.tbl td.fnd-num.is-balance { background: var(--f-balance-bg); color: var(--f-balance); font-weight: 600; }
+
+/* Banding would tint these three differently row by row and break the column. */
+.tbl tbody tr:nth-child(even) td.fnd-num.is-credit  { background: #ddeee4; }
+.tbl tbody tr:nth-child(even) td.fnd-num.is-debit   { background: #f9e2e7; }
+.tbl tbody tr:nth-child(even) td.fnd-num.is-balance { background: #dfe9f8; }
+.tbl tbody tr:hover td.fnd-num.is-credit  { background: #d3e9dc; }
+.tbl tbody tr:hover td.fnd-num.is-debit   { background: #f6d8de; }
+.tbl tbody tr:hover td.fnd-num.is-balance { background: #d6e4f6; }
+
+.tbl th.fnd-num.is-credit  { color: #a9e3c2; }
+.tbl th.fnd-num.is-debit   { color: #f5bcc7; }
+.tbl th.fnd-num.is-balance { color: #b9d2f4; }
+
+.fnd-people { font-size: 12.5px; color: var(--a-muted); min-width: 180px; }
+
+.tbl tfoot .fnd-total td {
+  padding: 13px 16px;
+  border-top: 2px solid var(--a-border);
+  font-weight: 700;
+  color: var(--a-heading);
+}
+
+.tbl tfoot .fnd-total td.fnd-num.is-credit  { background: var(--f-credit-bg);  color: var(--f-credit); }
+.tbl tfoot .fnd-total td.fnd-num.is-debit   { background: var(--f-debit-bg);   color: var(--f-debit); }
+.tbl tfoot .fnd-total td.fnd-num.is-balance { background: var(--f-balance-bg); color: var(--f-balance); }
+
+/* The two amount boxes wear their own meaning in the drawer too. */
+.fnd-in:focus  { border-color: var(--f-credit); box-shadow: 0 0 0 3px rgba(28, 110, 64, 0.14); }
+.fnd-out:focus { border-color: var(--f-debit);  box-shadow: 0 0 0 3px rgba(156, 39, 64, 0.14); }
+
+@media (max-width: 820px) {
+  .fnd-summary { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .fnd-stat-n { font-size: 23px; }
+}
+
+/* --------------------------------- drawers ------------------------------- */
+
+/* A form long enough to scroll belongs against an edge, not floating in the
+   middle of the screen: the drawer keeps its head and its buttons pinned while
+   the fields move, and leaves the table it was opened from in view. */
+.ed-drawer-scrim {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; justify-content: flex-end;
+  background: rgba(8, 19, 38, 0.72);
+}
+
+.ed-drawer {
+  width: min(440px, 100%);
+  height: 100%;
+  display: flex; flex-direction: column;
+  background: var(--a-surface);
+  box-shadow: -18px 0 44px rgba(8, 19, 38, 0.3);
+  animation: ed-drawer-in 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes ed-drawer-in { from { transform: translateX(28px); opacity: 0.4; } }
+@media (prefers-reduced-motion: reduce) { .ed-drawer { animation: none; } }
+
+/* The portal's own navy and gold, as the topbar carries them — the drawer is
+   chrome over the workspace, and reads as part of the frame rather than as
+   another white card that happens to be pinned to the edge. */
+.ed-drawer-head {
+  flex: none;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 15px 20px;
+  background: var(--a-navy);
+  border-bottom: 1px solid rgba(223, 174, 77, 0.22);
+}
+
+.ed-drawer-head h2 {
+  margin: 0;
+  font-family: var(--font-display, inherit);
+  font-size: 17px; font-weight: 600;
+  color: var(--a-gold-soft);
+}
+
+.ed-drawer-x {
+  width: 38px; height: 38px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 9px; border: 1px solid transparent;
+  background: none;
+  color: #d7e0f2;
+  font-size: 30px; line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ed-drawer-x:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); color: var(--a-gold-soft); }
+.ed-drawer-x:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Only the fields scroll — the buttons stay reachable however long the form
+   gets, which is the point of the drawer over the dialog it replaced. */
+.ed-drawer-body { flex: 1; overflow-y: auto; padding: 18px 20px 4px; }
+
+/* aspect-ratio, so the box has a height of its own before the picture arrives:
+   left to the image, a tall one would set the height and the drawer would jump
+   as each new link loaded. */
+.ed-preview {
+  margin: -6px 0 16px;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--a-radius-sm);
+  border: 1px solid var(--a-border);
+  background: var(--a-surface-2);
+  overflow: hidden;
+  display: grid; place-items: center;
+}
+
+.ed-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.ed-drawer-foot {
+  flex: none;
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 13px 20px;
+  border-top: 1px solid var(--a-border);
+}
+
+@media (max-width: 520px) {
+  .ed-drawer-body .ed-grid { grid-template-columns: minmax(0, 1fr); }
+  .ed-drawer-foot .admin-btn { flex: 1; justify-content: center; }
+}
 
 /* ---------------------------------- flags -------------------------------- */
 
@@ -798,8 +1275,6 @@
 
 @media (max-width: 720px) {
   .ed-bi, .ed-grid { grid-template-columns: 1fr; }
-  .ed-image-row { flex-direction: column; }
-  .ed-image-preview { width: 100%; height: 120px; }
 }
 
 /* Modal and empty-state shells for the editor screens. Gallery carries its own
@@ -819,3 +1294,64 @@
 .admin-empty-icon { font-size: 32px; display: block; margin-bottom: 8px; }
 .admin-empty-title { margin: 0 0 5px; font-size: 16px; color: var(--a-heading); font-family: var(--font-display, inherit); }
 .admin-empty-text { margin: 0 auto; max-width: 40ch; font-size: 12.8px; line-height: 1.6; color: var(--a-muted); }
+
+/* ------------------- table placeholders (TableSkeleton) ------------------ */
+
+/* Each block is the size of the control it stands in for, taken from the rules
+   above: the toolbar is 40px tall, the search box 230px wide, a row thumbnail
+   44px square, a pager button 34px. Guessing these is what makes a page jump
+   when the rows arrive. */
+
+.tbl-ph-btn    { height: 40px; width: 118px; border-radius: var(--a-radius-sm); }
+.tbl-ph-select { height: 40px; width: 84px;  border-radius: var(--a-radius-sm); }
+.tbl-ph-search { height: 40px; width: 230px; border-radius: var(--a-radius-sm); }
+
+.tbl-ph th { padding-top: 15px; padding-bottom: 15px; }
+.tbl-ph-th { display: block; height: 9px; width: 70%; border-radius: 4px; }
+
+/* The same 44px square the real thumbnail occupies, so the row is already the
+   height it will be once the picture loads. */
+.tbl-ph-thumb { display: block; width: 44px; height: 44px; border-radius: 6px; }
+.tbl-ph-cell  { display: block; height: 11px; width: 70%; border-radius: 5px; }
+
+/* The table stripes even rows in --a-surface-2, which is exactly what
+   .admin-skel is filled with — so every second row of placeholders vanished
+   into its own background. On a striped row they step one shade darker. */
+.tbl-ph tbody tr:nth-child(even) .admin-skel { background: #e6ebf3; }
+
+.tbl-ph-count { height: 11px; width: 150px; border-radius: 5px; }
+.tbl-ph-pager { height: 34px; width: 132px; border-radius: 8px; }
+
+/* Rows are the cause of most of the height, so they keep the real cell padding
+   rather than collapsing to the size of the blocks inside them. */
+.tbl-ph td { height: 69px; }
+
+@media (max-width: 620px) {
+  .tbl-ph-search { width: 100%; }
+  .tbl-ph-btn { flex: 1; }
+}
+
+/* The resolved span, shown in the statement drawer before anything is built. */
+.fnd-range {
+  display: flex; flex-direction: column; gap: 3px;
+  margin: -4px 0 16px;
+  padding: 11px 13px;
+  border-radius: var(--a-radius-sm);
+  border: 1px solid var(--f-balance-line);
+  background: var(--f-balance-bg);
+}
+
+.fnd-range b { font-size: 13.5px; color: var(--f-balance); }
+.fnd-range span { font-size: 12px; color: var(--a-muted); }
+
+/* "2nd year (2025 - 2026)" needs more room than "2026" ever did. */
+.fnd-year-select { min-width: 170px; }
+
+/* The seconds left in the idle warning — tabular, so the number does not
+   jitter the line as it counts down. */
+.idle-count {
+  margin: 12px 0 0;
+  font-size: 15px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--a-red);
+}

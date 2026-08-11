@@ -62,31 +62,33 @@ const Settings = () => {
       error={error}
     >
       <form className="admin-card" onSubmit={save}>
-        <div className="ed-field" style={{ maxWidth: 280 }}>
-          <span className="admin-label">First day of the festival</span>
-          <input
-            className="admin-input"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </div>
+        {/* Date and button on one line: there is a single field here, and
+            stacking the only button under it left the card mostly empty. */}
+        <div className="set-row">
+          <label className="ed-field">
+            <span className="admin-label">First day of the festival:</span>
+            <input
+              className="admin-input"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </label>
 
-        <p className={`ed-state${state && state.phase === 'ended' ? ' is-warn' : ''}`}>
-          {describe()}
-        </p>
-
-        <p className="admin-readonly-note">
-          The celebrations run for {FESTIVAL_DAYS} days from this date. During them the home
-          page says <i>Celebrations Started</i> with the day number; afterwards the strip
-          hides itself until you set the next year.
-        </p>
-
-        <div className="admin-btn-row">
           <button className="admin-btn" type="submit" disabled={busy || !dirty}>
             {busy ? 'Updating…' : 'Update'}
           </button>
         </div>
+
+        <p className={`ed-state set-state${state && state.phase === 'ended' ? ' is-warn' : ''}`}>
+          {describe()}
+        </p>
+
+        <p className="admin-readonly-note set-note">
+          The celebrations run for {FESTIVAL_DAYS} days from this date. During them the home
+          page says <i>Celebrations Started</i> with the day number; afterwards the strip
+          hides itself until you set the next year.
+        </p>
       </form>
     </EditorPage>
   );

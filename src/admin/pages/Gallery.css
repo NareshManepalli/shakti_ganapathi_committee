@@ -128,6 +128,7 @@
 }
 
 .gal-thumb {
+  position: relative;
   display: block;
   width: 100%;
   aspect-ratio: 1;
@@ -138,6 +139,21 @@
 }
 
 .gal-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Drive hands back a poster frame for a video, so a video tile is a photo tile
+   until something says otherwise. This is that something. */
+.gal-play {
+  position: absolute;
+  right: 7px; bottom: 7px;
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: rgba(8, 19, 38, 0.72);
+  color: #fff;
+  font-size: 10px;
+  padding-left: 2px;   /* the glyph's own bearing sits it left of centre */
+  pointer-events: none;
+}
 
 .gal-file figcaption {
   padding: 8px 10px 9px;
@@ -198,23 +214,54 @@
 
 /* ------------------------------------------------------ upload progress */
 
-.gal-progress {
-  background: var(--a-surface);
-  border: 1px solid var(--a-border);
-  border-radius: var(--a-radius-sm);
-  padding: 12px 14px;
-  margin-bottom: 14px;
-  box-shadow: var(--a-shadow-sm);
+/* A blocking sheet rather than a bar above the grid. Files go up one at a time
+   through Apps Script, which is slow enough that a strip at the top of a
+   scrolled page is out of sight for most of the wait — and nothing else on this
+   screen is safe to touch while files are in flight, so saying so with the
+   whole surface is more honest than a bar you can click past. */
+.gal-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+  padding: 30px 34px;
+  min-width: 270px;
+  max-width: 360px;
+  text-align: center;
 }
 
-.gal-progress p { margin: 8px 0 0; font-size: 12.5px; color: var(--a-muted); }
-.gal-progress-bar { height: 6px; border-radius: 999px; background: var(--a-surface-2); overflow: hidden; }
-
-.gal-progress-bar span {
-  display: block; height: 100%; border-radius: 999px;
-  background: linear-gradient(90deg, var(--a-gold), var(--a-gold-soft));
-  transition: width 0.3s ease;
+.gal-spinner {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  border: 3px solid var(--a-surface-2);
+  border-top-color: var(--a-gold);
+  animation: gal-spin 0.8s linear infinite;
 }
+
+@keyframes gal-spin { to { transform: rotate(360deg); } }
+
+/* Slowed rather than stopped: the turning circle is the only thing saying the
+   upload is still alive, and a frozen ring says the opposite. */
+@media (prefers-reduced-motion: reduce) {
+  .gal-spinner { animation-duration: 2.6s; }
+}
+
+.gal-upload-count {
+  font-family: var(--font-display, inherit);
+  font-size: 15px;
+  color: var(--a-heading);
+}
+
+/* One line, ellipsised — committee photos come off phones with names long
+   enough to wrap the card into a different shape on every file. */
+.gal-upload-name {
+  max-width: 100%;
+  font-size: 12.5px;
+  color: var(--a-muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.gal-upload-note { margin: 3px 0 0; font-size: 11.5px; line-height: 1.55; color: var(--a-muted-2); }
 
 /* -------------------------------------------------------------- modals */
 
@@ -227,6 +274,16 @@
 
 .gal-confirm { max-width: 400px; text-align: center; }
 .gal-preview { max-width: min(94vw, 1100px); max-height: 88vh; border-radius: 12px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55); }
+
+/* An iframe has no intrinsic size to be capped by max-width, so the player is
+   given one — 16:9, the shape almost every phone records in. */
+.gal-preview-video {
+  width: min(94vw, 1100px);
+  aspect-ratio: 16 / 9;
+  max-height: 88vh;
+  border: 0;
+  background: #000;
+}
 
 @media (max-width: 520px) {
   .gal-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 11px; }

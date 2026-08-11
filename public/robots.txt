@@ -1,0 +1,9 @@
+# The committee's pages are a private area behind a one-time code, not secret
+# content — but there is nothing there for a search engine, and a crawler that
+# indexes /funds would put a sign-in page in the results above the site itself.
+User-agent: *
+Disallow: /funds
+Disallow: /admin
+Allow: /
+
+Sitemap: https://srishaktiganapathicommittee.netlify.app/sitemap.xml

@@ -277,6 +277,12 @@ body.lang-te .auth-title { line-height: 1.45; }
 .auth-submit:hover:not(:disabled) { filter: brightness(1.07); transform: translateY(-1px); }
 .auth-submit:disabled { opacity: 0.6; cursor: progress; }
 
+/* Scoped to the code screen rather than set on .auth-submit, which the sign-in
+   page shares — there the button is the last thing in its card and the gap
+   would read as stray padding. Here an error, the validity timer and Resend
+   all follow it, and they sat too close to read as separate. */
+.auth-otp-form .auth-submit { margin-bottom: 10px; }
+
 .auth-resend {
   background: none;
   border: none;

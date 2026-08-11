@@ -18,9 +18,13 @@ import { getFestivalState, splitDuration, FESTIVAL_DAYS } from '../config/festiv
 const Countdown = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const { data: content } = useSectionContent('content');
+  // Day 1 of the newest year in the schedule sheet IS the next celebration.
+  // It used to come from the content sheet's `festival` row, which meant the
+  // same fact was typed in two places — set one and not the other and the strip
+  // counted down to a day the schedule below it did not list.
+  const { data: schedule } = useSectionContent('schedule');
 
-  const dateValue = (content && content.festival && content.festival.en) || '';
+  const dateValue = (schedule && schedule.days && schedule.days[0] && schedule.days[0].date) || '';
 
   // Recomputed from the clock each tick rather than decremented, so the
   // countdown stays correct after the tab sleeps, and the state flips to

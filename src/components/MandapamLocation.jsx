@@ -2,30 +2,11 @@ import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
 import { useSectionContent } from '../contexts/ContentContext';
+import { SectionMessage } from './SectionState';
+// Shared with the admin screen that edits this address, so the preview the
+// committee checks and the map visitors see are built by the same rules.
+import { toLines, mapEmbedFor, mapDirectionsUrl } from '../utils/mapLinks';
 import './MandapamLocation.css';
-
-// The sheet holds the address as one field, and the committee decides where it
-// breaks: put each line on its own row inside the cell (Alt+Enter in Sheets) or
-// separate them with a "|". Only when the cell has neither do we fall back to
-// splitting on commas, which keeps a plain one-line address readable.
-const toLines = (address) => {
-  const raw = String(address || '').trim();
-  if (!raw) return [];
-  const explicit = raw.split(/\s*(?:\r?\n|\|)\s*/).map((p) => p.trim()).filter(Boolean);
-  if (explicit.length > 1) return explicit;
-  return raw.split(',').map((p) => p.trim()).filter(Boolean);
-};
-
-// Maps wants one flat line whatever shape the cell is in — otherwise the line
-// breaks end up as %0A inside the query and the pin drifts. Trailing commas and
-// full stops are trimmed off each line first, so a cell punctuated for display
-// doesn't reach Maps as "Pedda Veedhi,, Annapurnamma Peta,,".
-const toQuery = (address) =>
-  toLines(address)
-    .map((line) => line.replace(/[,.\s]+$/, ''))
-    .join(', ')
-    .replace(/\s+/g, ' ')
-    .trim();
 
 const TempleIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -47,19 +28,18 @@ const PinIcon = () => (
 const MandapamLocation = () => {
   const { language } = useLanguage();
   const t = translations[language];
-  const { data: content, loading } = useSectionContent('content');
+  const { data: content, error, loading, reload } = useSectionContent('content');
 
   const mandapam = (content && content.mandapam) || {};
   const address = (language === 'te' ? mandapam.te : mandapam.en) || mandapam.en || '';
   const lines = toLines(address);
 
-  // Every link resolves from the same address string, so the embed, the
-  // directions and "open in maps" can never point at different places.
-  const query = encodeURIComponent(toQuery(address));
-  const mapEmbed = `https://www.google.com/maps?q=${query}&output=embed`;
-  const mapLink = mandapam.mapUrl
-    || `https://www.google.com/maps/search/?api=1&query=${query}`;
-  const directionsLink = `https://www.google.com/maps/dir/?api=1&destination=${query}`;
+  // The frame takes the committee's own pin when the sheet holds one, and
+  // otherwise searches this same address string.
+  const mapEmbed = mapEmbedFor(address, mandapam.mapUrl);
+  // Directions stay on the address either way: a route needs somewhere to
+  // arrive, and an embed URL is a viewport, not a destination.
+  const directionsLink = mapDirectionsUrl(address);
 
   if (loading) {
     return (
@@ -106,11 +86,18 @@ const MandapamLocation = () => {
               <h3 className="mandapam-brand-name">{t.mandapamName}</h3>
             </div>
 
-            <address className="mandapam-address">
-              {lines.map((line, i) => (
-                <span key={`${line}-${i}`}>{line}</span>
-              ))}
-            </address>
+            {lines.length ? (
+              <address className="mandapam-address">
+                {lines.map((line, i) => (
+                  <span key={`${line}-${i}`}>{line}</span>
+                ))}
+              </address>
+            ) : (
+              <SectionMessage
+                tone={error ? 'error' : 'empty'}
+                onRetry={error ? reload : undefined}
+              />
+            )}
 
             <a
               className="mandapam-btn"
@@ -123,7 +110,9 @@ const MandapamLocation = () => {
             </a>
           </div>
 
-          {/* Right — map */}
+          {/* Right — map. Nothing laid over it: Google puts its own control in
+              the corner, and a second button of ours on the same frame was two
+              ways to do the one thing Get Directions already does better. */}
           <div className="mandapam-card mandapam-map-card">
             <iframe
               src={mapEmbed}
@@ -132,15 +121,6 @@ const MandapamLocation = () => {
               referrerPolicy="no-referrer-when-downgrade"
               allowFullScreen
             />
-            <a
-              className="mandapam-btn mandapam-btn-overlay"
-              href={mapLink}
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              <PinIcon />
-              {t.openInMaps}
-            </a>
           </div>
         </div>
       </div>

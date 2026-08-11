@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useAdminData } from '../useAdminData';
 import { saveContent } from '../contentApi';
 import { useToast } from '../ToastContext';
-import { EditorPage, Bilingual } from './EditorShell';
+import { EditorPage, Bilingual, SplitCard, SplitSkeleton } from './EditorShell';
+import { toQuery, mapEmbedFor, parseMapField } from '../../utils/mapLinks';
 
 // The Mandapam address, held as the `mandapam` row of the content sheet.
 //
@@ -42,58 +43,101 @@ const Mandapam = () => {
     toast.success('Mandapam saved', 'The public site updates on its next load.');
   };
 
-  const lines = form.content_en.split(/\r?\n/).filter((l) => l.trim());
-
   return (
     <EditorPage
       title="Mandapam Management"
       subtitle="Edit the address and map shown on the website"
       loading={loading}
       error={error}
+      skeleton={<SplitSkeleton />}
     >
-      <form className="admin-card" onSubmit={save}>
-        <Bilingual
-          label="Address"
-          en={form.content_en}
-          te={form.content_te}
-          onEn={(v) => setForm({ ...form, content_en: v })}
-          onTe={(v) => setForm({ ...form, content_te: v })}
-          rows={6}
-          placeholder="Sri Shakthi Nilayam&#10;D.No: 44-13-101, Pedda Veedhi,"
-        />
-        <p className="admin-readonly-note">
-          Each line here is a line on the site. Press Enter where you want a break.
-        </p>
-
-        {lines.length > 0 && (
-          <div className="ed-field">
-            <span className="admin-label">How it will read</span>
-            <div className="ed-preview-card">
-              {lines.map((l, i) => <span key={i}>{l}</span>)}
-            </div>
-          </div>
-        )}
-
-        <div className="ed-field">
-          <span className="admin-label">Map link (optional)</span>
-          <input
-            className="admin-input"
-            value={form.map_url}
-            placeholder="https://www.google.com/maps/…"
-            onChange={(e) => setForm({ ...form, map_url: e.target.value })}
+      <SplitCard
+        title="Mandapam Location"
+        onSubmit={save}
+        /* The address, in both languages, exactly as the sheet holds it. No
+           helper note under the columns: one there would add its height to this
+           column, and the map grows to match it — which is what left the map
+           hanging below the boxes it sits beside. */
+        left={(
+          <Bilingual
+            label="Address"
+            en={form.content_en}
+            te={form.content_te}
+            onEn={(v) => setForm({ ...form, content_en: v })}
+            onTe={(v) => setForm({ ...form, content_te: v })}
+            rows={5}
+            placeholder="Sri Shakthi Nilayam&#10;D.No: 44-13-101, Pedda Veedhi,"
           />
-          <p className="admin-readonly-note">
-            Leave it empty and the map is built from the address above.
-          </p>
-        </div>
+        )}
+        /* The pin, and the map it produces. */
+        right={(
+          <>
+            <label className="ed-field ed-split-field">
+              <span className="admin-label">Map location / embed (optional)</span>
+              <input
+                className="admin-input ed-split-input"
+                value={form.map_url}
+                placeholder="Paste the Google Maps embed <iframe …> or a link"
+                onChange={(e) => setForm({ ...form, map_url: e.target.value })}
+              />
+              <span className="ed-split-hint">{hintFor(form.map_url)}</span>
+            </label>
 
-        <div className="admin-btn-row">
+            <MapPreview address={form.content_en} mapField={form.map_url} />
+          </>
+        )}
+        actions={(
           <button className="admin-btn" type="submit" disabled={busy || !dirty}>
             {busy ? 'Updating…' : 'Update'}
           </button>
-        </div>
-      </form>
+        )}
+      />
     </EditorPage>
+  );
+};
+
+// Only an embed does anything here, and a link to the place looks near enough
+// to one that pasting the wrong thing is the likely mistake — so name what is
+// in the box rather than leave it to be inferred from a map that didn't move.
+const hintFor = (value) => {
+  if (!String(value || '').trim()) {
+    return 'Empty — the map searches for the address beside it.';
+  }
+  const { embed, link } = parseMapField(value);
+  if (embed) return 'Embed found — the map below is exactly what the site will show.';
+  if (link) return 'That is a link, not an embed. In Maps use Share → Embed a map, and paste the <iframe> it gives you.';
+  return 'Not a Google Maps embed — the map falls back to searching the address.';
+};
+
+// The same embed the public card renders, so this is a preview and not an
+// approximation. Held a beat behind the textarea: keyed straight to it, every
+// character typed would be a fresh request to Google and a fresh reflow.
+const MapPreview = ({ address, mapField }) => {
+  const [settled, setSettled] = useState({ address, mapField });
+
+  useEffect(() => {
+    const id = setTimeout(() => setSettled({ address, mapField }), 700);
+    return () => clearTimeout(id);
+  }, [address, mapField]);
+
+  // Nothing to show only when there is neither a pin nor an address to search:
+  // a pasted embed stands on its own, which is the point of pasting one.
+  const pinned = Boolean(parseMapField(settled.mapField).embed);
+  const ready = pinned || Boolean(toQuery(settled.address));
+
+  return (
+    <div className="ed-split-view">
+      {ready ? (
+        <iframe
+          src={mapEmbedFor(settled.address, settled.mapField)}
+          title="Mandapam location"
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+        />
+      ) : (
+        <p className="ed-split-empty">Type the address, or paste an embed, and the map appears here.</p>
+      )}
+    </div>
   );
 };
 

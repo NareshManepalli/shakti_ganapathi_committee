@@ -40,6 +40,10 @@ const AuthContext = createContext({
  * flash a wrong title before correcting itself. The fallback is for a member
  * whose position cell is actually blank, which is a different thing.
  */
+// Ten minutes idle, warned at nine.
+export const IDLE_LOGOUT_MS = 10 * 60 * 1000;
+export const IDLE_WARN_MS = 9 * 60 * 1000;
+
 export const roleLabelFor = (profile, isAdmin) => {
   if (!profile) return '';
   const position = String(profile.position || '').trim() || 'Committee member';
@@ -101,6 +105,43 @@ export const AuthProvider = ({ children }) => {
     return () => clearTimeout(t);
   }, [session, signOut]);
 
+  /* ------------------------------------------------------------ idle */
+
+  // Ten minutes untouched ends the session, with a minute's warning first.
+  //
+  // The warning is the point. A silent drop mid-entry loses whatever was being
+  // typed, and the member cannot tell that from the portal breaking — so the
+  // one thing this must never do is disappear without saying so.
+  //
+  // Deliberate actions only: a click, a key, a scroll, a touch. Not mousemove,
+  // which a bumped desk or a passing cursor would count as somebody working.
+  const [idleWarning, setIdleWarning] = useState(false);
+
+  useEffect(() => {
+    if (!session) { setIdleWarning(false); return undefined; }
+
+    let warnAt;
+    let outAt;
+
+    const arm = () => {
+      setIdleWarning(false);
+      clearTimeout(warnAt);
+      clearTimeout(outAt);
+      warnAt = setTimeout(() => setIdleWarning(true), IDLE_WARN_MS);
+      outAt = setTimeout(signOut, IDLE_LOGOUT_MS);
+    };
+
+    const events = ['mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'];
+    events.forEach((e) => window.addEventListener(e, arm, { passive: true }));
+    arm();
+
+    return () => {
+      clearTimeout(warnAt);
+      clearTimeout(outAt);
+      events.forEach((e) => window.removeEventListener(e, arm));
+    };
+  }, [session, signOut]);
+
   const token = session ? session.token : null;
 
   // One fetch per session, shared by the portal chrome and the profile screen —
@@ -110,16 +151,33 @@ export const AuthProvider = ({ children }) => {
     if (!token) return null;
     setProfileLoading(true);
     setProfileError('');
-    const res = await getProfile(token);
+
+    let res = await getProfile(token);
+
+    // One refusal is not proof the session is dead.
+    //
+    // This used to sign out on the first UNAUTHORIZED, which meant a single
+    // hiccup from Apps Script — and it is not a reliable service — threw the
+    // member back to the login page seconds after they arrived, with no way to
+    // tell that from the portal being broken. Ask again before believing it.
+    if (!res.ok && res.code === 'UNAUTHORIZED') {
+      await new Promise((r) => { setTimeout(r, 1200); });
+      res = await getProfile(token);
+    }
+
     setProfileLoading(false);
+
     if (res.ok) {
       setProfile(res.profile);
       return res.profile;
     }
+
     setProfileError(res.error || '');
-    // A dead session cannot be fixed by retrying — end it and let the route
-    // guard send them back to sign in.
-    if (res.code === 'UNAUTHORIZED') setTimeout(signOut, 1800);
+
+    // Refused twice, so the token really is spent. Ended here rather than left
+    // to lapse: everything else on the screen would fail the same way, and
+    // saying so once is kinder than failing on every save.
+    if (res.code === 'UNAUTHORIZED') setTimeout(signOut, 2500);
     return null;
   }, [token, signOut]);
 
@@ -140,7 +198,11 @@ export const AuthProvider = ({ children }) => {
     setProfile,
     signIn,
     signOut,
-  }), [session, token, profile, profileLoading, profileError, refreshProfile, signIn, signOut]);
+    idleWarning,
+    // Any real interaction re-arms the timers on its own; this is for the
+    // warning's own button, which has to work without moving the mouse.
+    staySignedIn: () => setIdleWarning(false),
+  }), [session, token, profile, profileLoading, profileError, refreshProfile, signIn, signOut, idleWarning]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

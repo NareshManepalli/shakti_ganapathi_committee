@@ -20,6 +20,16 @@
 export const SHEETS_CONFIG = {
   FOLDER_URL: null,
 
+  // The Apps Script project's timezone, which is what a date or time cell is
+  // measured in. The Content Web App hands those cells back as instants —
+  // `2026-09-14T07:00:00.000Z` for a date, and a 1899-12-30 stamp for a
+  // time-only cell — and reading either without this would land on the wrong
+  // day, or an hour or two off the hour that was actually typed.
+  //
+  // It must match Extensions > Apps Script > Project Settings > Time zone.
+  // 'America/Los_Angeles' is the default a new project is created with.
+  sheetTimeZone: 'America/Los_Angeles',
+
   sections: {
     // About + Mandapam Location — two rows, keyed by `section`.
     // Columns: section | content_en | content_te | image | map_url |
@@ -90,5 +100,21 @@ export const SHEETS_CONFIG = {
       || 'https://script.google.com/macros/s/AKfycbzJH8kx4HlG1Jmf-pElUnFCOgwQQvsSxv5ozncMHr5_Xy4YKbYdSB6Q4NAhmHfAllxZEQ/exec',
 
     members: 'https://script.google.com/macros/s/AKfycbzB_4OcL26B4SbVkfb1byNV8ZLzqPMHXc0t18hs1ZnlO7iVx7W6jqio6QTGGar-dUdHuw/exec',
+
+    // funds: the Funds Web App (apps-script/GOOGLE_APPS_SCRIPT_FUNDS.js), which
+    //   serves the money ledger behind Monthly Funds.
+    //
+    //   Its own endpoint rather than part of the content one, because the two
+    //   answer different people: the content script refuses anyone without
+    //   adm_in = 1, and Monthly Funds is the single screen a funds-only member
+    //   can open. Here any signed-in member may read and only an admin may
+    //   write. Leave null until it is deployed — the screen then says so
+    //   instead of looking like an empty ledger.
+    //
+    //   VITE_FUNDS_API overrides it, as VITE_CONTENT_API does above: the browser
+    //   tests answer the endpoint themselves rather than write invented money
+    //   into the committee's own ledger.
+    funds: (import.meta.env && import.meta.env.VITE_FUNDS_API)
+      || 'https://script.google.com/macros/s/AKfycbydcYhcll0rOVoH_HGAE4hq1IVic72Mu7wRswy0vhnzzzhoxc4-HnmkD3Zg81EqGV-J0Q/exec',
   },
 };

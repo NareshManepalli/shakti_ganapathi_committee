@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAdminData } from '../useAdminData';
 import { saveContent } from '../contentApi';
 import { useToast } from '../ToastContext';
-import { EditorPage, Bilingual } from './EditorShell';
+import { EditorPage, Bilingual, SplitCard, SplitSkeleton } from './EditorShell';
 import { toMediaUrl } from '../../utils/sheetService';
 
 // The About section: one paragraph per language plus an image, held as the
@@ -46,67 +46,84 @@ const About = () => {
 
   const preview = toMediaUrl(form.image, 600);
 
+  const hint = () => {
+    if (!form.image.trim()) return 'Empty — the site shows a + placeholder instead.';
+    if (imgFailed) return 'That link will not load. Share the file as “Anyone with the link”.';
+    return 'The preview below is the image the site will show.';
+  };
+
   return (
     <EditorPage
       title="About Management"
       subtitle="Edit the About text and image shown on the website"
       loading={loading}
       error={error}
+      skeleton={<SplitSkeleton />}
     >
-      <form className="admin-card" onSubmit={save}>
-        <Bilingual
-          label="About the committee"
-          en={form.content_en}
-          te={form.content_te}
-          onEn={(v) => setForm({ ...form, content_en: v })}
-          onTe={(v) => setForm({ ...form, content_te: v })}
-          rows={9}
-          placeholder="One paragraph…"
-        />
+      <SplitCard
+        title="About the Committee"
+        onSubmit={save}
+        left={(
+          <Bilingual
+            label="About the committee"
+            en={form.content_en}
+            te={form.content_te}
+            onEn={(v) => setForm({ ...form, content_en: v })}
+            onTe={(v) => setForm({ ...form, content_te: v })}
+            rows={5}
+            placeholder="One paragraph…"
+          />
+        )}
+        /* The link, and the picture it resolves to — the same crop the section
+           uses, so a portrait pasted in for a landscape frame shows here as the
+           beheaded thing it will be on the site. */
+        right={(
+          <>
+            <label className="ed-field ed-split-field">
+              <span className="admin-label">Section image</span>
+              <input
+                className="admin-input ed-split-input"
+                value={form.image}
+                placeholder="Paste a Google Drive share link"
+                onChange={(e) => { setImgFailed(false); setForm({ ...form, image: e.target.value }); }}
+              />
+              <span className="ed-split-hint">{hint()}</span>
+            </label>
 
-        <div className="ed-field">
-          <span className="admin-label">Section image</span>
-          <div className="ed-image-row">
-            <input
-              className="admin-input"
-              value={form.image}
-              placeholder="Paste a Google Drive share link"
-              onChange={(e) => { setImgFailed(false); setForm({ ...form, image: e.target.value }); }}
-            />
-            <span className="ed-image-preview">
+            <div className="ed-split-view">
               {preview && !imgFailed ? (
                 /* Drive drops the request without this — ERR_BLOCKED_BY_ORB */
                 <img src={preview} alt="" referrerPolicy="no-referrer" onError={() => setImgFailed(true)} />
               ) : (
-                <span className="ed-image-empty">{form.image ? 'Cannot load' : '+'}</span>
+                <p className="ed-split-empty">
+                  {form.image ? 'That image cannot be loaded.' : 'Paste a link and the image appears here.'}
+                </p>
               )}
-            </span>
-          </div>
-          <p className="admin-readonly-note">
-            Leave it empty and the site shows a <code>+</code> placeholder instead.
-          </p>
-        </div>
-
-        <div className="admin-btn-row">
-          <button className="admin-btn" type="submit" disabled={busy || !dirty}>
-            {busy ? 'Updating…' : 'Update'}
-          </button>
-          {dirty && (
-            <button
-              className="admin-btn admin-btn-ghost"
-              type="button"
-              disabled={busy}
-              onClick={() => setForm({
-                content_en: String(row.content_en || ''),
-                content_te: String(row.content_te || ''),
-                image: String(row.image || ''),
-              })}
-            >
-              Discard changes
+            </div>
+          </>
+        )}
+        actions={(
+          <>
+            {dirty && (
+              <button
+                className="admin-btn admin-btn-ghost"
+                type="button"
+                disabled={busy}
+                onClick={() => setForm({
+                  content_en: String(row.content_en || ''),
+                  content_te: String(row.content_te || ''),
+                  image: String(row.image || ''),
+                })}
+              >
+                Discard changes
+              </button>
+            )}
+            <button className="admin-btn" type="submit" disabled={busy || !dirty}>
+              {busy ? 'Updating…' : 'Update'}
             </button>
-          )}
-        </div>
-      </form>
+          </>
+        )}
+      />
     </EditorPage>
   );
 };

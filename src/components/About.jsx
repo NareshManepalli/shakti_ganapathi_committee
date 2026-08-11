@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../utils/translations';
 import { useSectionContent } from '../contexts/ContentContext';
+import { SectionMessage } from './SectionState';
 import './About.css';
 
 const About = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const [imageFailed, setImageFailed] = useState(false);
-  const { data: content, loading } = useSectionContent('content');
+  const { data: content, error, loading, reload } = useSectionContent('content');
 
   const about = (content && content.about) || {};
   // The sheet is the only source for this text — there is no built-in copy to
@@ -51,6 +52,9 @@ const About = () => {
           <p className="about-subtitle">{t.aboutSubtitle}</p>
         </header>
 
+        {/* The placeholder means "no image in the sheet". When the sheet could
+            not be read at all it says nothing true, so it is left out. */}
+        {!(error && !image) && (
         <div className="about-media">
           {showImage ? (
             <img
@@ -66,8 +70,13 @@ const About = () => {
             </div>
           )}
         </div>
+        )}
 
-        {body && <p className="about-text">{body}</p>}
+        {/* The sheet is the only source for this paragraph, so an unreadable
+            one says so rather than leaving a heading over an empty box. */}
+        {body
+          ? <p className="about-text">{body}</p>
+          : <SectionMessage tone={error ? 'error' : 'empty'} onRetry={error ? reload : undefined} />}
       </div>
     </section>
   );

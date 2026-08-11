@@ -188,7 +188,6 @@ function doGet(e) {
  *   { action:'saveContent',  token, section, content_en, content_te, image?, map_url? }
  *   { action:'saveSchedule', token, day:{ id?, year, day_no, date, time, title_en, ... } }
  *   { action:'deleteSchedule', token, id }
- *   { action:'copyYear',     token, fromYear, toYear }
  *   { action:'saveMember',   token, member:{ id?, name_en, ... } }
  *   { action:'deleteMember', token, id }
  *
@@ -206,7 +205,6 @@ function doPost(e) {
     if (action === 'saveContent')    return saveContent(body);
     if (action === 'saveSchedule')   return saveSchedule(body);
     if (action === 'deleteSchedule') return softDelete('schedule', body.id);
-    if (action === 'copyYear')       return copyYear(body);
     if (action === 'saveMember')     return saveMember(body);
     if (action === 'deleteMember')   return softDelete('members', body.id);
     return fail('UNKNOWN_ACTION', 'Unknown action: ' + action);
@@ -259,7 +257,7 @@ function saveSchedule(body) {
   var rows = readRows(sheet);
 
   var fields = { u_ts: stamp() };
-  ['year', 'day_no', 'date', 'day_en', 'day_te', 'time', 'title_en', 'title_te', 'image']
+  ['year', 'annual_year', 'annual_yr_id', 'day_no', 'date', 'day_en', 'day_te', 'time', 'title_en', 'title_te', 'image']
     .forEach(function (k) { if (day[k] !== undefined) fields[k] = String(day[k]); });
 
   var existing = null;
@@ -286,52 +284,6 @@ function saveSchedule(body) {
   }
   SpreadsheetApp.flush();
   return jsonOut({ ok: true, schedule: readRows(sheet) });
-}
-
-/**
- * Copies a year's days forward. Dates are shifted by whole years, which lands
- * near but not exactly on the new festival — the committee still has to set
- * the real dates, and this only saves them retyping nine titles and times.
- */
-function copyYear(body) {
-  var from = String(body.fromYear || '').trim();
-  var to = String(body.toYear || '').trim();
-  if (!/^\d{4}$/.test(from) || !/^\d{4}$/.test(to)) {
-    return fail('BAD_YEAR', 'Enter four-digit years.');
-  }
-  if (from === to) return fail('BAD_YEAR', 'Choose two different years.');
-
-  var sheet = sheetFor('schedule');
-  var rows = readRows(sheet);
-  var active = rows.filter(function (r) { return String(r.a_in).trim() === '1'; });
-
-  if (active.filter(function (r) { return String(r.year).trim() === to; }).length) {
-    return fail('YEAR_EXISTS', to + ' already has days. Delete them first.');
-  }
-  var source = active.filter(function (r) { return String(r.year).trim() === from; });
-  if (!source.length) return fail('NO_SOURCE', from + ' has no days to copy.');
-
-  var shift = Number(to) - Number(from);
-  var id = nextId(rows);
-  source.forEach(function (r) {
-    var date = String(r.date || '');
-    var m = date.match(/^(\d{4})(-\d{2}-\d{2})/);
-    appendRow(sheet, {
-      id: id++,
-      year: to,
-      day_no: r.day_no,
-      date: m ? (Number(m[1]) + shift) + m[2] : '',
-      day_en: '', day_te: '',      // blank, so the weekday is derived from the new date
-      time: r.time,
-      title_en: r.title_en,
-      title_te: r.title_te,
-      image: r.image,
-      a_in: 1,
-      i_ts: stamp(),
-    });
-  });
-  SpreadsheetApp.flush();
-  return jsonOut({ ok: true, copied: source.length, schedule: readRows(sheet) });
 }
 
 /* ---------------------------------------------------------------- members */

@@ -1,5 +1,6 @@
 @import './styles/theme.css';
 @import './styles/skeleton.css';
+@import './styles/shared.css';
 
 * {
   margin: 0;
@@ -68,3 +69,35 @@ body::-webkit-scrollbar {
   display: none;
 }
 
+
+/* ===================== copy protection (public site) =====================
+
+   The committee asked that the site's content not be copyable. Selection is
+   switched off across the public pages and the sign-in screens, and the copy
+   and cut events are refused as a backstop for Ctrl+A followed by Ctrl+C,
+   which selects nothing visibly but would still lift the text.
+
+   Deliberately NOT applied to `.admin-root`: the portal is a tool, and its
+   users need to copy a Drive link out of one field and into another.
+
+   Inputs are exempted everywhere. A member signing in has to be able to select
+   what they typed to correct it, and paste a code from their email — taking
+   that away would break the gate rather than protect anything, since a field's
+   own value is not the content this is guarding. */
+
+.App,
+.auth-page {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  /* iOS otherwise offers its own copy/lookup bubble on a long press */
+  -webkit-touch-callout: none;
+}
+
+.App input, .App textarea, .App select, .App [contenteditable="true"],
+.auth-page input, .auth-page textarea, .auth-page select {
+  -webkit-user-select: auto;
+  -moz-user-select: text;
+  user-select: auto;
+  -webkit-touch-callout: default;
+}

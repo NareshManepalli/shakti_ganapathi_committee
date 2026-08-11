@@ -1,0 +1,14 @@
+/* Small pieces used by more than one section.
+
+   `.plus-icon` lived in Committee.css and was borrowed by About.css, which
+   styled it only as a descendant — so the About placeholder depended on a
+   sibling section's stylesheet having been loaded. Nothing was visibly wrong,
+   but the coupling was invisible and would have broken the moment Committee
+   was code-split or removed. Shared things belong in a shared file. */
+
+.plus-icon {
+  font-size: 32px;
+  color: var(--text-muted);
+  font-weight: 300;
+  line-height: 1;
+}

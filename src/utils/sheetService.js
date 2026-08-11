@@ -114,6 +114,20 @@ export const toMediaUrl = (value, width = 1000) => {
 // --- Fetch -----------------------------------------------------------------
 
 /** Every sheet uses a_in = 1 to mean "show this row". */
+/**
+ * The URL that hands a Drive file back as a download rather than a preview.
+ *
+ * Not the same endpoint the gallery renders from: `thumbnail?id=…` returns a
+ * re-encoded JPEG at whatever width was asked for, so downloading from it would
+ * save a shrunken copy of the photograph rather than the file the committee
+ * uploaded. This one returns the original bytes, and works for a video too,
+ * which has no thumbnail worth saving at all.
+ */
+export const driveDownloadUrl = (id) => {
+  const clean = String(id || '').trim();
+  return clean ? `https://drive.google.com/uc?export=download&id=${clean}` : '';
+};
+
 export const isActive = (r) => String((r && r.a_in) ?? '1').trim() === '1';
 
 /**
@@ -176,17 +190,26 @@ export const fetchGalleryTree = async (webAppUrl) => {
       const year = String((entry && entry.year) || '').trim();
       if (!year) return;
       const images = ((entry && entry.images) || [])
-        .map((im) => ({
-          id: im.id,
-          name: im.name || '',
-          // Two sizes on purpose. The grid renders these a few hundred pixels
-          // wide, so serving it the 1600px file wastes roughly 3x the bytes;
-          // only the lightbox, which fills the screen, actually needs that.
-          thumb: toMediaUrl(im.id, 600),
-          url: toMediaUrl(im.id, 1600),
-        }))
+        .map((im) => {
+          const mime = String((im && im.mime) || '');
+          const isVideo = mime.indexOf('video/') === 0;
+          return {
+            id: im.id,
+            name: im.name || '',
+            isVideo,
+            // Two sizes on purpose. The grid renders these a few hundred pixels
+            // wide, so serving it the 1600px file wastes roughly 3x the bytes;
+            // only the lightbox, which fills the screen, actually needs that.
+            // Drive returns a poster frame from the same endpoint for a video.
+            thumb: toMediaUrl(im.id, 600),
+            url: toMediaUrl(im.id, 1600),
+            // A video will not play from the thumbnail endpoint — Drive's own
+            // player is the only thing that streams it back.
+            play: isVideo ? `https://drive.google.com/file/d/${im.id}/preview` : '',
+          };
+        })
         .filter((im) => im.id && im.url);
-      // A year folder with no photos in it yet isn't offered at all.
+      // A year folder with nothing in it yet isn't offered at all.
       if (!images.length) return;
       byYear[year] = images;
       years.push(year);
