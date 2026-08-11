@@ -17,7 +17,7 @@ import { buildCycles, cycleLabel, rowsIn, usefulCycles } from '../fundsCycles';
 import { fetchSheetRows } from '../../utils/sheetService';
 import { SHEETS_CONFIG } from '../../config/sheetsConfig';
 
-const PER_PAGE = 8;
+const PER_PAGE = 5;
 
 const COLUMNS = [
   { cls: 'tbl-sno', w: '60%' }, { cls: 'tbl-acts', w: '70%' },
@@ -370,11 +370,11 @@ const MonthlyFunds = () => {
                         {isAdmin && <th className="tbl-acts">Actions</th>}
                         <th>Date</th>
                         <th>Month</th>
-                        <th>Remarks</th>
+                        <th className="fnd-reason">Remarks</th>
                         <th className="fnd-num is-credit">Credited</th>
                         <th className="fnd-num is-debit">Debited</th>
                         <th className="fnd-num is-balance">Balance</th>
-                        <th>Fund persons</th>
+                        <th className="fnd-people">Fund persons</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -414,7 +414,7 @@ const MonthlyFunds = () => {
                           )}
                           <td className="tbl-nowrap">{r.date || '—'}</td>
                           <td className="tbl-nowrap">{r.month || '—'}</td>
-                          <td>{r.reason || '—'}</td>
+                          <td className="fnd-reason">{r.reason || '—'}</td>
                           <td className="fnd-num is-credit">{r.credit ? `₹${rupees(r.credit)}` : '—'}</td>
                           <td className="fnd-num is-debit">{r.debit ? `₹${rupees(r.debit)}` : '—'}</td>
                           <td className="fnd-num is-balance">₹{rupees(r.balance)}</td>

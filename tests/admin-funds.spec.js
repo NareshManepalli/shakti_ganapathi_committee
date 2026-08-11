@@ -112,9 +112,24 @@ const stub = async (page, { rows = SEED, isAdmin = true } = {}) => {
   return { posts, state };
 };
 
-/** The balance cell of one row, by its reason. */
-const balanceOf = (page, reason) =>
-  page.locator('.tbl tbody tr', { hasText: reason }).locator('td.is-balance');
+/**
+ * The balance cell of one row, by its reason — turning the page to reach it.
+ *
+ * Five rows a page, and these seeds run past that, so the entry a spec is about
+ * is often not on the page the screen lands on. Paging to it keeps every spec
+ * below about the arithmetic rather than about where the pager happens to sit.
+ */
+const balanceOf = async (page, reason) => {
+  const row = page.locator('.tbl:not(.tbl-ph) tbody tr', { hasText: reason });
+  if (await row.count()) return row.locator('td.is-balance');
+
+  const next = page.getByRole('button', { name: 'Next page' });
+  while (await next.isEnabled().catch(() => false)) {
+    await next.click();
+    if (await row.count()) return row.locator('td.is-balance');
+  }
+  return row.locator('td.is-balance');   // absent: let the assertion say so
+};
 
 test.describe('monthly funds', () => {
   test('the ledger reads like a bank statement — credits add, debits subtract', async ({ page }) => {
@@ -123,11 +138,11 @@ test.describe('monthly funds', () => {
 
     // 2026 opens first, and it opens carrying 2025's closing figure rather
     // than restarting at zero.
-    await expect(balanceOf(page, 'January Amount')).toHaveText('₹19,500');
+    await expect(await balanceOf(page, 'January Amount')).toHaveText('₹19,500');
     // a debit takes it down
-    await expect(balanceOf(page, 'Bhogi Celebrations')).toHaveText('₹17,500');
+    await expect(await balanceOf(page, 'Bhogi Celebrations')).toHaveText('₹17,500');
     // and the next credit picks up from there
-    await expect(balanceOf(page, 'February Amount')).toHaveText('₹21,000');
+    await expect(await balanceOf(page, 'February Amount')).toHaveText('₹21,000');
   });
 
   test('the year summary counts money in, money out and what is left', async ({ page }) => {
@@ -179,7 +194,7 @@ test.describe('monthly funds', () => {
   test('a new credit raises the balance and every balance after it', async ({ page }) => {
     const { posts } = await stub(page);
     await page.goto('/admin/monthly-funds');
-    await expect(balanceOf(page, 'February Amount')).toHaveText('₹21,000');
+    await expect(await balanceOf(page, 'February Amount')).toHaveText('₹21,000');
 
     await page.getByRole('button', { name: /Add entry/ }).click();
     await page.getByLabel('Date').fill('2026-03-05');
@@ -188,7 +203,7 @@ test.describe('monthly funds', () => {
     await page.locator('form.ed-drawer').getByRole('button', { name: 'Save' }).click();
 
     await expect(page.locator('.toast')).toContainText('Entry saved');
-    await expect(balanceOf(page, 'March Amount')).toHaveText('₹23,500');
+    await expect(await balanceOf(page, 'March Amount')).toHaveText('₹23,500');
     await expect(page.locator('.fnd-card.is-balance')).toContainText('23,500');
     expect(posts.at(-1)).toMatchObject({ action: 'saveFund' });
     // dd-mm-yyyy on the wire, which is the shape the sheet holds
@@ -205,7 +220,7 @@ test.describe('monthly funds', () => {
     await page.locator('.fnd-out').fill('1500');
     await page.locator('form.ed-drawer').getByRole('button', { name: 'Save' }).click();
 
-    await expect(balanceOf(page, 'Mandapam repair')).toHaveText('₹19,500');
+    await expect(await balanceOf(page, 'Mandapam repair')).toHaveText('₹19,500');
     await expect(page.locator('.fnd-card.is-debit')).toContainText('3,500');
     await expect(page.locator('.fnd-card.is-balance')).toContainText('19,500');
   });
@@ -222,9 +237,9 @@ test.describe('monthly funds', () => {
     await page.locator('.fnd-out').fill('500');
     await page.locator('form.ed-drawer').getByRole('button', { name: 'Save' }).click();
 
-    await expect(balanceOf(page, 'Decorations')).toHaveText('₹19,000');
-    await expect(balanceOf(page, 'Bhogi Celebrations')).toHaveText('₹17,000');
-    await expect(balanceOf(page, 'February Amount')).toHaveText('₹20,500');
+    await expect(await balanceOf(page, 'Decorations')).toHaveText('₹19,000');
+    await expect(await balanceOf(page, 'Bhogi Celebrations')).toHaveText('₹17,000');
+    await expect(await balanceOf(page, 'February Amount')).toHaveText('₹20,500');
   });
 
   test('editing an amount restates the rows below it', async ({ page }) => {
@@ -235,8 +250,8 @@ test.describe('monthly funds', () => {
     await page.locator('.fnd-out').fill('3000');
     await page.locator('form.ed-drawer').getByRole('button', { name: 'Save' }).click();
 
-    await expect(balanceOf(page, 'Bhogi Celebrations')).toHaveText('₹16,500');
-    await expect(balanceOf(page, 'February Amount')).toHaveText('₹20,000');
+    await expect(await balanceOf(page, 'Bhogi Celebrations')).toHaveText('₹16,500');
+    await expect(await balanceOf(page, 'February Amount')).toHaveText('₹20,000');
   });
 
   test('money in and money out cannot both be filled on one entry', async ({ page }) => {
@@ -259,7 +274,7 @@ test.describe('monthly funds', () => {
 
     await expect(page.locator('.toast')).toContainText('deleted');
     // the 2,000 spend is gone, so February climbs by it
-    await expect(balanceOf(page, 'February Amount')).toHaveText('₹23,000');
+    await expect(await balanceOf(page, 'February Amount')).toHaveText('₹23,000');
     await expect(page.locator('.fnd-card.is-debit')).toContainText('₹0');
   });
 
@@ -267,7 +282,7 @@ test.describe('monthly funds', () => {
     await stub(page, { isAdmin: false });
     await page.goto('/admin/monthly-funds');
 
-    await expect(balanceOf(page, 'February Amount')).toHaveText('₹21,000');
+    await expect(await balanceOf(page, 'February Amount')).toHaveText('₹21,000');
     await expect(page.getByRole('button', { name: /Add entry/ })).toHaveCount(0);
     await expect(page.locator('.tbl-icon')).toHaveCount(0);
     // the statement is theirs to take, though — it is what they came for
@@ -289,7 +304,7 @@ test.describe('monthly funds', () => {
     await page.goto('/admin/monthly-funds');
     await expect(page.locator('.admin-msg.is-warn')).toContainText('does not match the arithmetic');
     // and the figure shown is the arithmetic, not the stored one
-    await expect(balanceOf(page, 'February Amount')).toHaveText('₹21,000');
+    await expect(await balanceOf(page, 'February Amount')).toHaveText('₹21,000');
   });
 });
 

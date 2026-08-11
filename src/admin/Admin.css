@@ -1208,6 +1208,16 @@
 
 .fnd-people { font-size: 12.5px; color: var(--a-muted); min-width: 180px; }
 
+/* The two columns of prose need more room on a phone, not less. Everything
+   around them is a date or a figure that cannot wrap, so the browser takes the
+   space it needs out of these two — "Bhogi Celebrations" came down to one word
+   a line while the amounts sat comfortably. The table already scrolls sideways
+   at this size, so a floor here costs nothing but a little more scrolling. */
+@media (max-width: 640px) {
+  .fnd-reason { min-width: 175px; }
+  .fnd-people { min-width: 230px; }
+}
+
 .tbl tfoot .fnd-total td {
   padding: 13px 16px;
   border-top: 2px solid var(--a-border);
@@ -1230,26 +1240,25 @@
   .fnd-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-/* Two per row all the way down, never one. Below 640px that only works if the
-   card stops being a row itself: side by side, an icon and 18px of padding each
-   side leave about 80px for the words, and "Current balance amount" came apart
-   over four lines. Stacked, the text gets the card's full width. */
+/* Two per row all the way down, never one — and the same card, not a different
+   one: icon on the left, words beside it, exactly as at full width. Only the
+   sizes come down, enough to leave the label a line of its own inside a 176px
+   card. Stacking them was a layout change, not a size change, and it made the
+   phone read as a different screen. */
 @media (max-width: 640px) {
   .fnd-summary { gap: 10px; }
 
   .fnd-card {
-    flex-direction: column;
-    align-items: flex-start;
     gap: 9px;
-    padding: 13px 14px;
+    padding: 12px;
     min-height: 0;
     border-radius: 15px;
   }
 
   .fnd-card-ico { flex-basis: 34px; width: 34px; height: 34px; }
   .fnd-card-ico svg { width: 18px; height: 18px; }
-  .fnd-card-body { width: 100%; }
-  .fnd-card-v { font-size: 17px; }
+  .fnd-card-l { font-size: 9.5px; }
+  .fnd-card-v { font-size: 16px; }
   .fnd-card-disc { right: -40px; bottom: -52px; width: 108px; height: 108px; }
 }
 
