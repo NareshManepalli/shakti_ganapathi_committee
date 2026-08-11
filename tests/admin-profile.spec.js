@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
+import { SHEETS_CONFIG } from '../src/config/sheetsConfig.js';
+
+const MEMBERS_API = SHEETS_CONFIG.api.members;
 
 // The profile screen against the LIVE auth endpoint and the real members sheet.
 //
@@ -15,12 +18,16 @@ import fs from 'node:fs';
 // re-run with nobody else on the profile screen before going looking for a bug.
 const session = () => fs.readFileSync('tests/.session-value.json', 'utf8');
 
-// .admin-input order on the screen: Name, Name (Telugu), Mobile, Email.
-// Indices rather than labels because the labels carry a '*' node.
 // By label, not by position. Counting inputs broke the moment anything else on
 // the card gained one, and the failure was silent: the wrong field was filled
 // and the assertion simply disagreed with a value nobody had typed.
-const field = (page, label) => page.getByLabel(new RegExp(`^${label}`));
+//
+// Exact, because "Name" is a prefix of "Name (Telugu)" and a loose match claims
+// both. By role rather than getByLabel: the required '*' is aria-hidden, so a
+// screen reader says "Name" — but getByLabel reads the <label> tag's raw text
+// and still sees "Name *". Only the role locator uses the name the browser
+// actually computes, which is the one worth asserting against.
+const field = (page, label) => page.getByRole('textbox', { name: label, exact: true });
 
 async function open(page, path = '/admin/profile') {
   await page.addInitScript((v) => sessionStorage.setItem('ssgc.session', v), session());
@@ -44,7 +51,53 @@ const factRows = (page) => page.locator('.prof-fact').evaluateAll((els) =>
 const expectName = (page, value) =>
   expect.poll(async () => (await factRows(page)).Name, { timeout: 20000 }).toBe(value);
 
-test.describe.configure({ mode: 'serial' });
+/**
+ * Enters edit mode, unless the screen is already in it.
+ *
+ * The restore blocks below run whether or not the body succeeded, and a failed
+ * save leaves the form open — where Edit Profile is disabled. Clicking it
+ * regardless spent 30 seconds timing out and then threw from the `finally`,
+ * which replaced the real failure with a click error and hid what went wrong.
+ */
+const startEdit = async (page) => {
+  const btn = page.locator('.admin-btn', { hasText: 'Edit Profile' });
+  if (await btn.isEnabled()) await btn.click();
+};
+
+/**
+ * Every active member's mobile, from the live sheet, grouped by number.
+ *
+ * Read here rather than assumed, because two of the tests below cannot pass
+ * while a number is shared — and the refusal they get back ("MOBILE_TAKEN")
+ * describes the sheet, not the code.
+ */
+const mobilesByNumber = async (page) => {
+  const rows = await page.evaluate(async (url) => {
+    const res = await fetch(`${url}${url.includes('?') ? '&' : '?'}action=members`);
+    return (await res.json()).members || [];
+  }, MEMBERS_API);
+
+  const by = {};
+  for (const r of rows) {
+    const m = String(r.mobile || '').replace(/\D/g, '').slice(-10);
+    if (m) (by[m] = by[m] || []).push(`${r.id}:${r.name_en}`);
+  }
+  return by;
+};
+
+// The mobile IS the identity: there is no password, so a number shared by two
+// active rows leaves the sign-in unable to say who is at the door. The Web App
+// refuses rather than guessing, which means a member in such a group cannot get
+// in at all — so this is a sheet fault that reads as a broken portal.
+test('no two active members share a mobile number', async ({ page }) => {
+  await open(page);
+  const by = await mobilesByNumber(page);
+  const shared = Object.entries(by)
+    .filter(([, who]) => who.length > 1)
+    .map(([m, who]) => `${m} → ${who.join(', ')}`);
+
+  expect(shared, `these numbers name more than one member:\n  ${shared.join('\n  ')}`).toEqual([]);
+});
 
 test('the profile loads the real record, email included', async ({ page }) => {
   await open(page);
@@ -63,33 +116,28 @@ test('the profile loads the real record, email included', async ({ page }) => {
 
 test('fields are read-only until Edit Profile is pressed', async ({ page }) => {
   await open(page);
-  const inputs = page.locator('.admin-input');
+  const editable = ['Name', 'Name (Telugu)', 'Mobile', 'Email'];
 
-  await expect(inputs.nth(NAME)).toBeDisabled();
-  await expect(inputs.nth(MOBILE)).toBeDisabled();
-  await expect(inputs.nth(EMAIL)).toBeDisabled();
+  for (const label of editable) await expect(field(page, label)).toBeDisabled();
   await expect(page.locator('.admin-btn', { hasText: 'Update' })).toBeDisabled();
 
-  await page.locator('.admin-btn', { hasText: 'Edit Profile' }).click();
+  await startEdit(page);
 
-  await expect(inputs.nth(NAME)).toBeEnabled();
-  await expect(inputs.nth(NAME_TE)).toBeEnabled();
-  await expect(inputs.nth(MOBILE)).toBeEnabled();
-  await expect(inputs.nth(EMAIL)).toBeEnabled();
+  for (const label of editable) await expect(field(page, label)).toBeEnabled();
   await expect(page.locator('.admin-btn', { hasText: 'Update' })).toBeEnabled();
 
   // Position is not a form field at all. The committee sets it, and a member who
   // could edit their own access could hand themselves the portal — a permanently
   // greyed box only invited the question of how to change it. It stays in the
   // read-only record above.
-  await expect(inputs).toHaveCount(4);
+  await expect(page.locator('.admin-input')).toHaveCount(4);
   await expect(page.locator('.prof-grid .admin-label', { hasText: 'Position' })).toHaveCount(0);
   expect((await factRows(page)).Position).toBeTruthy();
 });
 
 test('a malformed email never leaves the browser', async ({ page }) => {
   await open(page);
-  await page.locator('.admin-btn', { hasText: 'Edit Profile' }).click();
+  await startEdit(page);
 
   const email = field(page, 'Email');
   await email.fill('not-an-email');
@@ -103,66 +151,86 @@ test('a malformed email never leaves the browser', async ({ page }) => {
   await expect(page.locator('.admin-btn', { hasText: 'Update' })).toBeEnabled();  // still in edit mode
 });
 
-test('saving a new name reaches the sheet and survives a reload', async ({ page }) => {
-  await open(page);
-  const before = await factRows(page);
-  const original = before.Name;
-  const changed = `${original} QA`;
+// These two write to the live row, so they run one after another — two of them
+// mid-flight at once would each restore what the other had just changed. The
+// read-only tests above have no such need and are left to run normally, so a
+// sheet fault in one of them no longer takes the whole file down with it.
+test.describe('writes to the live row', () => {
+  test.describe.configure({ mode: 'serial' });
 
-  try {
-    await page.locator('.admin-btn', { hasText: 'Edit Profile' }).click();
-    await field(page, 'Name').fill(changed);
-    await page.locator('.admin-btn', { hasText: 'Update' }).click();
+  test('saving a new name reaches the sheet and survives a reload', async ({ page }) => {
+    await open(page);
+    // A save is refused outright while this member's number names another row
+    // too, and the refusal is about the sheet rather than anything here.
+    const mine = (await factRows(page)).Mobile;
+    const sharing = (await mobilesByNumber(page))[mine] || [];
+    test.skip(sharing.length > 1, `mobile ${mine} is shared with ${sharing.join(', ')}`);
 
-    await expect(page.locator('.toast-success')).toContainText(/Profile saved/, { timeout: 45000 });
-    await expectName(page, changed);
+    const before = await factRows(page);
+    const original = before.Name;
+    const changed = `${original} QA`;
 
-    // it really reached the sheet, not just the screen
-    await page.reload();
-    await expect(page.locator('.prof-fact').first()).toBeVisible({ timeout: 45000 });
-    await expectName(page, changed);
-  } finally {
-    await page.locator('.admin-btn', { hasText: 'Edit Profile' }).click();
-    await field(page, 'Name').fill(original);
-    await page.locator('.admin-btn', { hasText: 'Update' }).click();
-    await expect(page.locator('.toast-success')).toContainText(/Profile saved/, { timeout: 45000 });
-    await expectName(page, original);
-  }
-});
+    try {
+      await startEdit(page);
+      await field(page, 'Name').fill(changed);
+      await page.locator('.admin-btn', { hasText: 'Update' }).click();
 
-// The Telugu name is not in the read-only block above, so this reads it back
-// out of the input. Same write-check-restore shape as the name test, and the
-// same reason for the finally: a half-finished run must not leave the public
-// site showing a test string as somebody's name in Telugu.
-test('a Telugu name reaches the name_te column and survives a reload', async ({ page }) => {
-  await open(page);
-  const box = () => field(page, 'Name \(Telugu\)');
-  const original = await box().inputValue();
-  const changed = 'పరీక్ష పేరు';
+      await expect(page.locator('.toast-success')).toContainText(/Profile saved/, { timeout: 45000 });
+      await expectName(page, changed);
 
-  try {
-    await page.locator('.admin-btn', { hasText: 'Edit Profile' }).click();
-    await box().fill(changed);
-    await page.locator('.admin-btn', { hasText: 'Update' }).click();
-    await expect(page.locator('.toast-success')).toContainText(/Profile saved/, { timeout: 45000 });
+      // it really reached the sheet, not just the screen
+      await page.reload();
+      await expect(page.locator('.prof-fact').first()).toBeVisible({ timeout: 45000 });
+      await expectName(page, changed);
+    } finally {
+      await startEdit(page);
+      await field(page, 'Name').fill(original);
+      await page.locator('.admin-btn', { hasText: 'Update' }).click();
+      await expect(page.locator('.toast-success')).toContainText(/Profile saved/, { timeout: 45000 });
+      await expectName(page, original);
+    }
+  });
 
-    // Reloaded, so this is the sheet answering rather than the form still
-    // holding what was typed into it.
-    await page.reload();
-    // The read-only block above appears as soon as the profile lands, but the
-    // form below is seeded from it a tick later — so this needs the same
-    // patience as everything else here, not the 5s default.
-    await expect(page.locator('.prof-fact').first()).toBeVisible({ timeout: 45000 });
-    await expect(box()).toHaveValue(changed, { timeout: 45000 });
-  } finally {
-    await page.locator('.admin-btn', { hasText: 'Edit Profile' }).click();
-    await box().fill(original);
-    await page.locator('.admin-btn', { hasText: 'Update' }).click();
-    await expect(page.locator('.toast-success')).toContainText(/Profile saved/, { timeout: 45000 });
-    await page.reload();
-    await expect(page.locator('.prof-fact').first()).toBeVisible({ timeout: 45000 });
-    await expect(box()).toHaveValue(original, { timeout: 45000 });
-  }
+  // The Telugu name is not in the read-only block above, so this reads it back
+  // out of the input. Same write-check-restore shape as the name test, and the
+  // same reason for the finally: a half-finished run must not leave the public
+  // site showing a test string as somebody's name in Telugu.
+  test('a Telugu name reaches the name_te column and survives a reload', async ({ page }) => {
+    await open(page);
+    // A save is refused outright while this member's number names another row
+    // too, and the refusal is about the sheet rather than anything here.
+    const mine = (await factRows(page)).Mobile;
+    const sharing = (await mobilesByNumber(page))[mine] || [];
+    test.skip(sharing.length > 1, `mobile ${mine} is shared with ${sharing.join(', ')}`);
+
+    const box = () => field(page, 'Name (Telugu)');
+    const original = await box().inputValue();
+    const changed = 'పరీక్ష పేరు';
+
+    try {
+      await startEdit(page);
+      await box().fill(changed);
+      await page.locator('.admin-btn', { hasText: 'Update' }).click();
+      await expect(page.locator('.toast-success')).toContainText(/Profile saved/, { timeout: 45000 });
+
+      // Reloaded, so this is the sheet answering rather than the form still
+      // holding what was typed into it.
+      await page.reload();
+      // The read-only block above appears as soon as the profile lands, but the
+      // form below is seeded from it a tick later — so this needs the same
+      // patience as everything else here, not the 5s default.
+      await expect(page.locator('.prof-fact').first()).toBeVisible({ timeout: 45000 });
+      await expect(box()).toHaveValue(changed, { timeout: 45000 });
+    } finally {
+      await startEdit(page);
+      await box().fill(original);
+      await page.locator('.admin-btn', { hasText: 'Update' }).click();
+      await expect(page.locator('.toast-success')).toContainText(/Profile saved/, { timeout: 45000 });
+      await page.reload();
+      await expect(page.locator('.prof-fact').first()).toBeVisible({ timeout: 45000 });
+      await expect(box()).toHaveValue(original, { timeout: 45000 });
+    }
+  });
 });
 
 test('the profile is reachable from the topbar menu', async ({ page }) => {

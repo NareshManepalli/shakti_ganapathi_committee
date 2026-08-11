@@ -170,14 +170,38 @@ function readMembers() {
   return out;
 }
 
-function findMemberByMobile(mobile) {
+/** Every active member holding this number. Normally one; see below. */
+function membersWithMobile(mobile) {
   var wanted = normaliseMobile(mobile);
-  if (wanted.length !== 10) return null;
+  if (wanted.length !== 10) return [];
   var members = readMembers();
+  var out = [];
   for (var i = 0; i < members.length; i++) {
-    if (members[i].mobile === wanted) return members[i];
+    if (members[i].mobile === wanted) out.push(members[i]);
   }
-  return null;
+  return out;
+}
+
+/**
+ * The one member this number identifies, or null.
+ *
+ * Null when two rows share it, rather than the first of them. The mobile IS the
+ * identity here — there is no password to tell the rows apart — so picking the
+ * first would sign somebody in as whoever happens to sort earliest, carrying
+ * that row's adm_in rather than their own. Row order is not a fact anyone
+ * maintains: sorting the sheet or deactivating one row silently changes who a
+ * number resolves to. Refusing is the only answer that cannot be wrong.
+ */
+function findMemberByMobile(mobile) {
+  var hits = membersWithMobile(mobile);
+  return hits.length === 1 ? hits[0] : null;
+}
+
+/** The refusal for a number that names more than one member. */
+function ambiguousMobileFail() {
+  return fail('MOBILE_AMBIGUOUS',
+    'This mobile number is listed against more than one committee member, so we cannot tell '
+    + 'who is signing in. Please contact the committee admin.');
 }
 
 /* ------------------------------------------------------------------ token */
@@ -314,6 +338,7 @@ function handleRequestOtp(body) {
 
   var member = findMemberByMobile(mobile);
   if (!member) {
+    if (membersWithMobile(mobile).length > 1) return ambiguousMobileFail();
     return fail('NOT_A_MEMBER', 'This mobile number is not on the committee list.');
   }
   // Checked BEFORE any email goes out: a member whose access_in is 0 is on the
@@ -367,6 +392,11 @@ function handleVerifyOtp(body) {
   var mobile = normaliseMobile(body.mobile);
   var entered = String(body.otp || '').replace(/\D/g, '');
   var cache = sheetCache();
+
+  // Refused up front, before either route below can resolve the number to a
+  // row. Otherwise the bypass path would fall through to the cache and answer
+  // with a code error, which reads as "wrong code" for a sheet problem.
+  if (membersWithMobile(mobile).length > 1) return ambiguousMobileFail();
 
   // bypass_in = 1: the fixed code stands in for an emailed one. Checked before
   // the cache, because no code was ever generated for this member.

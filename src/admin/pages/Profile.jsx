@@ -130,7 +130,7 @@ const Profile = () => {
             <form className="prof-form" onSubmit={save}>
               <div className="prof-grid">
                 <label className="admin-field">
-                  <span className="admin-label">Name <em className="prof-req">*</em></span>
+                  <span className="admin-label">Name <em className="prof-req" aria-hidden="true">*</em></span>
                   <input
                     className="admin-input"
                     value={form.name}
@@ -157,7 +157,7 @@ const Profile = () => {
                 </label>
 
                 <label className="admin-field">
-                  <span className="admin-label">Mobile <em className="prof-req">*</em></span>
+                  <span className="admin-label">Mobile <em className="prof-req" aria-hidden="true">*</em></span>
                   <input
                     className="admin-input"
                     type="tel"
@@ -170,7 +170,7 @@ const Profile = () => {
                 </label>
 
                 <label className="admin-field">
-                  <span className="admin-label">Email <em className="prof-req">*</em></span>
+                  <span className="admin-label">Email <em className="prof-req" aria-hidden="true">*</em></span>
                   <input
                     className="admin-input"
                     type="email"

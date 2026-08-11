@@ -155,7 +155,10 @@ test('the sheets are fetched once for the whole visit, not once per screen', asy
     await page.locator('.admin-nav-link', { hasText: new RegExp(`^${label}$`) }).click();
     await expect(page.locator('.admin-skel')).toHaveCount(0);
   }
-  await expect(page.locator('input[type=date]')).toHaveValue(/^\d{4}-\d{2}-\d{2}$/);
+  // Mandapam is the last of them, and it is filled in — so the later screens
+  // rendered real rows rather than sitting empty behind a cleared skeleton,
+  // which would satisfy the count above for the wrong reason.
+  await expect(page.getByLabel('English')).toHaveValue(/\S/);
 
   expect(calls, 'later screens should read what is already loaded').toBe(1);
   expect(publicHits, 'only the editor screens may call the write endpoint').toBe(0);
