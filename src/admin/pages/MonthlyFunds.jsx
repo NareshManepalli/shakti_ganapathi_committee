@@ -7,9 +7,12 @@ import Modal from '../../components/Modal';
 import {
   isFundsConfigured, fetchFunds, saveFund, deleteFund,
   yearOf, monthOf, toDmy, toIso, rupees, withBalances, summarise,
-  resolveRange, inRange, rangeLabel, todayDmy,
+  resolveRange, inRange, rangeLabel, todayDmy, dateKey,
 } from '../fundsApi';
 import { buildStatement } from '../fundsStatement';
+import { buildCycles, cycleLabel, rowsIn, usefulCycles } from '../fundsCycles';
+import { fetchSheetRows } from '../../utils/sheetService';
+import { SHEETS_CONFIG } from '../../config/sheetsConfig';
 
 const PER_PAGE = 8;
 
@@ -45,7 +48,8 @@ const MonthlyFunds = () => {
   const [busy, setBusy] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
-  const [year, setYear] = useState('');
+  const [cycles, setCycles] = useState([]);
+  const [pickedCycle, setPickedCycle] = useState('');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(null);
@@ -67,20 +71,41 @@ const MonthlyFunds = () => {
 
   useEffect(() => { load(); }, [load]);
 
+  // Day 1 of each year in the schedule sheet is that year's celebration date,
+  // and that sheet is public — the site reads it — so a funds-only member gets
+  // the fund years without needing the admin endpoint they cannot call.
+  useEffect(() => {
+    let alive = true;
+    fetchSheetRows(SHEETS_CONFIG.sections && SHEETS_CONFIG.sections.schedule)
+      .then((rows) => { if (alive) setCycles(buildCycles(rows)); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
   // Balances are computed across the whole ledger before it is split by year,
   // so January opens with December's closing figure rather than at zero.
   const ledger = useMemo(() => withBalances(rows), [rows]);
 
-  const years = useMemo(() => {
-    const set = new Set(ledger.map((r) => r.year).filter(Boolean));
-    return [...set].sort((a, b) => Number(b) - Number(a));
-  }, [ledger]);
+  // Years the committee would recognise: those holding entries, plus the one
+  // today falls in. Newest first, because that is the one being worked on.
+  const offered = useMemo(
+    () => usefulCycles(cycles, ledger, todayDmy()).reverse(),
+    [cycles, ledger],
+  );
 
-  const current = year || years[0] || String(new Date().getFullYear());
+  const current = useMemo(
+    () => offered.find((c) => String(c.no) === String(pickedCycle)) || offered[0] || null,
+    [offered, pickedCycle],
+  );
+
+  // No schedule yet means no year boundaries to draw, so the whole ledger is
+  // shown rather than an empty screen behind a dropdown with nothing in it.
   const forYear = useMemo(
-    () => ledger.filter((r) => r.year === current),
+    () => (current ? rowsIn(ledger, current) : ledger),
     [ledger, current],
   );
+
+  const currentLabel = current ? cycleLabel(current) : 'All entries';
 
   const totals = useMemo(() => summarise(forYear), [forYear]);
   const drifted = useMemo(() => forYear.filter((r) => r.drift).length, [forYear]);
@@ -99,7 +124,7 @@ const MonthlyFunds = () => {
   const start = (shown - 1) * PER_PAGE;
   const onPage = found.slice(start, start + PER_PAGE);
 
-  useEffect(() => { setPage(1); }, [query, current]);
+  useEffect(() => { setPage(1); }, [query, currentLabel]);
 
   /* ------------------------------------------------------------ actions */
 
@@ -142,7 +167,15 @@ const MonthlyFunds = () => {
 
   // The statement spans whatever was asked for, not the year on screen — the
   // table is a working view, the statement is a document about a period.
-  const chosen = useMemo(() => (statement ? resolveRange(statement) : null), [statement]);
+  const chosen = useMemo(() => {
+    if (!statement) return null;
+    if (statement.mode !== 'cycle') return resolveRange(statement);
+    const c = offered.find((x) => String(x.no) === String(statement.cycleNo));
+    if (!c) return { from: '', to: '' };
+    // A year still running is cut at today, exactly as a month range is.
+    const end = c.to && dateKey(c.to) > dateKey(todayDmy()) ? todayDmy() : c.to;
+    return { from: c.from, to: end };
+  }, [statement, offered]);
   const chosenRows = useMemo(
     () => (chosen ? inRange(ledger, chosen) : []),
     [ledger, chosen],
@@ -171,8 +204,9 @@ const MonthlyFunds = () => {
   };
 
   const openStatement = () => setStatement({
-    mode: 'all',
-    year: current,
+    mode: current ? 'cycle' : 'all',
+    cycleNo: current ? current.no : '',
+    year: String(new Date().getFullYear()),
     fromMonth: '',
     toMonth: '',
     fromDate: '',
@@ -184,7 +218,7 @@ const MonthlyFunds = () => {
   if (!configured) {
     return (
       <>
-        <div className="admin-page-head"><h1 className="admin-page-title">Monthly Funds</h1></div>
+        <div className="admin-page-head"><h1 className="admin-page-title">Annual Funds</h1></div>
         <div className="admin-card admin-wip">
           <span className="admin-wip-icon" aria-hidden="true">🔌</span>
           <h2 className="admin-wip-title">Not connected</h2>
@@ -202,10 +236,10 @@ const MonthlyFunds = () => {
     <>
       <div className="admin-page-head">
         <div>
-          <h1 className="admin-page-title">Monthly Funds</h1>
+          <h1 className="admin-page-title">Annual Funds</h1>
           <p className="admin-page-sub">
-            What the committee collected and spent in {current}
-            {years.length > 1 && ` · ${years.length} years on record`}
+            What the committee collected and spent in the {currentLabel}
+            {current && current.festival && ` · celebrations from ${current.festival}`}
           </p>
         </div>
         <button className="admin-btn" onClick={openStatement} disabled={!ledger.length}>
@@ -231,44 +265,18 @@ const MonthlyFunds = () => {
         <>
           <div className="fnd-summary">
             <div className="fnd-stat is-credit">
-              <span className="fnd-stat-l">Saved in {current}</span>
+              <span className="fnd-stat-l">Collected</span>
               <b className="fnd-stat-n">₹{rupees(totals.credit)}</b>
             </div>
             <div className="fnd-stat is-debit">
-              <span className="fnd-stat-l">Spent in {current}</span>
+              <span className="fnd-stat-l">Spent</span>
               <b className="fnd-stat-n">₹{rupees(totals.debit)}</b>
             </div>
             <div className="fnd-stat is-balance">
-              <span className="fnd-stat-l">Balance in hand</span>
+              <span className="fnd-stat-l">Balance carried</span>
               <b className="fnd-stat-n">₹{rupees(totals.balance)}</b>
             </div>
           </div>
-
-          {totals.months.length > 0 && (
-            <div className="admin-card fnd-months">
-              <h2 className="tbl-title">Month by month</h2>
-              <div className="fnd-month-grid">
-                {totals.months.map((m) => (
-                  <div className="fnd-month" key={m.month}>
-                    <b className="fnd-month-name">{m.month}</b>
-                    <span className="fnd-month-row">
-                      <i>In</i><em className="is-credit">₹{rupees(m.credit)}</em>
-                    </span>
-                    <span className="fnd-month-row">
-                      <i>Out</i><em className="is-debit">₹{rupees(m.debit)}</em>
-                    </span>
-                    {/* Who paid in that month — the question the committee
-                        actually asks of a collection row. */}
-                    <span className="fnd-month-people" title={m.persons.join(', ')}>
-                      {m.persons.length
-                        ? `${m.persons.length} paid: ${m.persons.join(', ')}`
-                        : 'No contributions recorded'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div className="admin-card tbl-card">
             <div className="tbl-head">
@@ -280,13 +288,19 @@ const MonthlyFunds = () => {
                 </button>
               )}
 
+              {/* Celebration to celebration, not January to December — the
+                  ledger's Oct-to-Jul run is one fund year, and a calendar
+                  filter cut it in two. */}
               <select
-                className="admin-input tbl-select"
-                value={current}
-                aria-label="Year"
-                onChange={(e) => setYear(e.target.value)}
+                className="admin-input tbl-select fnd-year-select"
+                value={current ? current.no : ''}
+                aria-label="Fund year"
+                disabled={!offered.length}
+                onChange={(e) => setPickedCycle(e.target.value)}
               >
-                {(years.length ? years : [current]).map((y) => <option key={y} value={y}>{y}</option>)}
+                {offered.length
+                  ? offered.map((c) => <option key={c.no} value={c.no}>{cycleLabel(c)}</option>)
+                  : <option value="">All entries</option>}
               </select>
 
               <div className="tbl-search">
@@ -374,7 +388,7 @@ const MonthlyFunds = () => {
                     {Boolean(found.length) && (
                       <tfoot>
                         <tr className="fnd-total">
-                          <td colSpan={isAdmin ? 5 : 4}>Total for {current}</td>
+                          <td colSpan={isAdmin ? 5 : 4}>Total for the {currentLabel}</td>
                           <td className="fnd-num is-credit">₹{rupees(totals.credit)}</td>
                           <td className="fnd-num is-debit">₹{rupees(totals.debit)}</td>
                           <td className="fnd-num is-balance">₹{rupees(totals.balance)}</td>
@@ -393,7 +407,7 @@ const MonthlyFunds = () => {
             ) : (
               <div className="admin-empty">
                 <span className="admin-empty-icon" aria-hidden="true">₹</span>
-                <h2 className="admin-empty-title">Nothing recorded for {current}</h2>
+                <h2 className="admin-empty-title">Nothing recorded in the {currentLabel}</h2>
                 <p className="admin-empty-text">
                   {isAdmin
                     ? 'Add the first entry — a collection or something the committee spent on.'
@@ -431,21 +445,37 @@ const MonthlyFunds = () => {
                   onChange={(e) => setStatement({ ...statement, mode: e.target.value })}
                 >
                   <option value="all">Every record</option>
-                  <option value="year">A whole year</option>
+                  {Boolean(offered.length) && <option value="cycle">A fund year</option>}
+                  <option value="year">A calendar year</option>
                   <option value="months">A range of months</option>
                   <option value="dates">A range of dates</option>
                 </select>
               </label>
 
+              {statement.mode === 'cycle' && (
+                <label className="ed-field">
+                  <span className="admin-label">Fund year</span>
+                  <select
+                    className="admin-input"
+                    value={statement.cycleNo}
+                    onChange={(e) => setStatement({ ...statement, cycleNo: e.target.value })}
+                  >
+                    {offered.map((c) => <option key={c.no} value={c.no}>{cycleLabel(c)}</option>)}
+                  </select>
+                </label>
+              )}
+
               {statement.mode === 'year' && (
                 <label className="ed-field">
-                  <span className="admin-label">Year</span>
+                  <span className="admin-label">Calendar year</span>
                   <select
                     className="admin-input"
                     value={statement.year}
                     onChange={(e) => setStatement({ ...statement, year: e.target.value })}
                   >
-                    {(years.length ? years : [current]).map((y) => <option key={y} value={y}>{y}</option>)}
+                    {[...new Set(ledger.map((r) => r.year).filter(Boolean))]
+                      .sort((a, b) => Number(b) - Number(a))
+                      .map((y) => <option key={y} value={y}>{y}</option>)}
                   </select>
                 </label>
               )}

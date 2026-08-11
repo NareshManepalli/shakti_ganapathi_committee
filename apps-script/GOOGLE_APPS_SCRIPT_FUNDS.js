@@ -55,6 +55,11 @@
 // https://docs.google.com/spreadsheets/d/1qGY_P2g8Fg2pmWuj9iDGxW9Lc_GJplb3WxKYBxcZIg0/edit
 var FUNDS_SHEET_ID = '1qGY_P2g8Fg2pmWuj9iDGxW9Lc_GJplb3WxKYBxcZIg0';
 
+// The schedule workbook, read only to learn where each fund year begins and
+// ends. Day 1 of a year is that year's celebration date, and annual_year beside
+// it is what the committee calls the span it closes.
+var SCHEDULE_SHEET_ID = '1rtsurWepUJlzebf2LczLO_2f_EZ0YXJ7M06plNLtGV8';
+
 var SIGNING_KEY_PROP = 'SESSION_SIGNING_KEY';
 
 // The same three fills the screen and the PDF statement use, so the sheet, the
@@ -247,6 +252,63 @@ function numberFundsRows() {
   Logger.log('Numbered ' + filled + ' rows.');
 }
 
+/**
+ * The fund years, oldest first, from the schedule sheet.
+ *
+ * A year ends when its own celebrations end, nine days after day 1 — money
+ * spent on a celebration belongs to the fund that was collected for it. Read
+ * once per request and cached: every row in a restate asks the same question.
+ */
+var YEARS_ = null;
+
+function fundYears() {
+  if (YEARS_) return YEARS_;
+  YEARS_ = [];
+  try {
+    var sheet = SpreadsheetApp.openById(SCHEDULE_SHEET_ID).getSheets()[0];
+    var rows = readRows(sheet);
+    var starts = [];
+    rows.forEach(function (r) {
+      if (Number(r.day_no) !== 1) return;
+      var d = r.date instanceof Date
+        ? Utilities.formatDate(r.date, sheetTimeZone(), 'dd-MM-yyyy')
+        : String(r.date || '').trim();
+      // The schedule stores yyyy-MM-dd; accept either shape.
+      var iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d);
+      if (iso) d = iso[3] + '-' + iso[2] + '-' + iso[1];
+      if (!dateKey(d)) return;
+      starts.push({ key: dateKey(d), annual: String(r.annual_year || '').trim() });
+    });
+    starts.sort(function (a, b) { return a.key - b.key; });
+
+    var previous = 0;
+    starts.forEach(function (st) {
+      // nine days of celebrations, day 1 included
+      var d = String(st.key);
+      var end = new Date(Number(d.slice(0, 4)), Number(d.slice(4, 6)) - 1, Number(d.slice(6, 8)) + FESTIVAL_DAYS_ - 1);
+      var endKey = end.getFullYear() * 10000 + (end.getMonth() + 1) * 100 + end.getDate();
+      YEARS_.push({ from: previous + 1, to: endKey, annual: st.annual });
+      previous = endKey;
+    });
+  } catch (e) {
+    YEARS_ = [];
+  }
+  return YEARS_;
+}
+
+var FESTIVAL_DAYS_ = 9;
+
+/** What the committee calls the year a date falls in, or '' if unknown. */
+function annualYearFor(dateText) {
+  var k = dateKey(dateText);
+  if (!k) return '';
+  var years = fundYears();
+  for (var i = 0; i < years.length; i++) {
+    if (k >= years[i].from && k <= years[i].to) return years[i].annual;
+  }
+  return '';
+}
+
 /** Green for money in, red for money out, blue for the balance. */
 function paintRow(sheet, rowNumber) {
   var header = headerOf(sheet);
@@ -390,6 +452,7 @@ function ledger() {
         credit: asNumber(r.credit),
         debit: asNumber(r.debit),
         balance: asNumber(r.balance),
+        annual_year: String(r.annual_year || ''),
         reason: String(r.reason || ''),
         fund_persons: String(r.fund_persons || ''),
         __k: dateKey(date),
@@ -530,11 +593,18 @@ function restate(sheet) {
       return (Number(a.sno) || 0) - (Number(b.sno) || 0);
     });
 
+  var colAnnual = header.indexOf('annual_year');
+
   var running = 0;
   live.forEach(function (r, i) {
     running += asNumber(r.credit) - asNumber(r.debit);
     if (colSno >= 0) sheet.getRange(r.__row, colSno + 1).setValue(i + 1);
     if (colBal >= 0) sheet.getRange(r.__row, colBal + 1).setValue(running);
+    // Written rather than typed, so the sheet reads standalone and cannot
+    // disagree with the screen about which year a row belongs to.
+    if (colAnnual >= 0) {
+      sheet.getRange(r.__row, colAnnual + 1).setValue(annualYearFor(asDateText(r.date)));
+    }
     paintRow(sheet, r.__row);
   });
 }

@@ -257,7 +257,7 @@ function saveSchedule(body) {
   var rows = readRows(sheet);
 
   var fields = { u_ts: stamp() };
-  ['year', 'day_no', 'date', 'day_en', 'day_te', 'time', 'title_en', 'title_te', 'image']
+  ['year', 'annual_year', 'day_no', 'date', 'day_en', 'day_te', 'time', 'title_en', 'title_te', 'image']
     .forEach(function (k) { if (day[k] !== undefined) fields[k] = String(day[k]); });
 
   var existing = null;

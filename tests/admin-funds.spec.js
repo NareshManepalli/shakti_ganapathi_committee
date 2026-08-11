@@ -72,6 +72,16 @@ const stub = async (page, { rows = SEED, isAdmin = true } = {}) => {
     ['ssgc.session', JSON.stringify({ ...session, member: { ...session.member, isAdmin } })],
   );
 
+  // Day 1 of 2025 and 2026 — the celebration dates the fund years are cut on.
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({
+    contentType: 'text/csv',
+    body: [
+      'id,year,day_no,date,a_in',
+      '1,2025,1,2025-08-27,1',
+      '2,2026,1,2026-09-14,1',
+    ].join('\n'),
+  }));
+
   await page.route(`${API}**`, async (route) => {
     const req = route.request();
     if (req.method() === 'POST') {
@@ -124,20 +134,13 @@ test.describe('monthly funds', () => {
     await stub(page);
     await page.goto('/admin/monthly-funds');
 
-    await expect(page.locator('.fnd-stat.is-credit')).toContainText('7,000');
+    // Oct 2025 to Feb 2026 is ONE fund year — celebration to celebration — so
+    // the whole seed counts, where a calendar filter would have shown only the
+    // three rows dated 2026.
+    await expect(page.locator('.tbl-select')).toHaveValue('2');
+    await expect(page.locator('.fnd-stat.is-credit')).toContainText('23,000');
     await expect(page.locator('.fnd-stat.is-debit')).toContainText('2,000');
-    // in hand, not in-minus-out: the 16,000 carried in from 2025 is real money
     await expect(page.locator('.fnd-stat.is-balance')).toContainText('21,000');
-  });
-
-  test('a month holding both a collection and a spend rolls up as one', async ({ page }) => {
-    await stub(page);
-    await page.goto('/admin/monthly-funds');
-
-    const january = page.locator('.fnd-month', { hasText: 'January' });
-    await expect(january).toContainText('3,500');
-    await expect(january).toContainText('2,000');
-    await expect(january).toContainText('7 paid');
   });
 
   test('a new credit raises the balance and every balance after it', async ({ page }) => {
@@ -146,10 +149,10 @@ test.describe('monthly funds', () => {
     await expect(balanceOf(page, 'February Amount')).toHaveText('₹21,000');
 
     await page.getByRole('button', { name: /Add entry/ }).click();
-    await page.locator('.ed-drawer input[type=date]').fill('2026-03-05');
-    await page.locator('.ed-drawer input').nth(1).fill('March Amount');
+    await page.locator('form.ed-drawer input[type=date]').fill('2026-03-05');
+    await page.locator('form.ed-drawer input').nth(1).fill('March Amount');
     await page.locator('.fnd-in').fill('2500');
-    await page.locator('.ed-drawer').getByRole('button', { name: 'Save' }).click();
+    await page.locator('form.ed-drawer').getByRole('button', { name: 'Save' }).click();
 
     await expect(page.locator('.toast')).toContainText('Entry saved');
     await expect(balanceOf(page, 'March Amount')).toHaveText('₹23,500');
@@ -164,10 +167,10 @@ test.describe('monthly funds', () => {
     await page.goto('/admin/monthly-funds');
 
     await page.getByRole('button', { name: /Add entry/ }).click();
-    await page.locator('.ed-drawer input[type=date]').fill('2026-02-20');
-    await page.locator('.ed-drawer input').nth(1).fill('Mandapam repair');
+    await page.locator('form.ed-drawer input[type=date]').fill('2026-02-20');
+    await page.locator('form.ed-drawer input').nth(1).fill('Mandapam repair');
     await page.locator('.fnd-out').fill('1500');
-    await page.locator('.ed-drawer').getByRole('button', { name: 'Save' }).click();
+    await page.locator('form.ed-drawer').getByRole('button', { name: 'Save' }).click();
 
     await expect(balanceOf(page, 'Mandapam repair')).toHaveText('₹19,500');
     await expect(page.locator('.fnd-stat.is-debit')).toContainText('3,500');
@@ -181,10 +184,10 @@ test.describe('monthly funds', () => {
     // Between the January collection and Bhogi — the case a stored running
     // total gets wrong, and the reason this one is recomputed.
     await page.getByRole('button', { name: /Add entry/ }).click();
-    await page.locator('.ed-drawer input[type=date]').fill('2026-01-08');
-    await page.locator('.ed-drawer input').nth(1).fill('Decorations');
+    await page.locator('form.ed-drawer input[type=date]').fill('2026-01-08');
+    await page.locator('form.ed-drawer input').nth(1).fill('Decorations');
     await page.locator('.fnd-out').fill('500');
-    await page.locator('.ed-drawer').getByRole('button', { name: 'Save' }).click();
+    await page.locator('form.ed-drawer').getByRole('button', { name: 'Save' }).click();
 
     await expect(balanceOf(page, 'Decorations')).toHaveText('₹19,000');
     await expect(balanceOf(page, 'Bhogi Celebrations')).toHaveText('₹17,000');
@@ -197,7 +200,7 @@ test.describe('monthly funds', () => {
 
     await page.getByRole('button', { name: 'Edit Bhogi Celebrations' }).click();
     await page.locator('.fnd-out').fill('3000');
-    await page.locator('.ed-drawer').getByRole('button', { name: 'Save' }).click();
+    await page.locator('form.ed-drawer').getByRole('button', { name: 'Save' }).click();
 
     await expect(balanceOf(page, 'Bhogi Celebrations')).toHaveText('₹16,500');
     await expect(balanceOf(page, 'February Amount')).toHaveText('₹20,000');

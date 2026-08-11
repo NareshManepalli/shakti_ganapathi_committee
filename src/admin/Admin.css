@@ -1343,3 +1343,6 @@
 
 .fnd-range b { font-size: 13.5px; color: var(--f-balance); }
 .fnd-range span { font-size: 12px; color: var(--a-muted); }
+
+/* "2nd year (2025 - 2026)" needs more room than "2026" ever did. */
+.fnd-year-select { min-width: 170px; }

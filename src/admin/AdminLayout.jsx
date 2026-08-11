@@ -27,7 +27,7 @@ import { SectionBoundary } from '../components/SectionState';
 // Monthly Funds is first because it is where sign-in lands everyone — it is the
 // one screen every member can reach, admin or not.
 const NAV = [
-  { to: '/admin/monthly-funds', label: 'Monthly Funds', Icon: IconFunds,     admin: false },
+  { to: '/admin/monthly-funds', label: 'Annual Funds', Icon: IconFunds,     admin: false },
   { to: '/admin/transactions',  label: 'Transactions',  Icon: IconLedger,    admin: false },
   { to: '/admin/about',         label: 'About',         Icon: IconAbout,     admin: true },
   { to: '/admin/members',       label: 'Members',       Icon: IconMembers,   admin: true },

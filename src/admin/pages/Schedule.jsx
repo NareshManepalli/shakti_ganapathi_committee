@@ -72,7 +72,7 @@ const ImagePreview = ({ link }) => {
 };
 
 const blankDay = (year, dayNo) => ({
-  id: '', year, day_no: dayNo, date: '', time: '',
+  id: '', year, annual_year: '', day_no: dayNo, date: '', time: '',
   title_en: '', title_te: '', image: '', day_en: '', day_te: '',
 });
 
@@ -193,7 +193,7 @@ const Schedule = () => {
   // is rejected as malformed — the box renders empty and the next save wipes the
   // day it was meant to edit.
   const edit = (d) => setEditing({
-    id: d.id, year: String(d.year), day_no: d.day_no,
+    id: d.id, year: String(d.year), annual_year: String(d.annual_year || ''), day_no: d.day_no,
     date: toIsoDate(d.date), time: toIsoTime(d.time),
     title_en: String(d.title_en || ''), title_te: String(d.title_te || ''),
     image: String(d.image || ''), day_en: String(d.day_en || ''), day_te: String(d.day_te || ''),
@@ -348,6 +348,19 @@ const Schedule = () => {
                   <input className="admin-input" inputMode="numeric" maxLength={4} value={editing.year}
                          onChange={(e) => setEditing({ ...editing, year: e.target.value.replace(/\D/g, '').slice(0, 4) })} />
                 </label>
+                <label className="ed-field">
+                  <span className="admin-label">Fund year</span>
+                  {/* What the committee calls the span these celebrations
+                      close. Annual Funds names its years from this, so entering
+                      next year's dates is all it takes for the next fund year
+                      to appear there. */}
+                  <input className="admin-input" value={editing.annual_year}
+                         placeholder={`${Number(editing.year) - 1} - ${editing.year}`}
+                         onChange={(e) => setEditing({ ...editing, annual_year: e.target.value })} />
+                </label>
+              </div>
+
+              <div className="ed-grid">
                 <label className="ed-field">
                   <span className="admin-label">Day number</span>
                   {/* A list, not a typed number: the festival is a fixed nine
