@@ -104,8 +104,6 @@ const Members = () => {
     toast.success(`${name} removed`, 'Hidden from the site — the row stays in the sheet.');
   };
 
-  const bypassCount = rows.filter((r) => asBool(r.bypass_in)).length;
-
   return (
     <EditorPage
       title="Members Management"
@@ -114,13 +112,6 @@ const Members = () => {
       error={error}
       skeleton={<TableSkeleton columns={COLUMNS} rows={PER_PAGE} />}
     >
-      {bypassCount > 0 && (
-        <p className="admin-msg is-warn" role="status">
-          <b>{bypassCount} member{bypassCount === 1 ? '' : 's'} can sign in with the development
-          code.</b> Turn <code>bypass_in</code> off for everyone before the site goes public.
-        </p>
-      )}
-
       <div className="admin-card tbl-card">
         <div className="tbl-head">
           <button className="admin-btn" onClick={openNew} disabled={busy}>
@@ -153,7 +144,7 @@ const Members = () => {
                     <th>Name (తెలుగు)</th>
                     <th>Position</th>
                     <th>Mobile</th>
-                    <th>Email</th>
+                    <th className="ed-email">Email</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -1010,7 +1010,17 @@
 
 /* The older .ed-table and its row controls are gone — Schedule and Members were
    its only two screens and both now use the .tbl card above. */
-.ed-email { word-break: break-all; max-width: 220px; }
+/* Fixed rather than capped: an address is the longest unbroken string in the
+   table, and left to size itself it took width off every column beside it.
+   width + max-width together, because a table cell treats width as a
+   suggestion and would still stretch to fit the longest address.
+
+   The same 250px at every size, min-width included. The table is width: 100%,
+   so without the floor a narrow screen squeezes this column to fit rather than
+   scrolling — the address breaks across four or five lines and the row grows
+   tall enough to push the rest of the table off screen. With the floor, .tbl-wrap
+   scrolls sideways instead, which is how these tables already behave. */
+.ed-email { word-break: break-all; width: 250px; min-width: 250px; max-width: 250px; }
 
 /* ---------------------------------- chips -------------------------------- */
 /* Kept though nothing renders one at the moment: the access badges came off the

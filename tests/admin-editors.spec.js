@@ -194,10 +194,16 @@ test.describe('admin content screens', () => {
     await expect(page.locator('.tbl thead th')).toHaveCount(8);
   });
 
-  test('Members warns that a development sign-in is still switched on', async ({ page }) => {
+  // The screen used to carry a banner counting the rows with bypass_in on. It
+  // was taken off at the committee's request: the flag is deliberate while the
+  // site is being built, so the warning fired on every visit and said nothing
+  // anyone did not already know. bypass_in is still on the drawer, and turning
+  // it off before launch is tracked on the status board instead.
+  test('Members does not nag about the development sign-in', async ({ page }) => {
     await stub(page);
     await page.goto('/admin/members');
-    await expect(page.locator('.admin-msg.is-warn')).toContainText('1 member can sign in with the development');
+    await expect(page.locator('.tbl:not(.tbl-ph) tbody tr').first()).toBeVisible();
+    await expect(page.locator('.admin-msg.is-warn')).toHaveCount(0);
   });
 
   test('Members refuses to let the signed-in member delete themselves', async ({ page }) => {
