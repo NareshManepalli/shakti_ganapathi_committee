@@ -94,6 +94,31 @@ var LEDGER_PREFIX = 'SSGC';
 var LEDGER_START_YEAR = 2025;
 var LEDGER_SEQ_WIDTH = 6;
 
+/* ----------------------------------------------------- the transactions tab */
+//
+// The working pot for a celebration, kept as a second tab in THIS workbook
+// rather than a book of its own. The two are one movement apart — a transfer
+// out of the fund is the opening credit here — and a single script owning both
+// is what lets that be one write instead of two calls that can half-happen.
+//
+// Its own id prefix. A funds row and a transactions row are different things
+// and must never be mistaken for each other in a message, a statement or a
+// conversation, which "SSGC2025000004" and "TXN2025000004" cannot be.
+var TRANSACTIONS_TAB = 'transactions';
+var TXN_PREFIX = 'TXN';
+
+// Column for column the funds sheet's order, so the two read the same way.
+// `fund_persons` gives way to `paid_to` and `mode`: who was paid, and how,
+// which is what a spend needs and a collection does not. `kind` marks the one
+// opening row per year apart from the credits and spends that follow it.
+var TRANSACTIONS_HEADER = [
+  'sno', 'trnsctn_id', 'date', 'year', 'month',
+  'credit', 'debit', 'balance',
+  'annual_year', 'annual_yr_id',
+  'kind', 'reason', 'paid_to', 'mode',
+  'a_in', 'i_ts', 'u_ts', 'd_ts',
+];
+
 /* ------------------------------------------------------------------ utils */
 
 function jsonOut(obj) {
@@ -119,6 +144,69 @@ function fundsBook() {
 
 function fundsSheet() {
   return fundsBook().getSheets()[0];
+}
+
+/** The transactions tab, or a plain instruction if it has not been made yet. */
+function transactionsSheet() {
+  var sheet = fundsBook().getSheetByName(TRANSACTIONS_TAB);
+  if (!sheet) {
+    throw new Error('No "' + TRANSACTIONS_TAB + '" tab in the funds workbook. '
+      + 'Run createTransactionsTab() once from this editor.');
+  }
+  return sheet;
+}
+
+/**
+ * Builds the transactions tab, once.
+ *
+ * Run from the Apps Script editor: Run ▸ createTransactionsTab. It refuses to
+ * touch a tab that already exists rather than rewriting a header over rows
+ * somebody has entered — running it twice by accident must cost nothing.
+ *
+ * The date column is forced to plain text. Left as automatic, Sheets reads
+ * "05-10-2025" as a date and renders it back in whatever order the locale
+ * prefers — which silently turns 5 October into 10 May, and the ledger's own
+ * dd-mm-yyyy is no longer what the sheet holds.
+ */
+function createTransactionsTab() {
+  var book = fundsBook();
+  var existing = book.getSheetByName(TRANSACTIONS_TAB);
+  if (existing) {
+    Logger.log('The "' + TRANSACTIONS_TAB + '" tab already exists — nothing changed.');
+    return;
+  }
+
+  var sheet = book.insertSheet(TRANSACTIONS_TAB);
+  var head = sheet.getRange(1, 1, 1, TRANSACTIONS_HEADER.length);
+  head.setValues([TRANSACTIONS_HEADER]);
+  head.setFontWeight('bold');
+  head.setFontColor('#ffffff');
+  head.setBackground('#0e1b33');
+  sheet.setFrozenRows(1);
+
+  // The money columns wear the same three fills the screen and the statement
+  // use, on the heading as well as on every row this script writes.
+  var tint = { credit: FILL_CREDIT, debit: FILL_DEBIT, balance: FILL_BALANCE };
+  TRANSACTIONS_HEADER.forEach(function (name, i) {
+    if (tint[name]) sheet.getRange(1, i + 1).setFontColor('#0e1b33').setBackground(tint[name]);
+  });
+
+  var dateCol = TRANSACTIONS_HEADER.indexOf('date') + 1;
+  sheet.getRange(2, dateCol, sheet.getMaxRows() - 1, 1).setNumberFormat('@');
+
+  var widths = {
+    sno: 55, trnsctn_id: 130, date: 95, year: 60, month: 90,
+    credit: 90, debit: 90, balance: 95, annual_year: 105, annual_yr_id: 95,
+    kind: 80, reason: 200, paid_to: 150, mode: 80,
+    a_in: 55, i_ts: 140, u_ts: 140, d_ts: 140,
+  };
+  TRANSACTIONS_HEADER.forEach(function (name, i) {
+    if (widths[name]) sheet.setColumnWidth(i + 1, widths[name]);
+  });
+
+  SpreadsheetApp.flush();
+  Logger.log('Created "' + TRANSACTIONS_TAB + '" with '
+    + TRANSACTIONS_HEADER.length + ' columns. It is empty — the screen writes the first row.');
 }
 
 /**
