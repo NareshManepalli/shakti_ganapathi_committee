@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
+import { SHEETS_CONFIG } from '../src/config/sheetsConfig.js';
 
 // The session lives in sessionStorage, which storageState does not carry, so it
 // is put back per page the way the other live specs do it.
@@ -27,6 +28,62 @@ const DATE_ISO = '2026-12-31';
 const DATE_DMY = '31-12-2026';
 
 const rupees = (text) => Number(String(text).replace(/[^0-9-]/g, '')) || 0;
+
+/* ------------------------------------------------------------- the sweep */
+
+/**
+ * Removes this spec's rows from the committee's sheet, through the Web App
+ * rather than through the screen.
+ *
+ * The restore used to be the last steps of each test, which is fine until a
+ * test does not reach them. A run killed part way — a timeout, a lost answer,
+ * Ctrl-C — left "Playwright check" rows in the real ledger, and enough of them
+ * accumulated that the balance on the committee's own screen was wrong by
+ * 1,500 rupees for a fortnight before anybody looked.
+ *
+ * So the cleanup does not depend on the test finishing. It runs from afterAll,
+ * which Playwright runs after a failure as well, and it talks to the endpoint
+ * directly: no page, no session in storage, nothing that a broken screen can
+ * take down with it.
+ */
+const API = SHEETS_CONFIG.api.funds;
+const token = () => JSON.parse(session()).token;
+
+const readLedger = async () => {
+  const res = await fetch(`${API}?token=${encodeURIComponent(token())}`, { redirect: 'follow' });
+  const text = await res.text();
+  if (/^\s*</.test(text)) return null;
+  const data = JSON.parse(text);
+  return data.ok ? (data.funds || []) : null;
+};
+
+const removeRow = async (id) => {
+  const res = await fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: 'deleteFund', token: token(), trnsctn_id: id }),
+    redirect: 'follow',
+  });
+  const text = await res.text();
+  return !/^\s*</.test(text) && JSON.parse(text).ok === true;
+};
+
+/** Every row this spec could have left behind, gone — however the run ended. */
+const sweep = async () => {
+  for (let pass = 0; pass < 12; pass += 1) {
+    const rows = await readLedger();
+    if (!rows) return;
+    const stray = rows.find((r) => String(r.reason || '').includes(REASON));
+    if (!stray) return;
+    // A failure here is not worth failing the run over — it is already the
+    // cleanup — but it must be said, or the next person inherits the mess
+    // without knowing it is there.
+    if (!await removeRow(stray.trnsctn_id)) {
+      console.warn(`Could not remove ${stray.trnsctn_id} — check the funds sheet by hand.`);
+      return;
+    }
+  }
+};
 
 const balanceTile = (page) => page.locator('.fnd-card.is-balance');
 /**
@@ -76,6 +133,10 @@ test.describe.configure({ mode: 'serial' });
 
 test.describe('monthly funds — live', () => {
   let opening = 0;
+
+  // Before, in case the last run died; after, whatever this one does.
+  test.beforeAll(sweep);
+  test.afterAll(sweep);
 
   test('the ledger loads from the live sheet', async ({ page }) => {
     await openFunds(page);

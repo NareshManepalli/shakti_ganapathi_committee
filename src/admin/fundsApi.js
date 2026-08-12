@@ -1,4 +1,5 @@
 import { SHEETS_CONFIG } from '../config/sheetsConfig';
+import { settleWrite, holdsEntry, lacksEntry } from './settleWrite';
 
 // The committee's money ledger, through the Funds Web App.
 //
@@ -46,9 +47,23 @@ export const fetchFunds = async (token) => {
   }
 };
 
-export const saveFund = (token, entry) => post({ action: 'saveFund', token, entry });
-export const deleteFund = (token, trnsctnId) =>
-  post({ action: 'deleteFund', token, trnsctn_id: trnsctnId });
+// Both writes settle themselves rather than reporting a failure they cannot
+// vouch for. See settleWrite.js: a lost answer is decided by reading the ledger
+// back, because a retry on a write that already landed is what puts an entry in
+// the sheet twice.
+export const saveFund = (token, entry) => settleWrite({
+  attempt: () => post({ action: 'saveFund', token, entry }),
+  reread: () => fetchFunds(token),
+  rowsOf: (res) => res.funds,
+  landed: (rows) => holdsEntry(rows, entry),
+});
+
+export const deleteFund = (token, trnsctnId) => settleWrite({
+  attempt: () => post({ action: 'deleteFund', token, trnsctn_id: trnsctnId }),
+  reread: () => fetchFunds(token),
+  rowsOf: (res) => res.funds,
+  landed: (rows) => lacksEntry(rows, trnsctnId),
+});
 
 /* ------------------------------------------------------------- shaping */
 

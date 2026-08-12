@@ -283,14 +283,18 @@
       photos to files, retiring Settings, adding two fields ahead of a third. Rows are found by
       their accessible names now rather than by counting, which is what kept breaking.</p>
       <p><span class="need">Run before each deploy:</span> <code>npx playwright test</code>.
-      <code>--project=stubbed --project=docs</code> needs nothing and runs 62 specs in under two
+      <code>--project=stubbed --project=docs</code> needs nothing and runs 64 specs in under two
       minutes. The rest hit the live services and need a member with <code>bypass_in = 1</code> in
       <code>tests/.local.json</code>, gitignored because this repository is public.</p>
-      <p>105 pass. Two of them write to the President's real row and put it back — and the
+      <p>All pass. Two of them write to the President's real row and put it back — and the
       undo is now checked against the server rather than assumed, because a run that assumed it
       left <i>"Venkat Naresh QA"</i> as the name on the live public site. If the screen fails to
       restore, the spec repairs the record directly and still fails, so the data is never the
       thing that pays for a broken test.</p>
+      <p>The live funds specs sweep before and after themselves, through the Web App rather than
+      the screen, so a run killed part way — a timeout, a lost answer, Ctrl-C — cannot leave a
+      "Playwright check" row in the committee's ledger. Enough of those accumulated once to put
+      the balance out by 1,500 rupees for a fortnight before anyone looked.</p>
     </div>
 
     <div class="item">

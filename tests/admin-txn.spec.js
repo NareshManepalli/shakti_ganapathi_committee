@@ -267,4 +267,67 @@ test.describe('transactions', () => {
     await expect(page.locator('.tbl:not(.tbl-ph) tbody tr')).toHaveCount(1);
     await expect(page.locator('.tbl tbody tr')).toContainText('Sound system advance');
   });
+
+  // Apps Script sometimes answers a POST with an HTML page while the write
+  // itself has already run. The browser used to report failure on a write that
+  // had landed — and a committee that presses Save again then has the entry
+  // twice, which is how the funds sheet came to carry five ids twice over.
+  test('a write whose answer is lost is settled by reading, not by retrying', async ({ page }) => {
+    const { state } = await stub(page);
+    await page.goto('/admin/transactions');
+    await expect(page.locator('.txn-progress')).toBeVisible({ timeout: 20000 });
+
+    // The next POST does what it was asked and then throws the reply away.
+    await page.route(`${API}**`, async (route) => {
+      const req = route.request();
+      if (req.method() !== 'POST') return route.fallback();
+      const body = JSON.parse(req.postData() || '{}');
+      const e = body.entry || {};
+      state.rows.push(txn('TXN2025000099', e.date, e.kind, Number(e.debit) || Number(e.credit) || 0,
+        e.reason || '', e.paid_to || '', e.mode || ''));
+      state.rows = restate(state.rows);
+      return route.fulfill({ contentType: 'text/html', body: '<!doctype html><html>Sorry…</html>' });
+    });
+
+    await page.getByRole('button', { name: /Add transaction/ }).click();
+    await page.getByLabel('Date').fill('2026-08-11');
+    await page.getByLabel('Amount spent').fill('700');
+    await page.getByLabel('Remarks').fill('Lost answer');
+    await page.locator('.ed-drawer').getByRole('button', { name: 'Save' }).click();
+
+    // Reported as saved, because it was — and the drawer closes rather than
+    // sitting open inviting the second press that would duplicate it.
+    await expect(page.locator('.toast-success')).toContainText('Transaction saved', { timeout: 20000 });
+    await expect(page.locator('.ed-drawer')).toHaveCount(0);
+
+    // Once, not twice — searched rather than read off page one, since an eighth
+    // row at five a page is on the second.
+    await page.getByRole('searchbox', { name: 'Search transactions' }).fill('Lost answer');
+    await expect(page.locator('.tbl:not(.tbl-ph) tbody tr')).toHaveCount(1);
+  });
+
+  test('a refusal is still a refusal — it is not read back into a success', async ({ page }) => {
+    await stub(page);
+    await page.goto('/admin/transactions');
+    await expect(page.locator('.txn-progress')).toBeVisible({ timeout: 20000 });
+
+    // A coded failure means the script decided, and nothing was written. Reading
+    // back after one of these would be asking a question already answered.
+    await page.route(`${API}**`, async (route) => {
+      if (route.request().method() !== 'POST') return route.fallback();
+      return route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: false, code: 'OPENING_EXISTS', error: 'This fund year already has an opening amount.' }),
+      });
+    });
+
+    await page.getByRole('button', { name: /Add transaction/ }).click();
+    await page.getByLabel('Amount spent').fill('700');
+    await page.getByLabel('Remarks').fill('Refused');
+    await page.locator('.ed-drawer').getByRole('button', { name: 'Save' }).click();
+
+    await expect(page.locator('.toast-error')).toContainText('Could not save the transaction');
+    await expect(page.locator('.toast-error')).toContainText('already has an opening amount');
+    await expect(page.locator('.ed-drawer')).toBeVisible();
+  });
 });

@@ -1,5 +1,6 @@
 import { SHEETS_CONFIG } from '../config/sheetsConfig';
 import { withBalances, rupees } from './fundsApi';
+import { settleWrite, holdsEntry, lacksEntry } from './settleWrite';
 
 // The working pot, through the same Web App the fund uses.
 //
@@ -52,9 +53,21 @@ export const fetchTxns = async (token) => {
   }
 };
 
-export const saveTxn = (token, entry) => post({ action: 'saveTxn', token, entry });
-export const deleteTxn = (token, trnsctnId) =>
-  post({ action: 'deleteTxn', token, trnsctn_id: trnsctnId });
+// Settled the same way the fund's writes are — the hiccup is the transport's,
+// so it belongs to both ledgers equally.
+export const saveTxn = (token, entry) => settleWrite({
+  attempt: () => post({ action: 'saveTxn', token, entry }),
+  reread: () => fetchTxns(token),
+  rowsOf: (res) => res.txns,
+  landed: (rows) => holdsEntry(rows, entry),
+});
+
+export const deleteTxn = (token, trnsctnId) => settleWrite({
+  attempt: () => post({ action: 'deleteTxn', token, trnsctn_id: trnsctnId }),
+  reread: () => fetchTxns(token),
+  rowsOf: (res) => res.txns,
+  landed: (rows) => lacksEntry(rows, trnsctnId),
+});
 
 /* ------------------------------------------------------------- the pot */
 
