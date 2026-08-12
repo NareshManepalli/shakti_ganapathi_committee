@@ -1508,9 +1508,7 @@
   padding-top: 21px;
 }
 
-/* A figure and the tick that points at it. The tick is the pseudo-element, so
-   the label can be shifted at the ends without the mark moving with it — at 0%
-   and 100% the words have to come inward while the tick stays put. */
+/* The spent figure, placed at its own percentage along the bar. */
 .txn-tick {
   position: absolute;
   top: 0;
@@ -1521,6 +1519,8 @@
   color: var(--a-muted);
 }
 
+/* The mark that joins the spent figure to the point on the bar it describes.
+   It hangs below the words and reaches down to the bar. */
 .txn-tick::after {
   content: '';
   position: absolute;
@@ -1530,14 +1530,6 @@
   opacity: 0.55;
 }
 
-.txn-tick.is-start { left: 0; }
-.txn-tick.is-start::after { left: 0; }
-.txn-tick.is-end { right: 0; }
-.txn-tick.is-end::after { right: 0; }
-
-/* The bar carries no figures of its own. The four cards above say what the
-   amounts are; this says how far through them the committee is, which is the
-   one thing four numbers cannot show at a glance. */
 /* Square, not rounded. A rounded end reads as a shape; square ends read as a
    measure, which is what this is now that it carries figures. */
 .txn-bar {
@@ -1551,9 +1543,10 @@
    static measure — the pot is being spent from while the screen is open. The
    colour is the fill; the stripes are white laid over it, so one rule sets the
    texture for all three states. */
-.txn-bar span {
+.txn-bar > span {
   display: block;
   height: 100%;
+  border-radius: 0;
   background-image: repeating-linear-gradient(
     45deg,
     rgba(255, 255, 255, 0.28) 0, rgba(255, 255, 255, 0.28) 10px,
@@ -1562,26 +1555,24 @@
   background-size: 28px 28px;
   animation: txn-stripes 900ms linear infinite;
   transition: width 0.5s ease;
-  border-radius: 0;
 }
 
-.is-healthy .txn-bar span { background-color: #17914c; }
-.is-low .txn-bar span     { background-color: #d99a2b; }
-.is-over .txn-bar span    { background-color: #c33b56; }
+.is-healthy .txn-bar > span { background-color: #17914c; }
+.is-low .txn-bar > span     { background-color: #d99a2b; }
+.is-over .txn-bar > span    { background-color: #c33b56; }
 
 @keyframes txn-stripes { to { background-position: 28px 0; } }
 
 /* Movement is decoration here — the width and the colour carry the meaning —
    so it goes entirely for anyone who has asked for less of it. */
 @media (prefers-reduced-motion: reduce) {
-  .txn-bar span { animation: none; transition: none; }
+  .txn-bar > span { animation: none; transition: none; }
 }
 
-/* The figure riding the end of the fill. Absolute against the card so it can
-   sit exactly over the boundary, and pulled back at the two extremes where
-   centring would hang it off the end of the bar. */
-/* Zero-width, so `left: 42%` puts its tick on the boundary and nothing else has
-   to be corrected for. The label inside is what moves. */
+/* Zero-width, so `left: 42%` puts the tick exactly on the boundary and nothing
+   else has to be corrected for. Only the label inside moves — shifting the
+   whole element carried its pseudo-element tick along with it, and the mark
+   ended up pointing where the fill did not end. */
 .txn-bar-at {
   width: 0;
   font-weight: 700;
@@ -1600,22 +1591,45 @@
 .is-low .txn-bar-at     { color: #b8791a; }
 .is-over .txn-bar-at    { color: var(--f-debit, #d1435f); }
 
-/* Nothing at one end, everything the pot holds at the other — which is what
-   turns the bar from a decoration into a scale the marker can be read against. */
-.txn-ends {
+/* The line under the bar: where the scale starts, what is worth knowing about
+   it, and where it ends. One row rather than three, because all three are
+   remarks about the same bar. */
+.txn-foot {
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
-  margin-top: 5px;
+  gap: 10px;
+  margin-top: 7px;
+}
+
+.txn-end {
+  position: relative;
+  flex: none;
   font-size: 11.5px;
+  font-weight: 600;
   color: var(--a-muted);
   font-variant-numeric: tabular-nums;
 }
 
-/* One line, not a panel. It sits under a bar that has already said the same
-   thing in colour, so the full message box was three times the room the
-   sentence needed. */
+/* Their ticks stand above the words, reaching up to the bar — the mirror of the
+   spent figure's, which hangs below its own. */
+.txn-end::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  height: 5px;
+  border-left: 1.5px solid currentColor;
+  opacity: 0.55;
+}
+
+.txn-end:first-child::before { left: 0; }
+.txn-end:last-child::before { right: 0; }
+
 .txn-warn {
-  margin: 10px 0 0;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding-left: 10px;
   font-size: 12.5px;
   color: #8a5c12;
 }

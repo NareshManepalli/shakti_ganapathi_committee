@@ -300,14 +300,14 @@ const Transactions = () => {
                     at the right. Read together they say "we had this, we have
                     spent that" without a sentence. */}
                 <div className="txn-scale">
-                  <span className="txn-tick is-start">₹0</span>
-                  {/* The mark sits exactly on the boundary; only the words
-                      shift. Translating the whole thing moved its tick too, so
-                      the tick pointed at a place the fill did not end. */}
-                  <span className="txn-tick txn-bar-at" style={{ left: `${totals.percent}%` }}>
-                    <b style={{ transform: `translateX(${markerPull})` }}>₹{rupees(totals.spent)}</b>
-                  </span>
-                  <span className="txn-tick is-end">₹{rupees(totals.pot)}</span>
+                  {/* The spent figure above, riding the edge of the fill —
+                      until nothing has been spent, when it would sit on top of
+                      the ₹0 already at the start and say the same thing twice. */}
+                  {totals.spent > 0 && (
+                    <span className="txn-tick txn-bar-at" style={{ left: `${totals.percent}%` }}>
+                      <b style={{ transform: `translateX(${markerPull})` }}>₹{rupees(totals.spent)}</b>
+                    </span>
+                  )}
 
                   <div
                     className="txn-bar"
@@ -319,14 +319,22 @@ const Transactions = () => {
                   >
                     <span style={{ width: `${totals.percent}%` }} />
                   </div>
-                </div>
 
-                {warning && (
-                  <p className="txn-warn" role="status">
-                    <b>{totals.state === 'over' ? 'The pot is overspent.' : 'Balance is getting low.'}</b>
-                    {' '}{warning}
-                  </p>
-                )}
+                  {/* One line under the bar: where the scale starts, what the
+                      committee should know about it, and where it ends. The
+                      warning had a row to itself and read as a separate notice;
+                      here it is plainly a remark about the bar above it. */}
+                  <div className="txn-foot">
+                    <span className="txn-end">₹0</span>
+                    {warning && (
+                      <p className="txn-warn" role="status">
+                        <b>{totals.state === 'over' ? 'The pot is overspent.' : 'Balance is getting low.'}</b>
+                        {' '}{warning}
+                      </p>
+                    )}
+                    <span className="txn-end">₹{rupees(totals.pot)}</span>
+                  </div>
+                </div>
               </section>
             </>
           ) : (

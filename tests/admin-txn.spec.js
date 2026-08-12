@@ -138,10 +138,10 @@ test.describe('transactions', () => {
     await expect(card(page, 'debit')).toContainText('₹23,000');
     await expect(card(page, 'balance')).toContainText('₹9,500');
 
-    // The bar is a scale now: nothing at the left, what has gone marked at the
-    // edge of the fill, everything the pot held at the right.
-    const ticks = await page.locator('.txn-tick').allTextContents();
-    expect(ticks).toEqual(['₹0', '₹23,000', '₹32,500']);
+    // The bar is a scale now: nothing at the left, everything the pot held at
+    // the right, and what has gone marked at the edge of the fill between them.
+    expect(await page.locator('.txn-end').allTextContents()).toEqual(['₹0', '₹32,500']);
+    await expect(page.locator('.txn-bar-at')).toHaveText('₹23,000');
 
     // A donation is as spendable as the transfer that started the pot, so it
     // counts toward what there was — not toward what is left over after it.
@@ -404,6 +404,40 @@ test.describe('transactions', () => {
     // The label may be shifted for readability; the mark itself may not. A
     // transform on the whole thing used to carry its tick along with it.
     expect(Math.abs(tickAt - fillEnd), 'the mark drifted from the fill').toBeLessThan(2);
+
+    // The fill is a real width, not a collapsed span. Its rules have twice been
+    // swept away by an edit aimed at something beside them, and a zero-width
+    // fill still leaves the bar, the ticks and the figures looking correct —
+    // which is why the percentage itself has to be asserted.
+    const fill = await page.evaluate(() => {
+      const bar = document.querySelector('.txn-bar').getBoundingClientRect();
+      const el = document.querySelector('.txn-bar > span');
+      const cs = getComputedStyle(el);
+      return {
+        pct: Math.round((el.getBoundingClientRect().width / bar.width) * 1000) / 10,
+        striped: cs.backgroundImage.includes('repeating-linear-gradient'),
+        animated: cs.animationName !== 'none',
+        height: Math.round(bar.height),
+      };
+    });
+    expect(fill.pct).toBe(70.8);
+    expect(fill.striped, 'the stripes are gone').toBe(true);
+    expect(fill.animated, 'the stripes stopped moving').toBe(true);
+    expect(fill.height).toBe(12);
+
+    // The spent figure rides the bar from above; the two ends and the warning
+    // share one line under it, where they read as remarks about the same bar.
+    const where = await page.evaluate(() => {
+      const bar = document.querySelector('.txn-bar').getBoundingClientRect();
+      const ends = [...document.querySelectorAll('.txn-end')].map((e) => e.getBoundingClientRect());
+      const warn = document.querySelector('.txn-warn').getBoundingClientRect();
+      return {
+        marker: document.querySelector('.txn-bar-at').getBoundingClientRect().bottom <= bar.top + 1,
+        below: ends.every((e) => e.top >= bar.bottom) && warn.top >= bar.bottom,
+        sameLine: Math.abs(ends[0].top - warn.top) < 6 && Math.abs(ends[1].top - warn.top) < 6,
+      };
+    });
+    expect(where).toEqual({ marker: true, below: true, sameLine: true });
   });
 
   test("the type control is the drawer's own, not the browser's", async ({ page }) => {
@@ -421,5 +455,29 @@ test.describe('transactions', () => {
     expect(box.border).not.toBe('none');
     expect(box.radius).not.toBe('0px');
     expect(box.pad).not.toBe('0px');
+  });
+
+  // The state the committee opens a fresh year in: money moved across, nothing
+  // spent yet. It had the two ends of the scale sitting on top of each other at
+  // the left, because the warning between them is what was spreading them —
+  // and with a healthy balance there is no warning.
+  test('with nothing spent the scale still spans the bar', async ({ page }) => {
+    await open(page, {
+      rows: [txn('TXN2025000001', '01-08-2026', 'opening', 32500, 'Opening amount from annual funds', '', 'Bank')],
+    });
+    await expect(page.locator('.fnd-card').first()).toBeVisible({ timeout: 20000 });
+
+    const at = await page.evaluate(() => {
+      const bar = document.querySelector('.txn-bar').getBoundingClientRect();
+      const ends = [...document.querySelectorAll('.txn-end')].map((e) => e.getBoundingClientRect());
+      return { start: Math.round(ends[0].left - bar.left), end: Math.round(bar.right - ends[1].right) };
+    });
+    expect(at).toEqual({ start: 0, end: 0 });
+
+    await expect(page.locator('.txn-end').nth(0)).toHaveText('₹0');
+    await expect(page.locator('.txn-end').nth(1)).toHaveText('₹32,500');
+    // Nothing has gone, so there is nothing to mark — and a marker at 0% would
+    // print ₹0 directly over the ₹0 already there.
+    await expect(page.locator('.txn-bar-at')).toHaveCount(0);
   });
 });

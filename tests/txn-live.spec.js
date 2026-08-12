@@ -49,10 +49,17 @@ test.describe('transactions — live', () => {
 
     // The bar is a scale over the same figures: nothing at one end, the whole
     // pot at the other, and what has gone marked between them.
-    const ticks = await page.locator('.txn-tick').allTextContents();
-    expect(rupees(ticks[0])).toBe(0);
-    expect(rupees(ticks[1])).toBe(spent);
-    expect(rupees(ticks[2])).toBe(opening + credits);
+    const ends = await page.locator('.txn-end').allTextContents();
+    expect(rupees(ends[0])).toBe(0);
+    expect(rupees(ends[1])).toBe(opening + credits);
+
+    // The mark only exists once something has been spent — at zero it would
+    // print ₹0 on top of the ₹0 already at the start of the scale.
+    if (spent > 0) {
+      expect(rupees(await page.locator('.txn-bar-at').textContent())).toBe(spent);
+    } else {
+      await expect(page.locator('.txn-bar-at')).toHaveCount(0);
+    }
   });
 
   test('the dates arrive as the committee writes them', async ({ page }) => {
