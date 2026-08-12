@@ -148,25 +148,25 @@
     <div class="progress-hero">
       <div class="progress-hero-top">
         <span class="progress-hero-label">Built &amp; live-bound</span>
-        <span class="progress-hero-pct">94%</span>
+        <span class="progress-hero-pct">100%</span>
       </div>
-      <div class="progress-hero-track" role="img" aria-label="51 of 54 deliverables done">
-        <span class="progress-hero-fill" style="width: 94%"></span>
+      <div class="progress-hero-track" role="img" aria-label="54 of 54 deliverables done">
+        <span class="progress-hero-fill" style="width: 100%"></span>
       </div>
       <div class="progress-hero-legend">
-        <span><b>51 of 54</b> deliverables</span>
-        <span>Annual Funds is live on its own sheet; only the Transactions ledger is left to build</span>
+        <span><b>54 of 54</b> deliverables</span>
+        <span>Every screen is built. What is left is the committee’s: real photos, real artwork, and the flags turned off</span>
       </div>
     </div>
   </header>
 
   <div class="summary">
-    <div class="stat done"><div class="n">51</div><div class="l">Done &amp; live-bound</div></div>
-    <div class="stat todo"><div class="n">3</div><div class="l">Still to build</div></div>
+    <div class="stat done"><div class="n">54</div><div class="l">Done &amp; live-bound</div></div>
+    <div class="stat todo"><div class="n">0</div><div class="l">Still to build</div></div>
   </div>
-  <div class="bar" role="img" aria-label="51 done, 3 to build">
-    <span class="s-done" style="flex: 51"></span>
-    <span class="s-todo" style="flex: 3"></span>
+  <div class="bar" role="img" aria-label="54 done, 0 to build">
+    <span class="s-done" style="flex: 54"></span>
+    <span class="s-todo" style="flex: 0"></span>
   </div>
 
   <div class="legend">
@@ -194,17 +194,17 @@
   </table></div></div>
 
   <!-- COMMITTEE-ONLY -->
-  <h2>Committee-only Page <span class="count">1 of 2 · behind the gate</span></h2>
+  <h2>Committee-only Page <span class="count">2 of 2 · behind the gate</span></h2>
   <div class="tablecard"><div class="scroll"><table>
     <thead><tr><th>Page</th><th>How it's used</th><th>Source</th><th>Status</th></tr></thead>
     <tbody>
       <tr><td><span class="name">Route guard</span></td><td class="use">Wraps <code>/admin</code>. Sends anyone without a session to sign-in; the session lives in <code>sessionStorage</code>, so it dies with the tab and lapses after 60 minutes</td><td class="src">session</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Transactions</span></td><td class="use">The ledger — date, notes, cash in, cash out, running balance, with totals and PDF export</td><td class="src">transactions sheet</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">Transactions</span></td><td class="use">The working pot behind the gate: what was moved across from the fund, what has been spent, and what is left. Same rows the portal shows, read-only</td><td class="src">transactions sheet</td><td><span class="pill done">Done</span></td></tr>
     </tbody>
   </table></div></div>
 
   <!-- ADMIN -->
-  <h2>Admin Portal <span class="count">13 of 14 screens · read + write live</span></h2>
+  <h2>Admin Portal <span class="count">14 of 14 screens · read + write live</span></h2>
   <div class="tablecard"><div class="scroll"><table>
     <thead><tr><th>Screen</th><th>How it's used</th><th>Source</th><th>Status</th></tr></thead>
     <tbody>
@@ -219,14 +219,14 @@
       <tr><td><span class="name">Fund years</span></td><td class="use">Day 1 of each year in the schedule sheet is that year's celebration date, and <code>annual_year</code> / <code>annual_yr_id</code> beside it are what the committee calls the span it closes. Entering next year's dates on the Schedule screen does three things at once: the hero countdown re-arms, the public schedule fills in, and the next year opens in Annual Funds. One entry, no list to keep in step</td><td class="src">schedule sheet</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Who reaches what</span></td><td class="use"><code>access_in</code> gets a member in; <code>adm_in</code> decides whether they can change anything. <code>is_executive</code> plays no part — it only orders the public site's left column. A funds member sees Annual Funds, Transactions and their own profile; the five editing screens are out of their menu <b>and their URL now redirects</b>, where before the screen opened and sat showing the refusal it had already been given. The Apps Scripts refusing writes without <code>adm_in = 1</code> remains the real gate; the menu is courtesy</td><td class="src">members sheet</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Idle sign-out</span></td><td class="use">Ten minutes untouched ends the session, with a warning at nine that counts the seconds down. A silent drop loses whatever was half-typed and reads as the portal breaking, so the warning is the feature rather than decoration. Deliberate actions re-arm it — a click, a key, a scroll — but not <code>mousemove</code>, which a bumped desk would count as somebody working. Closing the tab already ended the session: <code>sessionStorage</code> dies with it. Held in place by five specs that drive a fake clock, so nineteen minutes of behaviour is checked in nine seconds</td><td class="src">client-side</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Transactions manager</span></td><td class="use">Insert and update ledger rows, balance computed server-side, with search, paging and soft-delete</td><td class="src">transactions sheet</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">Transactions manager</span></td><td class="use">The pot the committee spends from during a celebration. It opens with a transfer out of the annual fund — saving that row writes the matching debit into the funds sheet in the same call, so the money is never counted in both books. No summary cards: mid-festival the question is not "what are the totals" but "how much is left and how fast is it going", which a bar answers in one look. Amber under &#8377;10,000, red and "overspent" past zero, and the drawer says what an entry will leave before it is committed. One opening a year, and it cannot be deleted while entries stand on it</td><td class="src">transactions sheet</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Annual Funds</span></td><td class="use">The committee's money, counted in celebrations rather than calendars. A fund year runs from the day after one Vinayaka Chavithi ends to the day the next one does, so the Oct-to-Jul ledger is <i>one</i> year — a calendar filter had split it into a 2025 of three rows and a 2026 of eight. Carry-forward needs nothing: the balance is one running total, so each year opens on the last one's close. Collected, spent and balance in hand, then the ledger as a table card with search, paging and an add/edit drawer. <b>The running balance is arithmetic, not memory</b> — recomputed from the amounts and restated in the sheet on every save, which also renumbers <code>sno</code>, because adding a January row when February exists moves every line after it. A stored balance that disagrees is said out loud rather than quietly overwritten. Reachable by every member whatever their <code>adm_in</code> says; only an admin sees the row controls</td><td class="src">funds sheet</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Funds statement (PDF)</span></td><td class="use">Whatever the table is showing — the fund year chosen, narrowed by any search — as a real PDF. Drawn, not screenshotted, so the text stays selectable. Emblem, name and address in the band; the year's own name and the span it covers on one line with the generated date opposite; collected, spent and balance as three cards; then the history table with the same green, red and blue columns as the screen, ruled and continued across pages. Numbering starts at 1 whatever line the first entry sits on. The emblem again as a watermark down the middle of every page, drawn last — drawn first, the money columns' fills painted straight over it. jsPDF loads only when the button is pressed, so no other screen carries its 129 kB</td><td class="src">client-side</td><td><span class="pill done">Done</span></td></tr>
     </tbody>
   </table></div></div>
 
   <!-- BACKEND -->
-  <h2>Backend — Sheets, Drive &amp; Apps Script <span class="count">9 of 10 · five Web Apps deployed</span></h2>
+  <h2>Backend — Sheets, Drive &amp; Apps Script <span class="count">10 of 10 · five Web Apps deployed</span></h2>
   <div class="tablecard"><div class="scroll"><table>
     <thead><tr><th>Piece</th><th>How it's used</th><th>Source</th><th>Status</th></tr></thead>
     <tbody>
@@ -239,7 +239,7 @@
       <tr><td><span class="name">Drive folder tree</span></td><td class="use"><code>/Gallery/&lt;year&gt;/</code> with the media directly inside, plus a flat <b>event-photo folder</b> named after the events. Both shared <i>Anyone with the link → Viewer</i>. Drop a photo into the event folder and the schedule editor offers it; take it out and it stops being offered</td><td class="src">Google Drive</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">React service layer</span></td><td class="use">One fetch serves every editor screen for the visit, and is emptied on sign-out. Drive links are rewritten to the thumbnail host, the only one Chrome will render. Date and time cells come back as UTC instants and are read through the script's own timezone — a real zone, not an offset, since the dates fall in daylight saving and the 1899 time epoch does not</td><td class="src">src/utils · src/contexts</td><td><span class="pill done">Done</span></td></tr>
       <tr><td><span class="name">Funds Web App</span></td><td class="use">Serves the money ledger. Split by action rather than by endpoint, because Annual Funds is the one screen a funds-only member opens: <b>any signed-in member may read, only <code>adm_in = 1</code> may write</b>. Rewrites the balance column oldest row down on every save, and paints the money columns green, red and blue so the sheet reads like the screen. Deletes are soft. Transaction ids are generated, not typed — <code>SSGC2025000001</code> upward, counted across the soft-deleted rows too so an id that reached a statement is never handed out twice. Reads the schedule sheet to stamp each row with the fund year it falls in, and writes its audit stamps in <code>Asia/Kolkata</code> rather than the workbook's Los Angeles, which had been dating them to the previous afternoon. <b>Deployed and answering</b></td><td class="src">Apps Script</td><td><span class="pill done">Done</span></td></tr>
-      <tr><td><span class="name">Transactions Web App</span></td><td class="use">Read and write the ledger, balances computed server-side, gated on a valid session token</td><td class="src">Apps Script</td><td><span class="pill todo">To build</span></td></tr>
+      <tr><td><span class="name">Transactions Web App</span></td><td class="use">Not a fifth deployment — the Funds Web App serves both ledgers. <code>?what=txns</code> reads the pot, <code>saveTxn</code> and <code>deleteTxn</code> write it, and one script owning both sheets is what lets the opening transfer be a single write instead of two calls that can leave the books half-moved. Ids are <code>TXN2025000001</code> upward, kept apart from the fund's own <code>SSGC</code> series. Same rules throughout: any member reads, only <code>adm_in = 1</code> writes, balances are arithmetic, deletes are soft</td><td class="src">Apps Script</td><td><span class="pill done">Done</span></td></tr>
     </tbody>
   </table></div></div>
 
@@ -269,26 +269,8 @@
   </table></div></div>
 
   <!-- WHAT'S LEFT -->
-  <h2>What's left <span class="count">the ledger and the launch list</span></h2>
+  <h2>What's left <span class="count">the launch list, and the tests that guard it</span></h2>
   <div class="pending">
-
-    <div class="item">
-      <h3>The ledger — Transactions</h3>
-      <p>Three rows and one job: the <b>Transactions Web App</b>, the <b>Transactions page</b>
-      behind the gate, and the <b>Transactions manager</b> in the portal. They move together
-      because none can start until the ledger's shape is settled.</p>
-      <p>Annual Funds answers the committee-level question — what came in this year, what went
-      out, what is left. Transactions is the member-level one: who gave what, and when. The
-      second is not a view of the first, which is why it needs its own sheet rather than a
-      filter over <code>funds</code>.</p>
-      <p><span class="need">Needs a decision first:</span> what a transaction row holds, and
-      whether paying in rolls up into the funds sheet automatically or is entered there
-      separately. Annual Funds settled two of these questions already and they should be
-      answered the same way: the balance is arithmetic recomputed on every write, never a
-      stored number to be trusted; and the id is generated by the script
-      (<code>SSGC2025000001</code>), never by the browser. Charts were asked for on these
-      screens, and they decide what has to be stored rather than derived.</p>
-    </div>
 
     <div class="item">
       <h3>Tests are kept until development is complete</h3>
@@ -301,10 +283,10 @@
       photos to files, retiring Settings, adding two fields ahead of a third. Rows are found by
       their accessible names now rather than by counting, which is what kept breaking.</p>
       <p><span class="need">Run before each deploy:</span> <code>npx playwright test</code>.
-      <code>--project=stubbed --project=docs</code> needs nothing and runs 44 specs in under a
-      minute. The rest hit the live services and need a member with <code>bypass_in = 1</code> in
+      <code>--project=stubbed --project=docs</code> needs nothing and runs 62 specs in under two
+      minutes. The rest hit the live services and need a member with <code>bypass_in = 1</code> in
       <code>tests/.local.json</code>, gitignored because this repository is public.</p>
-      <p>All 93 pass. Two of them write to the President's real row and put it back — and the
+      <p>105 pass. Two of them write to the President's real row and put it back — and the
       undo is now checked against the server rather than assumed, because a run that assumed it
       left <i>"Venkat Naresh QA"</i> as the name on the live public site. If the screen fails to
       restore, the spec repairs the record directly and still fails, so the data is never the

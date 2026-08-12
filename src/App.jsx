@@ -16,8 +16,8 @@ import LoginPage from './pages/LoginPage'
 import OtpPage from './pages/OtpPage'
 import AdminLayout from './admin/AdminLayout'
 import Profile from './admin/pages/Profile'
-import WorkInProgress from './admin/pages/WorkInProgress'
 import MonthlyFunds from './admin/pages/MonthlyFunds'
+import Transactions from './admin/pages/Transactions'
 import AdminGallery from './admin/pages/Gallery'
 import AdminAbout from './admin/pages/About'
 import AdminMandapam from './admin/pages/Mandapam'
@@ -108,7 +108,7 @@ function App() {
                 <Route path="gallery" element={<RequireAdmin><AdminGallery /></RequireAdmin>} />
                 <Route path="schedule" element={<RequireAdmin><AdminSchedule /></RequireAdmin>} />
                 <Route path="mandapam" element={<RequireAdmin><AdminMandapam /></RequireAdmin>} />
-                <Route path="transactions" element={<WorkInProgress title="Transactions" description="The committee ledger." />} />
+                <Route path="transactions" element={<Transactions />} />
                 {/* Settings retired: the festival date it edited is now read
                     from the schedule sheet's day 1, so the screen had nothing
                     left to change. */}

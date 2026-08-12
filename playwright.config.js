@@ -31,7 +31,7 @@ export default defineConfig({
     // the second server below, the one told an endpoint exists.
     {
       name: 'stubbed',
-      testMatch: /admin-(editors|modals|funds|idle)\.spec\.js/,
+      testMatch: /admin-(editors|modals|funds|idle|txn)\.spec\.js/,
       use: {
         ...devices['Desktop Chrome'],
         baseURL: STUB_URL,
@@ -47,7 +47,7 @@ export default defineConfig({
     {
       name: 'desktop',
       dependencies: ['setup'],
-      testIgnore: /(admin-editors|admin-modals|admin-funds|admin-idle|status-page)\.spec\.js/,
+      testIgnore: /(admin-editors|admin-modals|admin-funds|admin-idle|admin-txn|status-page)\.spec\.js/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 900 } },
     },
   ],

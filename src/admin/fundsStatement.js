@@ -1,5 +1,6 @@
 import logoImg from '../assets/logo.png';
 import { rupees, summarise, rangeLabel, todayDmy } from './fundsApi';
+import { summariseTxns } from './txnApi';
 
 // The chosen span of the ledger as a PDF the committee can hand out or file.
 //
@@ -57,7 +58,57 @@ const COLS = [
   { key: 'balance', label: 'BALANCE (Rs)', w: 24, align: 'right', fill: BALANCE_FILL, ink: BALANCE_INK },
 ];
 
-const TABLE_W = COLS.reduce((t, c) => t + c.w, 0);
+// The working pot's statement. Month gives way to who was paid and how — a
+// transaction is a dated event where a collection belongs to a month, and "paid
+// to Balaji Sounds, by UPI" is the half of a spend a remark cannot carry.
+const COLS_TXN = [
+  { key: 'sno', label: 'S.NO', w: 13, align: 'center' },
+  { key: 'date', label: 'DATE', w: 25, icon: 'calendar' },
+  { key: 'reason', label: 'REMARKS', w: 40 },
+  { key: 'paid_to', label: 'PAID TO / FROM', w: 34, clamp: true },
+  { key: 'mode', label: 'MODE', w: 14 },
+  { key: 'credit', label: 'IN (Rs)', w: 17, align: 'right', fill: CREDIT_FILL, ink: CREDIT_INK },
+  { key: 'debit', label: 'OUT (Rs)', w: 17, align: 'right', fill: DEBIT_FILL, ink: DEBIT_INK },
+  { key: 'balance', label: 'BALANCE (Rs)', w: 22, align: 'right', fill: BALANCE_FILL, ink: BALANCE_INK },
+];
+
+/**
+ * The two statements this builds, and everything that differs between them.
+ *
+ * One builder rather than two files: the band, the title, the cards, the page
+ * breaking and the watermark are the same document either way, and a second
+ * copy of all that would be a second thing to keep in step.
+ */
+const VARIANTS = {
+  funds: {
+    cols: COLS,
+    heading: 'FUNDS STATEMENT',
+    footer: 'funds statement',
+    file: 'SSGC-funds-statement.pdf',
+    cards: (t) => [
+      ['TOTAL FUND AMOUNT', t.credit, CREDIT_INK, CREDIT_FILL, CREDIT_EDGE, iconIn],
+      ['TOTAL SPEND AMOUNT', t.debit, DEBIT_INK, DEBIT_FILL, DEBIT_EDGE, iconOut],
+      ['CURRENT BALANCE', t.balance, BALANCE_INK, BALANCE_FILL, BALANCE_EDGE, iconBalance],
+    ],
+    note: 'The balance carries forward any amount held before the first entry shown.',
+  },
+  txn: {
+    cols: COLS_TXN,
+    heading: 'TRANSACTIONS STATEMENT',
+    footer: 'transactions statement',
+    file: 'SSGC-transactions-statement.pdf',
+    // The bar's three figures, as figures. A printed page cannot be watched,
+    // so what the screen says at a glance is said here in words.
+    cards: (t) => [
+      ['TOTAL IN THE POT', t.pot, CREDIT_INK, CREDIT_FILL, CREDIT_EDGE, iconIn],
+      ['TOTAL SPENT', t.spent, DEBIT_INK, DEBIT_FILL, DEBIT_EDGE, iconOut],
+      ['LEFT IN THE POT', t.left, BALANCE_INK, BALANCE_FILL, BALANCE_EDGE, iconBalance],
+    ],
+    note: 'The pot is the opening amount plus anything received after it. Balance is what remains.',
+  },
+};
+
+const tableWidth = (cols) => cols.reduce((t, c) => t + c.w, 0);
 
 /**
  * The logo, shrunk.
@@ -218,13 +269,13 @@ const drawBand = (doc, logo) => {
  * rather than more heading. When the statement was made is provenance — true of
  * the document rather than of the money — so it sits quietly on the right.
  */
-const drawTitle = (doc, { title, span }) => {
+const drawTitle = (doc, { title, span, heading }) => {
   const y = BAND_H + 9;
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(...NAVY);
-  doc.text(`FUNDS STATEMENT — ${title}`, M.left, y);
+  doc.text(`${heading} — ${title}`, M.left, y);
 
   iconCalendar(doc, M.left, y + 3.2, 3.1, AMBER);
   doc.setFont('helvetica', 'bold');
@@ -246,15 +297,12 @@ const drawTitle = (doc, { title, span }) => {
  * three independent figures, and a shared outline invites them to be read as
  * parts of one sum.
  */
-const drawSummary = (doc, y, totals) => {
+const drawSummary = (doc, y, totals, variant) => {
   const gap = 6;
+  const TABLE_W = tableWidth(variant.cols);
   const w = (TABLE_W - gap * 2) / 3;
 
-  const cards = [
-    ['TOTAL FUND AMOUNT', totals.credit, CREDIT_INK, CREDIT_FILL, CREDIT_EDGE, iconIn],
-    ['TOTAL SPEND AMOUNT', totals.debit, DEBIT_INK, DEBIT_FILL, DEBIT_EDGE, iconOut],
-    ['CURRENT BALANCE', totals.balance, BALANCE_INK, BALANCE_FILL, BALANCE_EDGE, iconBalance],
-  ];
+  const cards = variant.cards(totals);
 
   cards.forEach(([label, value, ink, fill, edge, glyph], i) => {
     const x = M.left + i * (w + gap);
@@ -287,7 +335,8 @@ const drawSummary = (doc, y, totals) => {
 };
 
 /** The navy heading row, with the table's top corners rounded into it. */
-const drawTableHead = (doc, y) => {
+const drawTableHead = (doc, y, cols) => {
+  const TABLE_W = tableWidth(cols);
   doc.setFillColor(...NAVY);
   doc.roundedRect(M.left, y, TABLE_W, HEAD_H, 2.5, 2.5, 'F');
   // The rounding belongs to the top of the table only — square the bottom edge
@@ -302,14 +351,14 @@ const drawTableHead = (doc, y) => {
   // below stay right-aligned — a column of amounts is read down its last digit
   // — but a heading centred over the whole column reads as naming all of it.
   let x = M.left;
-  for (const c of COLS) {
+  for (const c of cols) {
     doc.text(c.label, x + c.w / 2, y + 5.8, { align: 'center' });
     x += c.w;
   }
   return y + HEAD_H;
 };
 
-const drawFooter = (doc, page, pages) => {
+const drawFooter = (doc, page, pages, kind) => {
   doc.setDrawColor(...LINE);
   doc.setLineWidth(0.2);
   doc.line(M.left, PAGE.h - M.bottom + 2, PAGE.w - M.right, PAGE.h - M.bottom + 2);
@@ -317,16 +366,25 @@ const drawFooter = (doc, page, pages) => {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(...MUTED);
-  doc.text('Sri Shakthi Ganapathi Committee — funds statement', M.left, PAGE.h - M.bottom + 7);
+  doc.text(`Sri Shakthi Ganapathi Committee — ${kind}`, M.left, PAGE.h - M.bottom + 7);
   doc.text(`Page ${page} of ${pages}`, PAGE.w - M.right, PAGE.h - M.bottom + 7, { align: 'right' });
 };
 
-export const buildStatement = async ({ rows, range, title, filename }) => {
+export const buildStatement = async ({ rows, range, title, filename, variant: which }) => {
   const { default: JsPDF } = await import('jspdf');
   const doc = new JsPDF({ unit: 'mm', format: 'a4' });
   const logo = await logoData();
 
-  const totals = summarise(rows);
+  const variant = VARIANTS[which] || VARIANTS.funds;
+  const cols = variant.cols;
+  const TABLE_W = tableWidth(cols);
+  const reasonCol = cols.find((c) => c.key === 'reason');
+
+  // Both shapes come off the same rows. The fund's three figures are its
+  // credits, its debits and its closing balance; the pot's are what went into
+  // it, what came out, and what is left — the same arithmetic named for what
+  // the reader of each document is actually asking.
+  const totals = which === 'txn' ? summariseTxns(rows) : summarise(rows);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
@@ -338,16 +396,23 @@ export const buildStatement = async ({ rows, range, title, filename }) => {
     // Who paid in is on the screen, not here: seven names under every
     // collection row doubled the statement's length and buried the figures it
     // exists to present.
-    const reason = clampLines(doc, r.reason || '—', COLS[3].w - 4, 2);
+    const reason = clampLines(doc, r.reason || '—', reasonCol.w - 4, 2);
+    // A vendor's name gets the same two lines a remark does. Cut to one it read
+    // "Sri…", which names nobody — and the row is already as tall as its
+    // remark, so the second line is usually free.
+    const partyCol = cols.find((c) => c.clamp);
+    const party = partyCol ? clampLines(doc, r.paid_to || '—', partyCol.w - 4, 2) : (r.paid_to || '—');
     return {
       sno: i + 1,
       date: r.date || '—',
       month: r.month || '—',
       reason,
+      paid_to: party,
+      mode: r.mode || '—',
       credit: r.credit,
       debit: r.debit,
       balance: r.balance,
-      h: Math.max(10, reason.length * 4 + 6),
+      h: Math.max(10, Math.max(reason.length, Array.isArray(party) ? party.length : 1) * 4 + 6),
     };
   });
 
@@ -378,21 +443,22 @@ export const buildStatement = async ({ rows, range, title, filename }) => {
       y = drawTitle(doc, {
         title: title || rangeLabel(range, rows),
         span: rangeLabel(range, rows),
+        heading: variant.heading,
       });
-      y = drawSummary(doc, y, totals);
+      y = drawSummary(doc, y, totals, variant);
     } else {
       y = BAND_H + 10;
     }
 
     const tableTop = y;
-    y = drawTableHead(doc, y);
+    y = drawTableHead(doc, y, cols);
     const bodyTop = y;
 
     for (const m of pageRows) {
       // The money columns keep their fill for the whole row height, so a
       // two-line reason does not leave a band of white beside its amount.
       let x = M.left;
-      for (const c of COLS) {
+      for (const c of cols) {
         if (c.fill) {
           doc.setFillColor(...c.fill);
           doc.rect(x, y, c.w, m.h, 'F');
@@ -402,7 +468,7 @@ export const buildStatement = async ({ rows, range, title, filename }) => {
 
       x = M.left;
       doc.setFontSize(8);
-      for (const c of COLS) {
+      for (const c of cols) {
         const align = c.align === 'center' ? 'center' : c.align || 'left';
         // A column with a glyph starts its text after it; the rest start at the
         // padding. Kept as one expression so the two cannot drift apart.
@@ -416,10 +482,10 @@ export const buildStatement = async ({ rows, range, title, filename }) => {
           iconCalendar(doc, x + 2.6, y + m.h / 2 - s / 2 - 0.2, s, MUTED);
         }
 
-        if (c.key === 'reason') {
+        if (c.key === 'reason' || (c.clamp && Array.isArray(m[c.key]))) {
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(...INK);
-          doc.text(m.reason, tx, y + 6.1);
+          doc.text(c.key === 'reason' ? m.reason : m[c.key], tx, y + 6.1);
         } else if (c.ink) {
           doc.setFont('helvetica', c.key === 'balance' ? 'bold' : 'normal');
           doc.setTextColor(...c.ink);
@@ -445,7 +511,7 @@ export const buildStatement = async ({ rows, range, title, filename }) => {
     doc.setDrawColor(...LINE);
     doc.setLineWidth(0.2);
     let gx = M.left;
-    for (const c of COLS) {
+    for (const c of cols) {
       doc.line(gx, bodyTop, gx, y);
       gx += c.w;
     }
@@ -457,15 +523,12 @@ export const buildStatement = async ({ rows, range, title, filename }) => {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);
       doc.setTextColor(...GOLD);
-      doc.text(
-        'The balance carries forward any amount held before the first entry shown.',
-        M.left, y + 6,
-      );
+      doc.text(variant.note, M.left, y + 6);
     }
 
-    drawFooter(doc, p + 1, pageCount);
+    drawFooter(doc, p + 1, pageCount, variant.footer);
     drawWatermark(doc, logo);
   });
 
-  doc.save(filename || 'SSGC-funds-statement.pdf');
+  doc.save(filename || variant.file);
 };

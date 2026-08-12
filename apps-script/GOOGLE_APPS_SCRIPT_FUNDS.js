@@ -576,6 +576,12 @@ function doGet(e) {
     return fail('UNAUTHORIZED', err.message);
   }
   try {
+    // ?what=txns for the working pot, nothing for the fund. Two screens read
+    // this endpoint and neither wants the other's rows, so asking for both on
+    // every load would double the slowest call on the slowest service here.
+    if (String(params.what || '').trim() === 'txns') {
+      return jsonOut({ ok: true, txns: txnLedger() });
+    }
     return jsonOut({ ok: true, funds: ledger() });
   } catch (err) {
     return fail('SERVER_ERROR', String(err && err.message ? err.message : err));
@@ -598,6 +604,8 @@ function doPost(e) {
     var action = String(body.action || '').trim();
     if (action === 'saveFund')   return saveFund(body);
     if (action === 'deleteFund') return deleteFund(body);
+    if (action === 'saveTxn')    return saveTxn(body);
+    if (action === 'deleteTxn')  return deleteTxn(body);
     return fail('UNKNOWN_ACTION', 'Unknown action: ' + action);
   } catch (err) {
     return fail('SERVER_ERROR', String(err && err.message ? err.message : err));
@@ -715,4 +723,257 @@ function restate(sheet) {
     }
     paintRow(sheet, r.__row);
   });
+}
+
+/* ==========================================================================
+   TRANSACTIONS — the working pot
+   ==========================================================================
+   The second tab of this workbook. The fund is what the committee collected
+   over the year; this is the pot they spend from during the celebration, and
+   the two are one movement apart: a debit in the fund is the opening credit
+   here. Kept in the same script for that reason — the transfer is a single
+   write, where two endpoints could leave the books half-moved.
+
+   Everything below reuses the funds machinery. readRows, writeRow, appendRow
+   and restate all take a sheet, and restate in particular is the whole of the
+   arithmetic: renumber, rewrite the running balance, stamp the fund year,
+   repaint. A transactions row obeys the same rules because it runs through the
+   same code, not because two copies were kept in step.
+   ========================================================================== */
+
+/** The next TXN id. Same reasoning as nextTrnsctnId — stripped by length. */
+function nextTxnId(rows) {
+  var prefix = TXN_PREFIX + LEDGER_START_YEAR;
+  var max = 0;
+  rows.forEach(function (r) {
+    var id = String(r.trnsctn_id || '').trim();
+    if (id.indexOf(prefix) !== 0) return;
+    var n = Number(id.slice(prefix.length));
+    if (!isNaN(n)) max = Math.max(max, n);
+  });
+  var next = String(max + 1);
+  while (next.length < LEDGER_SEQ_WIDTH) next = '0' + next;
+  return prefix + next;
+}
+
+/** The live transactions, oldest first, shaped for the screen. */
+function txnLedger() {
+  return readRows(transactionsSheet())
+    .filter(function (r) { return String(r.a_in === undefined ? '1' : r.a_in).trim() === '1'; })
+    .map(function (r) {
+      var date = asDateText(r.date);
+      return {
+        sno: Number(r.sno) || 0,
+        trnsctn_id: String(r.trnsctn_id || ''),
+        date: date,
+        year: String(r.year || yearOfDate(date)),
+        month: String(r.month || monthOfDate(date)),
+        credit: asNumber(r.credit),
+        debit: asNumber(r.debit),
+        balance: asNumber(r.balance),
+        annual_year: String(r.annual_year || ''),
+        annual_yr_id: String(r.annual_yr_id || ''),
+        kind: String(r.kind || (asNumber(r.credit) ? 'credit' : 'spend')),
+        reason: String(r.reason || ''),
+        paid_to: String(r.paid_to || ''),
+        mode: String(r.mode || ''),
+        __k: dateKey(date)
+      };
+    })
+    .sort(function (a, b) {
+      if (a.__k !== b.__k) return a.__k - b.__k;
+      return a.sno - b.sno;
+    })
+    .map(function (r) { delete r.__k; return r; });
+}
+
+/** Which fund year a row belongs to, however it was filled in. */
+function txnYearKey(row) {
+  var id = String(row.annual_yr_id || '').trim();
+  if (id) return 'id:' + id;
+  return 'yr:' + String(row.annual_year || annualYearFor(asDateText(row.date)) || '').trim();
+}
+
+/**
+ * Adds or updates one transaction.
+ *
+ *   { action:'saveTxn', token, entry:{ trnsctn_id?, date, kind, credit, debit,
+ *                                      reason, paid_to, mode, annual_year?,
+ *                                      annual_yr_id?, mirror? } }
+ *
+ * An `opening` row also writes the matching debit into the funds sheet, in this
+ * same call, so the money cannot be in both books at once. `mirror: false`
+ * skips that — for a committee that already entered the transfer by hand.
+ */
+function saveTxn(body) {
+  var entry = body.entry || {};
+  var date = String(entry.date || '').trim();
+  if (!dateKey(date)) return fail('BAD_DATE', 'Give the transaction a date as dd-mm-yyyy.');
+
+  var kind = String(entry.kind || '').trim().toLowerCase();
+  if (kind !== 'opening' && kind !== 'credit' && kind !== 'spend') {
+    return fail('BAD_KIND', 'A transaction is an opening, money in or money out.');
+  }
+
+  var credit = asNumber(entry.credit);
+  var debit = asNumber(entry.debit);
+  // The kind decides the direction, so only one amount can survive — the screen
+  // sends a single box. Anything else is a caller that has lost track of which
+  // way the money went, and guessing on its behalf is how a ledger goes wrong.
+  if (kind === 'spend') { credit = 0; } else { debit = 0; }
+  var amount = kind === 'spend' ? debit : credit;
+  if (amount <= 0) return fail('BAD_AMOUNT', 'Enter an amount.');
+
+  var reason = String(entry.reason || '').trim();
+  if (!reason) return fail('BAD_REASON', 'Say what this transaction was for.');
+
+  var sheet = transactionsSheet();
+  var rows = readRows(sheet);
+  var live = rows.filter(function (r) {
+    return String(r.a_in === undefined ? '1' : r.a_in).trim() === '1';
+  });
+
+  var existing = null;
+  if (entry.trnsctn_id) {
+    rows.forEach(function (r) {
+      if (String(r.trnsctn_id) === String(entry.trnsctn_id)) existing = r;
+    });
+  }
+
+  var fields = {
+    date: date,
+    year: yearOfDate(date),
+    month: monthOfDate(date),
+    credit: credit || '',
+    debit: debit || '',
+    kind: kind,
+    reason: reason,
+    paid_to: String(entry.paid_to || ''),
+    mode: String(entry.mode || ''),
+    u_ts: stamp()
+  };
+  if (String(entry.annual_year || '').trim()) fields.annual_year = String(entry.annual_year).trim();
+  if (String(entry.annual_yr_id || '').trim()) fields.annual_yr_id = String(entry.annual_yr_id).trim();
+
+  // One opening a year. A second would make "what the pot started with" a
+  // question with two answers, and every balance below it arguable.
+  if (kind === 'opening') {
+    var wantKey = txnYearKey({
+      date: date,
+      annual_year: fields.annual_year,
+      annual_yr_id: fields.annual_yr_id
+    });
+    var clash = null;
+    live.forEach(function (r) {
+      if (String(r.kind || '').trim().toLowerCase() !== 'opening') return;
+      if (existing && String(r.trnsctn_id) === String(existing.trnsctn_id)) return;
+      if (txnYearKey(r) === wantKey) clash = r;
+    });
+    if (clash) {
+      return fail('OPENING_EXISTS',
+        'This fund year already has an opening amount (' + String(clash.trnsctn_id)
+        + '). Edit that one instead of adding a second.');
+    }
+  }
+
+  var id;
+  if (existing) {
+    id = String(existing.trnsctn_id);
+    writeRow(sheet, existing.__row, fields);
+  } else {
+    id = nextTxnId(rows);
+    fields.trnsctn_id = id;
+    fields.a_in = 1;
+    fields.i_ts = stamp();
+    appendRow(sheet, fields);
+  }
+
+  restate(sheet);
+
+  // The other half of the movement. Written after the transactions row so its
+  // id can be named in the funds row, which is what lets the pair be found
+  // again — and read plainly by anyone looking at the sheet itself.
+  if (kind === 'opening' && entry.mirror !== false) mirrorOpeningToFunds(id, date, amount);
+
+  SpreadsheetApp.flush();
+  return jsonOut({ ok: true, txns: txnLedger(), funds: ledger() });
+}
+
+/**
+ * Records the transfer out of the fund that an opening row represents.
+ *
+ * The link lives in the funds row's own remark — "Transferred to transactions
+ * (TXN2025000001)" — rather than in a new column. It costs the committee no
+ * sheet change, it survives a copy-paste, and it says what it is to somebody
+ * reading the sheet directly, which a hidden id column would not.
+ */
+function mirrorOpeningToFunds(txnId, date, amount) {
+  var sheet = fundsSheet();
+  var rows = readRows(sheet);
+  var mark = '(' + txnId + ')';
+
+  var existing = null;
+  rows.forEach(function (r) {
+    if (String(r.reason || '').indexOf(mark) >= 0) existing = r;
+  });
+
+  var fields = {
+    date: date,
+    year: yearOfDate(date),
+    month: monthOfDate(date),
+    credit: '',
+    debit: amount,
+    reason: 'Transferred to transactions ' + mark,
+    u_ts: stamp()
+  };
+
+  if (existing) {
+    writeRow(sheet, existing.__row, fields);
+  } else {
+    fields.trnsctn_id = nextTrnsctnId(rows);
+    fields.a_in = 1;
+    fields.i_ts = stamp();
+    appendRow(sheet, fields);
+  }
+  restate(sheet);
+}
+
+/**
+ * Soft-deletes one transaction.
+ *
+ * An opening row cannot go while entries stand on it: every balance below it
+ * is measured from that figure, and removing it would silently restate the
+ * whole year rather than fail.
+ */
+function deleteTxn(body) {
+  var id = String(body.trnsctn_id || '').trim();
+  if (!id) return fail('BAD_ID', 'Which transaction?');
+
+  var sheet = transactionsSheet();
+  var live = readRows(sheet).filter(function (r) {
+    return String(r.a_in === undefined ? '1' : r.a_in).trim() === '1';
+  });
+
+  var target = null;
+  live.forEach(function (r) { if (String(r.trnsctn_id) === id) target = r; });
+  if (!target) return fail('NOT_FOUND', 'That transaction is no longer there.');
+
+  if (String(target.kind || '').trim().toLowerCase() === 'opening') {
+    var key = txnYearKey(target);
+    var others = 0;
+    live.forEach(function (r) {
+      if (String(r.trnsctn_id) === id) return;
+      if (txnYearKey(r) === key) others += 1;
+    });
+    if (others) {
+      return fail('OPENING_IN_USE',
+        'This year has ' + others + ' transaction' + (others === 1 ? '' : 's')
+        + ' standing on that opening amount. Remove them first, or edit the amount instead.');
+    }
+  }
+
+  writeRow(sheet, target.__row, { a_in: 0, d_ts: stamp() });
+  restate(sheet);
+  SpreadsheetApp.flush();
+  return jsonOut({ ok: true, txns: txnLedger(), funds: ledger() });
 }

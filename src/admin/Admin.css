@@ -1475,3 +1475,133 @@
   font-variant-numeric: tabular-nums;
   color: var(--a-red);
 }
+
+/* ============================= transactions ============================= */
+/* The working pot. Lifted from the mockup the committee approved rather than
+   rewritten from it, so the screen is the picture and not a second attempt at
+   it. Everything else on this screen is the funds screen's own furniture. */
+
+  /* ---- the one new piece: the progress panel that replaces the cards ---- */
+  .txn-progress {
+    padding: 16px 18px 18px;
+    margin-bottom: 14px;
+  }
+
+  .txn-progress-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 9px;
+  }
+
+  .txn-spent { font-size: 13.5px; color: var(--a-muted); }
+  .txn-spent b { font-family: var(--font-display, inherit); font-size: 17px; color: var(--a-text); font-variant-numeric: tabular-nums; }
+
+  .txn-left { font-family: var(--font-display, inherit); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .txn-left small { display: block; font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--a-muted); text-align: right; }
+
+  .is-healthy .txn-left { color: var(--f-credit, #17914c); }
+  .is-low .txn-left     { color: #b8791a; }
+  .is-over .txn-left    { color: var(--f-debit, #d1435f); }
+
+  /* The bar. A track with a filled portion — the fill is what has been spent,
+     so the empty part is money still in the pot, which is the thing being
+     watched. */
+  .txn-bar {
+    height: 13px;
+    border-radius: 999px;
+    background: #e3e8ef;
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(15,30,60,.10);
+  }
+
+  .txn-bar span { display: block; height: 100%; border-radius: 999px; }
+  .is-healthy .txn-bar span { background: linear-gradient(90deg, #1aa05a, #35c07d); }
+  .is-low .txn-bar span     { background: linear-gradient(90deg, #d99a2b, #edb95a); }
+  .is-over .txn-bar span    { background: linear-gradient(90deg, #c33b56, #e2708a); }
+
+  /* Four figures under the bar. A legend, not cards — it explains the bar
+     rather than competing with it. */
+  .txn-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    margin-top: 11px;
+    font-size: 12.5px;
+    color: var(--a-muted);
+  }
+  .txn-legend b { color: var(--a-text); font-variant-numeric: tabular-nums; }
+  .txn-legend i { font-style: normal; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+  .txn-dot-open  { background: #6f8bf5; }
+  .txn-dot-cr    { background: #1aa05a; }
+  .txn-dot-sp    { background: #d1435f; }
+  .txn-dot-left  { background: #2f6fd0; }
+
+  .txn-warn { margin: 12px 0 0; }
+
+  /* Remarks and Paid to carry the only prose in the row. Every other column is
+     a date, a word or a figure that cannot wrap, so without a floor the browser
+     takes their space first and a remark comes apart a word at a time. */
+  .txn-reason { min-width: 150px; }
+  .txn-party  { min-width: 120px; }
+  @media (max-width: 640px) {
+    .txn-reason { min-width: 175px; }
+    .txn-party  { min-width: 160px; }
+  }
+
+  @media (max-width: 640px) {
+    .txn-progress { padding: 14px; }
+    .txn-left { font-size: 18px; }
+    .txn-legend { gap: 5px 16px; font-size: 12px; }
+  }
+
+
+  /* ---- the drawer's own two new pieces ---- */
+  .txn-kind { display: flex; gap: 8px; flex-wrap: wrap; }
+  .txn-kind-opt {
+    flex: 1 1 90px;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 9px 10px;
+    border: 1px solid var(--a-border);
+    border-radius: var(--a-radius-sm);
+    background: var(--a-surface-2);
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .txn-kind-opt input { accent-color: var(--a-heading); margin: 0; }
+  .txn-kind-opt:has(input:checked) { border-color: var(--a-heading); box-shadow: 0 0 0 2px rgba(22,38,90,.10); }
+  .txn-kind-opt.is-in:has(input:checked)  { border-color: #17914c; box-shadow: 0 0 0 2px rgba(23,145,76,.12); }
+  .txn-kind-opt.is-out:has(input:checked) { border-color: #d1435f; box-shadow: 0 0 0 2px rgba(209,67,95,.12); }
+
+  .txn-req { font-style: normal; color: var(--a-red); }
+
+  .txn-effect {
+    margin: 4px 0 2px;
+    padding: 10px 12px;
+    border-radius: var(--a-radius-sm);
+    font-size: 12.5px;
+    background: #eef4fd;
+    border: 1px solid #c9daf3;
+    color: #1c4a86;
+  }
+  .txn-effect.is-low { background: #fdf4e3; border-color: #ecd39a; color: #8a5c12; }
+  .txn-effect.is-over { background: #fdecef; border-color: #f0b2c0; color: #9c2740; }
+
+/* No opening amount yet — the year cannot be measured until something is put
+   in the pot, so the panel asks for that instead of drawing a bar over zero. */
+.txn-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.txn-empty b { font-size: 14.5px; color: var(--a-heading); }
+.txn-empty span { font-size: 13px; color: var(--a-muted); max-width: 60ch; }
+.txn-empty .admin-btn { margin-top: 4px; }
+
+/* The opening row's chip, beside its remark in the table. */
+.txn-reason .ed-chip { margin-left: 7px; vertical-align: 1px; }
+
+/* The one checkbox in the drawer, which decides whether the other book hears
+   about this entry — so it reads as a sentence rather than a toggle. */
+.txn-mirror { flex-direction: row; align-items: flex-start; gap: 9px; }
+.txn-mirror input { margin-top: 2px; accent-color: var(--a-heading); flex: none; }
+.txn-mirror span { font-size: 12.5px; color: var(--a-muted); line-height: 1.45; }
+.txn-mirror b { color: var(--a-text); }
