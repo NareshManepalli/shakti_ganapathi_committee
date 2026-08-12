@@ -31,24 +31,28 @@ test.describe('transactions — live', () => {
     if (await page.locator('.txn-empty').count()) {
       test.skip(true, 'the transactions book has no opening amount yet');
     }
+    await expect(page.locator('.fnd-card')).toHaveCount(4, { timeout: 30000 });
 
     await expect(page.locator('.tbl:not(.tbl-ph) tbody tr').first()).toBeVisible({ timeout: 60000 });
 
-    const legend = async (name) =>
-      rupees(await page.locator('.txn-legend span', { hasText: name }).textContent());
+    const card = async (kind) => rupees(await page.locator(`.fnd-card.is-${kind}`).textContent());
 
-    const opening = await legend('Opening');
-    const credits = await legend('Credits');
-    const spent = await legend('Spent');
-    const left = await legend('Left');
+    const opening = await card('year');
+    const credits = await card('credit');
+    const spent = await card('debit');
+    const left = await card('balance');
 
     // The bar is not told what to show; it is the rows added up. If the sheet
     // were hand-edited into disagreeing with itself, this is where it shows.
     expect(opening + credits - spent).toBe(left);
     expect(opening, 'the pot should have been opened with something').toBeGreaterThan(0);
 
-    const headline = await page.locator('.txn-spent').textContent();
-    expect(rupees(headline.split(' of ')[1])).toBe(opening + credits);
+    // The bar is a scale over the same figures: nothing at one end, the whole
+    // pot at the other, and what has gone marked between them.
+    const ticks = await page.locator('.txn-tick').allTextContents();
+    expect(rupees(ticks[0])).toBe(0);
+    expect(rupees(ticks[1])).toBe(spent);
+    expect(rupees(ticks[2])).toBe(opening + credits);
   });
 
   test('the dates arrive as the committee writes them', async ({ page }) => {
@@ -65,8 +69,9 @@ test.describe('transactions — live', () => {
   test('the warning follows the balance rather than a fixed message', async ({ page }) => {
     await open(page);
     if (await page.locator('.txn-empty').count()) test.skip(true, 'nothing to read yet');
+    await expect(page.locator('.fnd-card.is-balance')).toBeVisible({ timeout: 30000 });
 
-    const left = rupees(await page.locator('.txn-left').textContent());
+    const left = rupees(await page.locator('.fnd-card.is-balance').textContent());
     const panel = page.locator('.txn-progress');
 
     if (left < 0) {
@@ -75,6 +80,8 @@ test.describe('transactions — live', () => {
     } else if (left < 10000) {
       await expect(panel).toHaveClass(/is-low/);
       await expect(page.locator('.txn-warn')).toContainText('getting low');
+      // The rule that produced it is no longer in the sentence.
+      await expect(page.locator('.txn-warn')).not.toContainText('10,000 mark');
     } else {
       await expect(panel).toHaveClass(/is-healthy/);
       await expect(page.locator('.txn-warn')).toHaveCount(0);

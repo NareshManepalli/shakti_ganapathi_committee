@@ -9,10 +9,13 @@ import { FUNDS_STUB } from '../playwright.config.js';
 // the two halves have drifted apart rather than that the stub is wrong.
 const API = FUNDS_STUB;
 
+// An hour from whenever the suite runs, not an hour from a date typed here.
+// Pinned, it lapsed the moment real time passed it, and every spec in the file
+// then failed at the gate — a session expiring is not something these are about.
 const session = {
   token: 'stub-token',
   member: { id: 1, name: 'Venkat Naresh', isAdmin: true },
-  expiresAt: Date.parse('2026-08-12T10:00:00Z') + 60 * 60 * 1000,
+  get expiresAt() { return Date.now() + 60 * 60 * 1000; },
 };
 
 const M = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -118,7 +121,8 @@ const open = async (page, opts) => {
 };
 
 const panel = (page) => page.locator('.txn-progress');
-const legend = (page, name) => page.locator('.txn-legend span', { hasText: name });
+/** One of the four cards, by the label it carries. */
+const card = (page, kind) => page.locator(`.fnd-card.is-${kind}`);
 
 test.describe('transactions', () => {
   test('the pot is the opening plus what came in, and the bar is what has gone', async ({ page }) => {
@@ -126,11 +130,18 @@ test.describe('transactions', () => {
     await expect(panel(page)).toBeVisible({ timeout: 20000 });
 
     // 30,000 opening + 2,500 donation = 32,500 in; 23,000 out; 9,500 left.
-    await expect(panel(page)).toContainText('Spent ₹23,000 of ₹32,500');
-    await expect(legend(page, 'Opening')).toContainText('₹30,000');
-    await expect(legend(page, 'Credits')).toContainText('₹2,500');
-    await expect(legend(page, 'Spent')).toContainText('₹23,000');
-    await expect(legend(page, 'Left')).toContainText('₹9,500');
+    // The four cards carry the figures now; the bar carries none.
+    await expect(page.locator('.fnd-card')).toHaveCount(4);
+    await expect(card(page, 'year')).toContainText('Opening amount');
+    await expect(card(page, 'year')).toContainText('₹30,000');
+    await expect(card(page, 'credit')).toContainText('₹2,500');
+    await expect(card(page, 'debit')).toContainText('₹23,000');
+    await expect(card(page, 'balance')).toContainText('₹9,500');
+
+    // The bar is a scale now: nothing at the left, what has gone marked at the
+    // edge of the fill, everything the pot held at the right.
+    const ticks = await page.locator('.txn-tick').allTextContents();
+    expect(ticks).toEqual(['₹0', '₹23,000', '₹32,500']);
 
     // A donation is as spendable as the transfer that started the pot, so it
     // counts toward what there was — not toward what is left over after it.
@@ -142,7 +153,10 @@ test.describe('transactions', () => {
     await open(page);
     await expect(panel(page)).toHaveClass(/is-low/);
     await expect(page.locator('.txn-warn')).toContainText('Balance is getting low');
-    await expect(page.locator('.txn-warn')).toContainText('below the ₹10,000 mark');
+    await expect(page.locator('.txn-warn')).toContainText('₹9,500 left out of ₹32,500');
+    // The rule that produced the warning is not in the sentence: the warning
+    // appearing IS the explanation, and the two figures are what can be acted on.
+    await expect(page.locator('.txn-warn')).not.toContainText('10,000 mark');
   });
 
   test('above the mark it says nothing at all', async ({ page }) => {
@@ -222,8 +236,8 @@ test.describe('transactions', () => {
     expect(sent.entry.date).toBe('11-08-2026');
 
     // 23,000 spent + 1,500 = 24,500, leaving 8,000.
-    await expect(legend(page, 'Spent')).toContainText('₹24,500');
-    await expect(legend(page, 'Left')).toContainText('₹8,000');
+    await expect(card(page, 'debit')).toContainText('₹24,500');
+    await expect(card(page, 'balance')).toContainText('₹8,000');
   });
 
   test('an opening entry offers to record the transfer out of the fund', async ({ page }) => {
@@ -248,7 +262,7 @@ test.describe('transactions', () => {
 
   test('a funds-only member reads the pot but cannot touch it', async ({ page }) => {
     await open(page, { isAdmin: false });
-    await expect(panel(page)).toContainText('₹9,500');
+    await expect(card(page, 'balance')).toContainText('₹9,500');
     await expect(page.locator('.tbl:not(.tbl-ph) tbody tr').first()).toBeVisible({ timeout: 20000 });
 
     await expect(page.getByRole('button', { name: /Add transaction/ })).toHaveCount(0);
@@ -354,7 +368,7 @@ test.describe('transactions', () => {
     await page.goto('/admin/transactions');
 
     // Second time lucky, and the committee never learns there was a first.
-    await expect(page.locator('.txn-progress')).toContainText('₹9,500', { timeout: 30000 });
+    await expect(card(page, 'balance')).toContainText('₹9,500', { timeout: 30000 });
     await expect(page.locator('.admin-msg.is-error')).toHaveCount(0);
     expect(reads).toBeGreaterThan(1);
   });

@@ -44,18 +44,14 @@ const CARD_GAP = 7;                       // cards to table
 // Widened to the full text column — 182 mm rather than 175 — so the table's
 // right edge lines up with the emblem band above it and the cards beside it.
 //
-// "Rs" rather than the rupee sign. jsPDF's built-in Helvetica is WinAnsi, which
-// has no glyph at U+20B9 — a ₹ in it prints as a blank box or nothing at all.
-// Carrying a font that does have it would add a few hundred kilobytes to a
-// document whose whole point is being small enough to email.
 const COLS = [
   { key: 'sno', label: 'S.NO', w: 13, align: 'center' },
   { key: 'date', label: 'DATE', w: 26, icon: 'calendar' },
   { key: 'month', label: 'MONTH', w: 26 },
   { key: 'reason', label: 'REMARKS', w: 47 },
-  { key: 'credit', label: 'CREDIT (Rs)', w: 24, align: 'right', fill: CREDIT_FILL, ink: CREDIT_INK },
-  { key: 'debit', label: 'DEBIT (Rs)', w: 22, align: 'right', fill: DEBIT_FILL, ink: DEBIT_INK },
-  { key: 'balance', label: 'BALANCE (Rs)', w: 24, align: 'right', fill: BALANCE_FILL, ink: BALANCE_INK },
+  { key: 'credit', label: 'CREDIT', w: 24, align: 'right', rupee: true, fill: CREDIT_FILL, ink: CREDIT_INK },
+  { key: 'debit', label: 'DEBIT', w: 22, align: 'right', rupee: true, fill: DEBIT_FILL, ink: DEBIT_INK },
+  { key: 'balance', label: 'BALANCE', w: 24, align: 'right', rupee: true, fill: BALANCE_FILL, ink: BALANCE_INK },
 ];
 
 // The working pot's statement. Month gives way to who was paid and how — a
@@ -67,9 +63,9 @@ const COLS_TXN = [
   { key: 'reason', label: 'REMARKS', w: 40 },
   { key: 'paid_to', label: 'PAID TO / FROM', w: 34, clamp: true },
   { key: 'mode', label: 'MODE', w: 14 },
-  { key: 'credit', label: 'IN (Rs)', w: 17, align: 'right', fill: CREDIT_FILL, ink: CREDIT_INK },
-  { key: 'debit', label: 'OUT (Rs)', w: 17, align: 'right', fill: DEBIT_FILL, ink: DEBIT_INK },
-  { key: 'balance', label: 'BALANCE (Rs)', w: 22, align: 'right', fill: BALANCE_FILL, ink: BALANCE_INK },
+  { key: 'credit', label: 'IN', w: 17, align: 'right', rupee: true, fill: CREDIT_FILL, ink: CREDIT_INK },
+  { key: 'debit', label: 'OUT', w: 17, align: 'right', rupee: true, fill: DEBIT_FILL, ink: DEBIT_INK },
+  { key: 'balance', label: 'BALANCE', w: 22, align: 'right', rupee: true, fill: BALANCE_FILL, ink: BALANCE_INK },
 ];
 
 /**
@@ -154,6 +150,43 @@ const iconCalendar = (doc, x, y, s, colour) => {
   doc.line(x, y + s * 0.42, x + s, y + s * 0.42);          // the header rule
   doc.line(x + s * 0.3, y, x + s * 0.3, y + s * 0.24);      // the two hangers
   doc.line(x + s * 0.7, y, x + s * 0.7, y + s * 0.24);
+};
+
+/**
+ * The rupee sign, drawn rather than typed.
+ *
+ * jsPDF's built-in Helvetica is WinAnsi and has no glyph at U+20B9 — a ₹ in it
+ * prints as a blank. Carrying a font that has one would add a few hundred
+ * kilobytes to a document whose whole point is being small enough to email, and
+ * the sign appears in six places on the page. Six shapes cost nothing.
+ *
+ * `size` is the font size it stands beside, in points; the glyph is drawn to a
+ * cap height off that so it sits on the same line as the figures it marks.
+ */
+const RUPEE_RATIO = 0.62;   // width against cap height
+
+const rupeeWidth = (size) => size * 0.3528 * 0.70 * RUPEE_RATIO;
+
+const drawRupee = (doc, x, baseline, size, colour) => {
+  const h = size * 0.3528 * 0.70;       // pt -> mm, then cap height
+  const w = h * RUPEE_RATIO;
+  const top = baseline - h;
+  const at = (fx, fy) => [x + fx * w, top + fy * h];
+
+  doc.setDrawColor(...colour);
+  doc.setLineWidth(Math.max(0.18, h * 0.075));
+  doc.setLineCap('round');
+
+  // Two bars across the top, the stroke that hangs from the upper one, and the
+  // leg that kicks out to the right — the four marks that make it a rupee and
+  // not a capital R.
+  doc.line(...at(0.02, 0.10), ...at(0.98, 0.10));
+  doc.line(...at(0.02, 0.40), ...at(0.98, 0.40));
+  doc.line(...at(0.70, 0.10), ...at(0.70, 0.34));
+  doc.line(...at(0.70, 0.40), ...at(0.22, 0.66));
+  doc.line(...at(0.16, 0.66), ...at(0.95, 1.00));
+  doc.line(...at(0.16, 0.66), ...at(0.30, 0.66));
+  doc.setLineCap('butt');
 };
 
 /** Money in: an arrow coming down into an open hand. */
@@ -328,7 +361,9 @@ const drawSummary = (doc, y, totals, variant) => {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12.5);
     doc.setTextColor(...ink);
-    doc.text(`Rs ${rupees(value)}`, x + 16.5, cy + 4.4);
+    const base = cy + 4.4;
+    drawRupee(doc, x + 16.5, base, 12.5, ink);
+    doc.text(rupees(value), x + 16.5 + rupeeWidth(12.5) + 1.1, base);
   });
 
   return y + CARD_H + CARD_GAP;
@@ -352,7 +387,21 @@ const drawTableHead = (doc, y, cols) => {
   // — but a heading centred over the whole column reads as naming all of it.
   let x = M.left;
   for (const c of cols) {
-    doc.text(c.label, x + c.w / 2, y + 5.8, { align: 'center' });
+    if (c.rupee) {
+      // "CREDIT (₹)" as one centred unit: the label measured, the glyph drawn
+      // after it, and the pair placed so the whole thing sits centred rather
+      // than the text alone with the sign hanging off its end.
+      const gap = 0.45;
+      const glyph = rupeeWidth(7.5);
+      const whole = doc.getTextWidth(`${c.label} (`) + glyph + gap + doc.getTextWidth(')');
+      const left = x + c.w / 2 - whole / 2;
+      doc.text(`${c.label} (`, left, y + 5.8);
+      const after = left + doc.getTextWidth(`${c.label} (`);
+      drawRupee(doc, after, y + 5.8, 7.5, [219, 227, 245]);
+      doc.text(')', after + glyph + gap, y + 5.8);
+    } else {
+      doc.text(c.label, x + c.w / 2, y + 5.8, { align: 'center' });
+    }
     x += c.w;
   }
   return y + HEAD_H;

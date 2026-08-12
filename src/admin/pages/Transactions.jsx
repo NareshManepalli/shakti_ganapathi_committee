@@ -2,7 +2,10 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../ToastContext';
 import { TableFoot, TableSkeleton } from './EditorShell';
-import { IconTrash, IconEdit, IconSearch, IconDownload } from '../icons';
+import {
+  IconTrash, IconEdit, IconSearch, IconDownload,
+  IconFunds, IconIn, IconOut, IconBalance,
+} from '../icons';
 import Modal from '../../components/Modal';
 import {
   isFundsConfigured, yearOf, monthOf, toDmy, toIso, rupees,
@@ -39,10 +42,11 @@ const blank = {
  * is a transfer out of the fund, and saving it writes that debit into the funds
  * sheet in the same call, so the money is never counted in both books.
  *
- * No summary cards. A committee mid-festival is not asking "what are the
- * totals", they are asking "how much is left and how fast is it going", and a
- * bar answers that in one look where three figures have to be compared. The
- * figures are still there, as a legend under it.
+ * Four cards and a bar, not one or the other. The cards are the same four the
+ * fund screen carries, so the two money screens are read the same way; the bar
+ * under them answers the question four figures cannot — how far through the pot
+ * the committee is — and carries the three points of that scale rather than
+ * repeating the amounts a second time.
  */
 const Transactions = () => {
   const { token, member } = useAuth();
@@ -105,6 +109,10 @@ const Transactions = () => {
   const currentLabel = current ? cycleLabel(current) : 'All entries';
   const totals = useMemo(() => summariseTxns(forYear), [forYear]);
   const warning = warningFor(totals);
+
+  // The spent marker is centred on the fill's edge, except at the two ends
+  // where centring would hang it off the bar — nothing spent yet, or all of it.
+  const markerPull = totals.percent < 12 ? '0%' : totals.percent > 88 ? '-100%' : '-50%';
 
   const found = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -258,47 +266,71 @@ const Transactions = () => {
         <TableSkeleton columns={COLUMNS} rows={PER_PAGE} withSelect />
       ) : (
         <>
-          {/* The bar, not cards. Filled by what has been spent, so the empty
-              part is the money still there — which is the thing being watched. */}
-          <section className={`admin-card txn-progress is-${totals.state}`}>
-            {totals.pot ? (
-              <>
-                <div className="txn-progress-top">
-                  <span className="txn-spent">
-                    Spent <b>₹{rupees(totals.spent)}</b> of <b>₹{rupees(totals.pot)}</b>
-                  </span>
-                  <span className="txn-left">
-                    ₹{rupees(totals.left)}
-                    <small>{totals.left < 0 ? 'overspent' : 'left in the pot'}</small>
-                  </span>
-                </div>
+          {totals.pot ? (
+            <>
+              {/* The same four cards the fund screen carries, so the two money
+                  screens are read the same way — and the pot's four figures are
+                  the fund's four questions asked of a smaller purse. */}
+              <div className="fnd-summary">
+                {[
+                  { k: 'year', Ico: IconFunds, l: 'Opening amount', v: totals.opening },
+                  { k: 'credit', Ico: IconIn, l: 'Total credited amount', v: totals.credits },
+                  { k: 'debit', Ico: IconOut, l: 'Total spending amount', v: totals.spent },
+                  { k: 'balance', Ico: IconBalance, l: 'Total amount left', v: totals.left },
+                ].map(({ k, Ico, l, v }) => (
+                  <article className={`fnd-card is-${k}`} key={k}>
+                    <span className="fnd-card-ico" aria-hidden="true"><Ico /></span>
+                    <div className="fnd-card-body">
+                      <span className="fnd-card-l">{l}</span>
+                      <b className="fnd-card-v">₹{rupees(v)}</b>
+                    </div>
+                    <span className="fnd-card-disc" aria-hidden="true" />
+                  </article>
+                ))}
+              </div>
 
-                <div
-                  className="txn-bar"
-                  role="progressbar"
-                  aria-valuenow={totals.percent}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label={`${totals.percent}% of the pot spent`}
-                >
-                  <span style={{ width: `${totals.percent}%` }} />
-                </div>
+              {/* The bar carries no figures of its own now. The cards above say
+                  what the amounts are; this says how far through them the
+                  committee is, which is the one thing four numbers cannot show
+                  at a glance. */}
+              <section className={`admin-card txn-progress is-${totals.state}`}>
+                {/* All three figures above the bar, each on a tick that points
+                    at the place on it they describe: nothing at the left, what
+                    has gone at the edge of the fill, everything the pot holds
+                    at the right. Read together they say "we had this, we have
+                    spent that" without a sentence. */}
+                <div className="txn-scale">
+                  <span className="txn-tick is-start">₹0</span>
+                  <span
+                    className="txn-tick txn-bar-at"
+                    style={{ left: `${totals.percent}%`, transform: `translateX(${markerPull})` }}
+                  >
+                    ₹{rupees(totals.spent)}
+                  </span>
+                  <span className="txn-tick is-end">₹{rupees(totals.pot)}</span>
 
-                <div className="txn-legend">
-                  <span><i className="txn-dot-open" />Opening <b>₹{rupees(totals.opening)}</b></span>
-                  <span><i className="txn-dot-cr" />Credits <b>₹{rupees(totals.credits)}</b></span>
-                  <span><i className="txn-dot-sp" />Spent <b>₹{rupees(totals.spent)}</b></span>
-                  <span><i className="txn-dot-left" />Left <b>₹{rupees(totals.left)}</b></span>
+                  <div
+                    className="txn-bar"
+                    role="progressbar"
+                    aria-valuenow={totals.percent}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`₹${rupees(totals.spent)} of ₹${rupees(totals.pot)} spent`}
+                  >
+                    <span style={{ width: `${totals.percent}%` }} />
+                  </div>
                 </div>
 
                 {warning && (
-                  <p className="admin-msg is-warn txn-warn" role="status">
+                  <p className="txn-warn" role="status">
                     <b>{totals.state === 'over' ? 'The pot is overspent.' : 'Balance is getting low.'}</b>
                     {' '}{warning}
                   </p>
                 )}
-              </>
-            ) : (
+              </section>
+            </>
+          ) : (
+            <section className="admin-card txn-progress">
               <div className="txn-empty">
                 <b>Nothing in the pot yet.</b>
                 <span>
@@ -311,8 +343,8 @@ const Transactions = () => {
                   </button>
                 )}
               </div>
-            )}
-          </section>
+            </section>
+          )}
 
           <div className="fnd-toolbar">
             <select

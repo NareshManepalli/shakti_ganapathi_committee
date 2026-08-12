@@ -22,10 +22,13 @@ const MEMBER = {
   email: 'a@example.com', isAdmin: true,
 };
 
+// Relative to the run, not to a date typed here — a pinned expiry lapses the
+// moment real time passes it, and then every spec fails at the gate over
+// something none of them are about.
 const session = {
   token: 'stub-token',
   member: { id: 1, name: 'Venkat Naresh', isAdmin: true },
-  expiresAt: Date.parse('2026-08-12T10:00:00Z') + 60 * 60 * 1000,
+  get expiresAt() { return Date.now() + 60 * 60 * 1000; },
 };
 
 const HTML = { contentType: 'text/html', body: '<!doctype html><html>Moved Temporarily</html>' };

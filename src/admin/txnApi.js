@@ -139,7 +139,10 @@ export const warningFor = (totals) => {
     return `Overspent by ₹${rupees(Math.abs(totals.left))}. The pot held ₹${rupees(totals.pot)}.`;
   }
   if (totals.state === 'low') {
-    return `₹${rupees(totals.left)} left of ₹${rupees(totals.pot)} — below the ₹${rupees(LOW_BALANCE)} mark.`;
+    // The mark itself is not in the sentence. It explained why the warning had
+    // appeared, but the warning appearing is the explanation — and a member
+    // reading it needs the two figures, not the rule that produced them.
+    return `₹${rupees(totals.left)} left out of ₹${rupees(totals.pot)}`;
   }
   return '';
 };

@@ -1496,112 +1496,137 @@
    it. Everything else on this screen is the funds screen's own furniture. */
 
   /* ---- the one new piece: the progress panel that replaces the cards ---- */
-  .txn-progress {
-    padding: 16px 18px 18px;
-    margin-bottom: 14px;
-  }
+.txn-progress {
+  padding: 16px 18px 15px;
+  margin-bottom: 14px;
+}
 
-  .txn-progress-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 9px;
-  }
+/* The scale: the bar, and the three figures standing over it. Relative so each
+   label can be placed against the bar's own width rather than the card's. */
+.txn-scale {
+  position: relative;
+  padding-top: 21px;
+}
 
-  .txn-spent { font-size: 13.5px; color: var(--a-muted); }
-  .txn-spent b { font-family: var(--font-display, inherit); font-size: 17px; color: var(--a-text); font-variant-numeric: tabular-nums; }
+/* A figure and the tick that points at it. The tick is the pseudo-element, so
+   the label can be shifted at the ends without the mark moving with it — at 0%
+   and 100% the words have to come inward while the tick stays put. */
+.txn-tick {
+  position: absolute;
+  top: 0;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--a-muted);
+}
 
-  .txn-left { font-family: var(--font-display, inherit); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .txn-left small { display: block; font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--a-muted); text-align: right; }
+.txn-tick::after {
+  content: '';
+  position: absolute;
+  top: 15px;
+  height: 5px;
+  border-left: 1.5px solid currentColor;
+  opacity: 0.55;
+}
 
-  .is-healthy .txn-left { color: var(--f-credit, #17914c); }
-  .is-low .txn-left     { color: #b8791a; }
-  .is-over .txn-left    { color: var(--f-debit, #d1435f); }
+.txn-tick.is-start { left: 0; }
+.txn-tick.is-start::after { left: 0; }
+.txn-tick.is-end { right: 0; }
+.txn-tick.is-end::after { right: 0; }
 
-  /* The bar. A track with a filled portion — the fill is what has been spent,
-     so the empty part is money still in the pot, which is the thing being
-     watched. */
-  .txn-bar {
-    height: 13px;
-    border-radius: 999px;
-    background: #e3e8ef;
-    overflow: hidden;
-    box-shadow: inset 0 1px 2px rgba(15,30,60,.10);
-  }
+/* The bar carries no figures of its own. The four cards above say what the
+   amounts are; this says how far through them the committee is, which is the
+   one thing four numbers cannot show at a glance. */
+/* Square, not rounded. A rounded end reads as a shape; square ends read as a
+   measure, which is what this is now that it carries figures. */
+.txn-bar {
+  height: 12px;
+  background: #e3e8ef;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(15, 30, 60, 0.10);
+}
 
-  .txn-bar span { display: block; height: 100%; border-radius: 999px; }
-  .is-healthy .txn-bar span { background: linear-gradient(90deg, #1aa05a, #35c07d); }
-  .is-low .txn-bar span     { background: linear-gradient(90deg, #d99a2b, #edb95a); }
-  .is-over .txn-bar span    { background: linear-gradient(90deg, #c33b56, #e2708a); }
+/* Stripes that travel, so the bar reads as a thing in progress rather than a
+   static measure — the pot is being spent from while the screen is open. The
+   colour is the fill; the stripes are white laid over it, so one rule sets the
+   texture for all three states. */
+.txn-bar span {
+  display: block;
+  height: 100%;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.28) 0, rgba(255, 255, 255, 0.28) 10px,
+    rgba(255, 255, 255, 0) 10px, rgba(255, 255, 255, 0) 20px
+  );
+  background-size: 28px 28px;
+  animation: txn-stripes 900ms linear infinite;
+  transition: width 0.5s ease;
+  border-radius: 0;
+}
 
-  /* Four figures under the bar. A legend, not cards — it explains the bar
-     rather than competing with it. */
-  .txn-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 22px;
-    margin-top: 11px;
-    font-size: 12.5px;
-    color: var(--a-muted);
-  }
-  .txn-legend b { color: var(--a-text); font-variant-numeric: tabular-nums; }
-  .txn-legend i { font-style: normal; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
-  .txn-dot-open  { background: #6f8bf5; }
-  .txn-dot-cr    { background: #1aa05a; }
-  .txn-dot-sp    { background: #d1435f; }
-  .txn-dot-left  { background: #2f6fd0; }
+.is-healthy .txn-bar span { background-color: #17914c; }
+.is-low .txn-bar span     { background-color: #d99a2b; }
+.is-over .txn-bar span    { background-color: #c33b56; }
 
-  .txn-warn { margin: 12px 0 0; }
+@keyframes txn-stripes { to { background-position: 28px 0; } }
 
-  /* Remarks and Paid to carry the only prose in the row. Every other column is
-     a date, a word or a figure that cannot wrap, so without a floor the browser
-     takes their space first and a remark comes apart a word at a time. */
-  .txn-reason { min-width: 150px; }
-  .txn-party  { min-width: 120px; }
-  @media (max-width: 640px) {
-    .txn-reason { min-width: 175px; }
-    .txn-party  { min-width: 160px; }
-  }
+/* Movement is decoration here — the width and the colour carry the meaning —
+   so it goes entirely for anyone who has asked for less of it. */
+@media (prefers-reduced-motion: reduce) {
+  .txn-bar span { animation: none; transition: none; }
+}
 
-  @media (max-width: 640px) {
-    .txn-progress { padding: 14px; }
-    .txn-left { font-size: 18px; }
-    .txn-legend { gap: 5px 16px; font-size: 12px; }
-  }
+/* The figure riding the end of the fill. Absolute against the card so it can
+   sit exactly over the boundary, and pulled back at the two extremes where
+   centring would hang it off the end of the bar. */
+.txn-bar-at {
+  font-weight: 700;
+  transition: left 0.5s ease;
+}
 
+/* The marker's tick sits under its own left edge normally, and under whichever
+   edge was pulled to the bar's end at the extremes. */
+.txn-bar-at::after { left: 0; }
 
-  /* ---- the drawer's own two new pieces ---- */
-  .txn-kind { display: flex; gap: 8px; flex-wrap: wrap; }
-  .txn-kind-opt {
-    flex: 1 1 90px;
-    display: flex; align-items: center; justify-content: center; gap: 7px;
-    padding: 9px 10px;
-    border: 1px solid var(--a-border);
-    border-radius: var(--a-radius-sm);
-    background: var(--a-surface-2);
-    font-size: 13px;
-    cursor: pointer;
-  }
-  .txn-kind-opt input { accent-color: var(--a-heading); margin: 0; }
-  .txn-kind-opt:has(input:checked) { border-color: var(--a-heading); box-shadow: 0 0 0 2px rgba(22,38,90,.10); }
-  .txn-kind-opt.is-in:has(input:checked)  { border-color: #17914c; box-shadow: 0 0 0 2px rgba(23,145,76,.12); }
-  .txn-kind-opt.is-out:has(input:checked) { border-color: #d1435f; box-shadow: 0 0 0 2px rgba(209,67,95,.12); }
+.is-healthy .txn-bar-at { color: var(--f-credit, #17914c); }
+.is-low .txn-bar-at     { color: #b8791a; }
+.is-over .txn-bar-at    { color: var(--f-debit, #d1435f); }
 
-  .txn-req { font-style: normal; color: var(--a-red); }
+/* Nothing at one end, everything the pot holds at the other — which is what
+   turns the bar from a decoration into a scale the marker can be read against. */
+.txn-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: var(--a-muted);
+  font-variant-numeric: tabular-nums;
+}
 
-  .txn-effect {
-    margin: 4px 0 2px;
-    padding: 10px 12px;
-    border-radius: var(--a-radius-sm);
-    font-size: 12.5px;
-    background: #eef4fd;
-    border: 1px solid #c9daf3;
-    color: #1c4a86;
-  }
-  .txn-effect.is-low { background: #fdf4e3; border-color: #ecd39a; color: #8a5c12; }
-  .txn-effect.is-over { background: #fdecef; border-color: #f0b2c0; color: #9c2740; }
+/* One line, not a panel. It sits under a bar that has already said the same
+   thing in colour, so the full message box was three times the room the
+   sentence needed. */
+.txn-warn {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: #8a5c12;
+}
+
+.txn-warn b { color: #7a4f0c; }
+.is-over .txn-warn { color: var(--f-debit, #d1435f); }
+.is-over .txn-warn b { color: #9c2740; }
+
+/* Remarks and Paid to carry the only prose in the row. Every other column is
+   a date, a word or a figure that cannot wrap, so without a floor the browser
+   takes their space first and a remark comes apart a word at a time. */
+.txn-reason { min-width: 150px; }
+.txn-party  { min-width: 120px; }
+@media (max-width: 640px) {
+  .txn-reason { min-width: 175px; }
+  .txn-party  { min-width: 160px; }
+  .txn-progress { padding: 14px; }
+}
 
 /* No opening amount yet — the year cannot be measured until something is put
    in the pot, so the panel asks for that instead of drawing a bar over zero. */
