@@ -639,14 +639,32 @@ function sendOtpEmail(member, code) {
   var html =
     '<div style="font-family:Segoe UI,Arial,sans-serif;max-width:460px;margin:0 auto;' +
     'background:#0e1b33;color:#eaf0fb;padding:28px 26px;border-radius:14px">' +
-    // Only when there is one to show: an <img> whose source never arrives is a
-    // broken-image icon at the top of the committee's own email.
+    // The emblem and the name on one line, as a letterhead.
+    //
+    // A table, not flexbox or an inline-block: Outlook renders through Word,
+    // which supports neither, and this is the one line of the email that has to
+    // survive every client. role="presentation" keeps it out of a screen
+    // reader's way, since it is a layout table and not a table of anything.
+    //
+    // The name still stands alone when there is no emblem to sit beside — an
+    // <img> whose source never arrives is a broken-image icon at the top of the
+    // committee's own email, so it is left out rather than risked.
     (logo
-      ? '<img src="cid:ssgclogo" width="54" height="54" alt="" '
-        + 'style="display:block;width:54px;height:54px;border-radius:50%;margin:0 0 14px">'
-      : '') +
-    '<p style="margin:0 0 4px;color:#e5b94e;font-size:13px;letter-spacing:.14em;' +
-    'text-transform:uppercase">Sri Shakthi Ganapathi Committee</p>' +
+      ? '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
+        + 'style="border-collapse:collapse;margin:0 0 16px">'
+        + '<tr>'
+        + '<td style="padding:0 12px 0 0;vertical-align:middle">'
+        + '<img src="cid:ssgclogo" width="52" height="52" alt="" '
+        + 'style="display:block;width:52px;height:52px;border-radius:50%">'
+        + '</td>'
+        + '<td style="vertical-align:middle">'
+        + '<p style="margin:0;color:#e5b94e;font-size:13px;letter-spacing:.14em;'
+        + 'line-height:1.45;text-transform:uppercase">Sri Shakthi Ganapathi Committee</p>'
+        + '</td>'
+        + '</tr>'
+        + '</table>'
+      : '<p style="margin:0 0 4px;color:#e5b94e;font-size:13px;letter-spacing:.14em;'
+        + 'text-transform:uppercase">Sri Shakthi Ganapathi Committee</p>') +
     '<p style="margin:0 0 18px;font-size:15px">Namaskaram ' +
     (member.name || 'committee member') + ',</p>' +
     '<p style="margin:0 0 10px;font-size:14px;color:#b9c6de">Your one-time code for the ' +
