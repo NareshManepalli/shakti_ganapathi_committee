@@ -1,5 +1,5 @@
 /**
- * SSGC — Funds Web App (the committee's money ledger)
+ * SSGC — Funds & Transactions Web App (the committee's two money ledgers)
  * ---------------------------------------------------------------------------
  * One dated row per movement of money: the monthly collection, and each thing
  * it was spent on. This is the sheet the committee kept by hand before the site
@@ -48,6 +48,24 @@
  *  6. Put the /exec URL in src/config/sheetsConfig.js -> api.funds.
  *  7. Run paintFundsSheet() once to colour the money columns of rows that are
  *     already there. New rows are coloured as they are written.
+ *
+ * THE SECOND LEDGER
+ *   Transactions — the pot the committee spends from during a celebration —
+ *   lives in its own workbook, and this script serves both:
+ *
+ *     GET  ?token=…                 the fund
+ *     GET  ?what=txns&token=…       the pot
+ *     POST saveTxn / deleteTxn      write the pot
+ *
+ *   One script rather than two, because the two books are one movement apart:
+ *   the pot's opening row IS a transfer out of the fund, and saving it writes
+ *   that debit into the funds sheet in the same call. Split across two
+ *   deployments, that movement could half-happen.
+ *
+ *  8. Put the transactions workbook's id in TRANSACTIONS_SHEET_ID below.
+ *  9. Run setupTransactionsSheet() once to write its header.
+ * 10. Run checkTransactions() to confirm this project can reach all three
+ *     books and holds the signing key, before wondering why a screen is blank.
  * ---------------------------------------------------------------------------
  */
 
@@ -59,6 +77,11 @@ var FUNDS_SHEET_ID = '1qGY_P2g8Fg2pmWuj9iDGxW9Lc_GJplb3WxKYBxcZIg0';
 // ends. Day 1 of a year is that year's celebration date, and annual_year beside
 // it is what the committee calls the span it closes.
 var SCHEDULE_SHEET_ID = '1rtsurWepUJlzebf2LczLO_2f_EZ0YXJ7M06plNLtGV8';
+
+// The transactions workbook — the working pot, kept as its own book at the
+// committee's instruction rather than as a second tab here.
+// https://docs.google.com/spreadsheets/d/1oRuHXLYY9zQLK38W9AA-mPENPYQq6XOLmriSxUXlJ0g/edit
+var TRANSACTIONS_SHEET_ID = '1oRuHXLYY9zQLK38W9AA-mPENPYQq6XOLmriSxUXlJ0g';
 
 
 // Audit stamps are written in the committee's own time, not the workbook's.
@@ -94,17 +117,18 @@ var LEDGER_PREFIX = 'SSGC';
 var LEDGER_START_YEAR = 2025;
 var LEDGER_SEQ_WIDTH = 6;
 
-/* ----------------------------------------------------- the transactions tab */
+/* ---------------------------------------------------- the transactions book */
 //
-// The working pot for a celebration, kept as a second tab in THIS workbook
-// rather than a book of its own. The two are one movement apart — a transfer
-// out of the fund is the opening credit here — and a single script owning both
-// is what lets that be one write instead of two calls that can half-happen.
+// The working pot for a celebration, in its own workbook. The two ledgers are
+// one movement apart — a transfer out of the fund is the opening credit here —
+// and this one script opens both books, which is what lets that transfer be a
+// single write rather than two calls that can leave the books half-moved. Two
+// workbooks, one owner: the separation is the committee's filing, not a second
+// service.
 //
 // Its own id prefix. A funds row and a transactions row are different things
 // and must never be mistaken for each other in a message, a statement or a
 // conversation, which "SSGC2025000004" and "TXN2025000004" cannot be.
-var TRANSACTIONS_TAB = 'transactions';
 var TXN_PREFIX = 'TXN';
 
 // Column for column the funds sheet's order, so the two read the same way.
@@ -146,21 +170,40 @@ function fundsSheet() {
   return fundsBook().getSheets()[0];
 }
 
-/** The transactions tab, or a plain instruction if it has not been made yet. */
-function transactionsSheet() {
-  var sheet = fundsBook().getSheetByName(TRANSACTIONS_TAB);
-  if (!sheet) {
-    throw new Error('No "' + TRANSACTIONS_TAB + '" tab in the funds workbook. '
-      + 'Run createTransactionsTab() once from this editor.');
+var TXN_BOOK_ = null;
+
+function transactionsBook() {
+  if (TXN_BOOK_) return TXN_BOOK_;
+  var id = String(TRANSACTIONS_SHEET_ID || '');
+  if (!id || id.indexOf('PASTE_') === 0) {
+    throw new Error('TRANSACTIONS_SHEET_ID is not set in the script.');
   }
-  return sheet;
+  TXN_BOOK_ = SpreadsheetApp.openById(id);
+  return TXN_BOOK_;
+}
+
+function transactionsSheet() {
+  return transactionsBook().getSheets()[0];
 }
 
 /**
- * Builds the transactions tab, once.
+ * The transactions workbook's own timezone.
  *
- * Run from the Apps Script editor: Run ▸ createTransactionsTab. It refuses to
- * touch a tab that already exists rather than rewriting a header over rows
+ * Its own, not the funds book's. They are separate files and each carries its
+ * own locale — read a transactions date cell in the funds book's zone and every
+ * date could land a day out, which is the exact fault this pair of functions
+ * exists to prevent.
+ */
+function txnTimeZone() {
+  return transactionsBook().getSpreadsheetTimeZone();
+}
+
+/**
+ * Prepares the transactions workbook, once.
+ *
+ * Run from the Apps Script editor: Run ▸ setupTransactionsSheet. It writes the
+ * header, freezes it, tints the money columns and sets sensible widths. It
+ * refuses a sheet that already has a header rather than writing over rows
  * somebody has entered — running it twice by accident must cost nothing.
  *
  * The date column is forced to plain text. Left as automatic, Sheets reads
@@ -168,15 +211,19 @@ function transactionsSheet() {
  * prefers — which silently turns 5 October into 10 May, and the ledger's own
  * dd-mm-yyyy is no longer what the sheet holds.
  */
-function createTransactionsTab() {
-  var book = fundsBook();
-  var existing = book.getSheetByName(TRANSACTIONS_TAB);
-  if (existing) {
-    Logger.log('The "' + TRANSACTIONS_TAB + '" tab already exists — nothing changed.');
-    return;
+function setupTransactionsSheet() {
+  var sheet = transactionsSheet();
+
+  var width = sheet.getLastColumn();
+  if (width > 0) {
+    var first = sheet.getRange(1, 1, 1, width).getValues()[0]
+      .filter(function (v) { return String(v || '').trim() !== ''; });
+    if (first.length) {
+      Logger.log('That sheet already has a header (' + first.join(', ') + ') — nothing changed.');
+      return;
+    }
   }
 
-  var sheet = book.insertSheet(TRANSACTIONS_TAB);
   var head = sheet.getRange(1, 1, 1, TRANSACTIONS_HEADER.length);
   head.setValues([TRANSACTIONS_HEADER]);
   head.setFontWeight('bold');
@@ -198,26 +245,42 @@ function createTransactionsTab() {
     sno: 55, trnsctn_id: 130, date: 95, year: 60, month: 90,
     credit: 90, debit: 90, balance: 95, annual_year: 105, annual_yr_id: 95,
     kind: 80, reason: 200, paid_to: 150, mode: 80,
-    a_in: 55, i_ts: 140, u_ts: 140, d_ts: 140,
+    a_in: 55, i_ts: 140, u_ts: 140, d_ts: 140
   };
   TRANSACTIONS_HEADER.forEach(function (name, i) {
     if (widths[name]) sheet.setColumnWidth(i + 1, widths[name]);
   });
 
   SpreadsheetApp.flush();
-  Logger.log('Created "' + TRANSACTIONS_TAB + '" with '
+  Logger.log('Prepared "' + sheet.getName() + '" with '
     + TRANSACTIONS_HEADER.length + ' columns. It is empty — the screen writes the first row.');
 }
 
 /**
- * The workbook's timezone, NOT the script project's.
+ * Says whether this project can reach everything it needs.
  *
- * A date cell is midnight in the timezone the spreadsheet keeps, and the two
- * settings are separate — a new script project defaults to America/Los_Angeles
- * whatever the sheet says. Format 5 October 00:00 IST in Los Angeles and it
- * prints as the 4th, so every date would be a day early and the wrong month at
- * the turn of one.
+ * Three books and a signing key, checked in one run — because "the screen is
+ * blank" looks the same whether the id is wrong, the sheet was never shared, or
+ * the key went into a different project.
  */
+function checkTransactions() {
+  var out = [];
+  try { out.push('funds: ' + fundsBook().getName() + ' (' + sheetTimeZone() + ')'); }
+  catch (e) { out.push('funds: FAILED — ' + e.message); }
+  try {
+    var sh = transactionsSheet();
+    out.push('transactions: ' + transactionsBook().getName() + ' / tab "' + sh.getName()
+      + '" (' + txnTimeZone() + '), ' + Math.max(0, sh.getLastRow() - 1) + ' rows');
+    out.push('header: ' + headerOf(sh).join(', '));
+  } catch (e) { out.push('transactions: FAILED — ' + e.message); }
+  try { out.push('schedule: ' + SpreadsheetApp.openById(SCHEDULE_SHEET_ID).getName()); }
+  catch (e) { out.push('schedule: FAILED — ' + e.message); }
+  out.push('signing key: ' + keyFingerprint(
+    PropertiesService.getScriptProperties().getProperty(SIGNING_KEY_PROP)));
+  Logger.log(out.join(String.fromCharCode(10)));
+  return out.join(String.fromCharCode(10));
+}
+
 function sheetTimeZone() {
   return fundsBook().getSpreadsheetTimeZone();
 }
@@ -260,9 +323,9 @@ function stamp() {
  * A real date is turned back into text HERE rather than left to JSON, which
  * would send a UTC instant that lands a day early for anyone west of the sheet.
  */
-function asDateText(value) {
+function asDateText(value, tz) {
   if (value instanceof Date) {
-    return Utilities.formatDate(value, sheetTimeZone(), 'dd-MM-yyyy');
+    return Utilities.formatDate(value, tz || sheetTimeZone(), 'dd-MM-yyyy');
   }
   return String(value || '').trim();
 }
@@ -761,7 +824,7 @@ function txnLedger() {
   return readRows(transactionsSheet())
     .filter(function (r) { return String(r.a_in === undefined ? '1' : r.a_in).trim() === '1'; })
     .map(function (r) {
-      var date = asDateText(r.date);
+      var date = asDateText(r.date, txnTimeZone());
       return {
         sno: Number(r.sno) || 0,
         trnsctn_id: String(r.trnsctn_id || ''),
