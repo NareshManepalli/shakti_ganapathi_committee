@@ -294,7 +294,14 @@
       <p>The live funds specs sweep before and after themselves, through the Web App rather than
       the screen, so a run killed part way — a timeout, a lost answer, Ctrl-C — cannot leave a
       "Playwright check" row in the committee's ledger. Enough of those accumulated once to put
-      the balance out by 1,500 rupees for a fortnight before anyone looked.</p>
+      the balance out by 1,500 rupees for a fortnight before anyone looked. Proved by stranding a
+      row deliberately and watching the next run take it out.</p>
+      <p>A member with <code>bypass_in = 1</code> signs the suite in through the fixed code
+      directly, rather than asking the gate to email one. The throttle is on <i>sending</i> — one
+      a minute, five an hour — and it interrupted these runs repeatedly, always reporting itself
+      as "Sign-in is not set up yet", which sends whoever is reading off to check a configuration
+      that is perfectly fine. The full sign-in still runs for a member without the flag, since it
+      is the only thing that exercises the captcha and the OTP screen.</p>
     </div>
 
     <div class="item">
