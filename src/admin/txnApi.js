@@ -1,6 +1,7 @@
 import { SHEETS_CONFIG } from '../config/sheetsConfig';
 import { withBalances, rupees } from './fundsApi';
 import { settleWrite, holdsEntry, lacksEntry } from './settleWrite';
+import { readJson } from '../utils/readJson';
 
 // The working pot, through the same Web App the fund uses.
 //
@@ -40,17 +41,9 @@ const post = async (payload) => {
 
 export const fetchTxns = async (token) => {
   if (!API) return { ok: false, error: NOT_SET };
-  try {
-    const res = await fetch(`${API}?what=txns&token=${encodeURIComponent(token)}`, {
-      cache: 'no-store', redirect: 'follow',
-    });
-    const text = await res.text();
-    if (/^\s*</.test(text)) return { ok: false, error: 'The funds service did not respond properly.' };
-    return JSON.parse(text);
-  } catch (err) {
-    console.error('Transactions read failed:', err);
-    return { ok: false, error: 'Could not reach the funds service.' };
-  }
+  return readJson(`${API}?what=txns&token=${encodeURIComponent(token)}`, {
+    label: 'funds service', cache: 'no-store',
+  });
 };
 
 // Settled the same way the fund's writes are — the hiccup is the transport's,

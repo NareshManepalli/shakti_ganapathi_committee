@@ -1,4 +1,5 @@
 import { SHEETS_CONFIG } from '../config/sheetsConfig';
+import { readJson } from '../utils/readJson';
 
 // Reads and writes the three data sheets through the Content Web App.
 //
@@ -35,17 +36,9 @@ const post = async (payload) => {
 /** Everything the editor screens need, in one call. */
 export const fetchAll = async (token) => {
   if (!API) return { ok: false, error: NOT_SET };
-  try {
-    const res = await fetch(`${API}?token=${encodeURIComponent(token)}`, {
-      cache: 'no-store', redirect: 'follow',
-    });
-    const text = await res.text();
-    if (/^\s*</.test(text)) return { ok: false, error: 'The editing service did not respond properly.' };
-    return JSON.parse(text);
-  } catch (err) {
-    console.error('Content read failed:', err);
-    return { ok: false, error: 'Could not reach the editing service.' };
-  }
+  return readJson(`${API}?token=${encodeURIComponent(token)}`, {
+    label: 'editing service', cache: 'no-store',
+  });
 };
 
 export const saveContent = (token, section, fields) =>

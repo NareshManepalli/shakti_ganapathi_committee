@@ -6,6 +6,8 @@
 // fallback since it is friendlier to cross-origin requests.
 // ---------------------------------------------------------------------------
 
+import { readJson } from './readJson';
+
 // Pull the sheet id and tab id (gid) out of any Google Sheets URL.
 const parseSheetUrl = (url) => {
   if (!url) return null;
@@ -140,19 +142,34 @@ export const fetchSheetRows = async (url) => {
   if (!parsed) return [];
 
   let lastError = null;
-  for (const csvUrl of buildCsvUrls(parsed)) {
-    try {
-      const res = await fetch(csvUrl, { redirect: 'follow' });
-      if (!res.ok) { lastError = new Error(`HTTP ${res.status}`); continue; }
-      const text = await res.text();
-      // A sheet that isn't shared publicly answers with a sign-in *page*
-      // rather than an error status, so check the shape, not just res.ok.
-      if (/^\s*</.test(text)) { lastError = new Error('Sheet is not shared publicly'); continue; }
-      return parseCsv(text).filter(isActive);
-    } catch (err) {
-      lastError = err;
+
+  // Two URLs, two passes. The CSV export is not a Web App but it fails the same
+  // ways — a slow response, or Google answering with an interstitial instead of
+  // the file — and a section that gives up on the first attempt shows a visitor
+  // "this section could not be loaded" for a sheet that is perfectly readable a
+  // second later.
+  for (let pass = 0; pass < 2; pass += 1) {
+    if (pass) await new Promise((r) => { setTimeout(r, 1200); });
+
+    for (const csvUrl of buildCsvUrls(parsed)) {
+      const control = new AbortController();
+      const timer = setTimeout(() => control.abort(), 15000);
+      try {
+        const res = await fetch(csvUrl, { redirect: 'follow', signal: control.signal });
+        if (!res.ok) { lastError = new Error(`HTTP ${res.status}`); continue; }
+        const text = await res.text();
+        // A sheet that isn't shared publicly answers with a sign-in *page*
+        // rather than an error status, so check the shape, not just res.ok.
+        if (/^\s*</.test(text)) { lastError = new Error('Sheet is not shared publicly'); continue; }
+        return parseCsv(text).filter(isActive);
+      } catch (err) {
+        lastError = err;
+      } finally {
+        clearTimeout(timer);
+      }
     }
   }
+
   throw lastError || new Error('Could not read the sheet');
 };
 
@@ -174,14 +191,10 @@ export const fetchSheetRows = async (url) => {
 export const fetchGalleryTree = async (webAppUrl) => {
   if (!webAppUrl) return null;
   try {
-    const res = await fetch(webAppUrl, { cache: 'no-store', redirect: 'follow' });
-    if (!res.ok) return null;
-
-    const text = await res.text();
-    // An undeployed or unauthorised Web App answers with an HTML page.
-    if (/^\s*</.test(text)) return null;
-
-    const data = JSON.parse(text);
+    // Retried rather than reported: a cold Apps Script project can take fifteen
+    // seconds to wake, and a visitor who arrives during that used to be told the
+    // gallery was empty.
+    const data = await readJson(webAppUrl, { label: 'gallery', cache: 'no-store' });
     if (!data || data.ok === false || !Array.isArray(data.years)) return null;
 
     const byYear = {};
@@ -241,12 +254,8 @@ export const fetchMembersApi = async (webAppUrl) => {
   if (!webAppUrl) return null;
   try {
     const url = webAppUrl + (webAppUrl.includes('?') ? '&' : '?') + 'action=members';
-    const res = await fetch(url, { cache: 'no-store', redirect: 'follow' });
-    if (!res.ok) return null;
-    const text = await res.text();
-    // An undeployed or unauthorised Web App answers with an HTML page.
-    if (/^\s*</.test(text)) return null;
-    const data = JSON.parse(text);
+    const data = await readJson(url, { label: 'members list', cache: 'no-store' });
+    if (!data || data.ok === false) return null;
     const rows = Array.isArray(data) ? data : (data.members || data.rows);
     if (!Array.isArray(rows)) return null;
     return rows;

@@ -1461,10 +1461,24 @@
 
 .fnd-year-select { min-width: 170px; flex: 0 0 auto; }
 
-/* Kept to their own widths on a phone rather than stretched across it: these
-   two govern the whole screen, and a full-width bar reads as its subject. */
+/* Half each, on one line, on a phone. Stacked they took two rows out of the
+   top of the screen before a single figure was visible; side by side they read
+   as what they are — pick a year, then take a copy of it. `min-width: 0` is
+   what lets them actually halve: a flex item will not shrink below its content
+   without it, and "Download statement" is wider than half a 390px screen. */
 @media (max-width: 640px) {
-  .fnd-toolbar .admin-btn, .fnd-year-select { width: auto; }
+  .fnd-toolbar { flex-wrap: nowrap; gap: 8px; }
+  .fnd-toolbar .admin-btn,
+  .fnd-toolbar .fnd-year-select {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+    justify-content: center;
+  }
+  /* The label has to give way rather than the button — a truncated icon is
+     nothing, a truncated word is still readable. */
+  .fnd-toolbar .admin-btn { padding-inline: 10px; white-space: nowrap; overflow: hidden; }
+  .fnd-toolbar .fnd-year-select { padding-inline: 8px; font-size: 12.5px; }
 }
 
 /* The seconds left in the idle warning — tabular, so the number does not

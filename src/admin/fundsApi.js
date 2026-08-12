@@ -1,5 +1,6 @@
 import { SHEETS_CONFIG } from '../config/sheetsConfig';
 import { settleWrite, holdsEntry, lacksEntry } from './settleWrite';
+import { readJson } from '../utils/readJson';
 
 // The committee's money ledger, through the Funds Web App.
 //
@@ -34,17 +35,9 @@ const post = async (payload) => {
 
 export const fetchFunds = async (token) => {
   if (!API) return { ok: false, error: NOT_SET };
-  try {
-    const res = await fetch(`${API}?token=${encodeURIComponent(token)}`, {
-      cache: 'no-store', redirect: 'follow',
-    });
-    const text = await res.text();
-    if (/^\s*</.test(text)) return { ok: false, error: 'The funds service did not respond properly.' };
-    return JSON.parse(text);
-  } catch (err) {
-    console.error('Funds read failed:', err);
-    return { ok: false, error: 'Could not reach the funds service.' };
-  }
+  return readJson(`${API}?token=${encodeURIComponent(token)}`, {
+    label: 'funds service', cache: 'no-store',
+  });
 };
 
 // Both writes settle themselves rather than reporting a failure they cannot

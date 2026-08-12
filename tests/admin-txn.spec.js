@@ -330,4 +330,46 @@ test.describe('transactions', () => {
     await expect(page.locator('.toast-error')).toContainText('already has an opening amount');
     await expect(page.locator('.ed-drawer')).toBeVisible();
   });
+
+  // Apps Script answers a good request with an HTML page often enough that the
+  // committee saw "the funds service did not respond properly" on screens that
+  // were fine a moment later. A read changes nothing, so it is repeated.
+  test('a read that fails once is retried rather than reported', async ({ page }) => {
+    const { state } = await stub(page);
+
+    let reads = 0;
+    await page.route(`${API}**`, async (route) => {
+      if (route.request().method() !== 'GET') return route.fallback();
+      reads += 1;
+      // The first attempt gets the page Apps Script sometimes sends instead.
+      if (reads === 1) {
+        return route.fulfill({ contentType: 'text/html', body: '<!doctype html><html>Moved</html>' });
+      }
+      return route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, txns: state.rows }),
+      });
+    });
+
+    await page.goto('/admin/transactions');
+
+    // Second time lucky, and the committee never learns there was a first.
+    await expect(page.locator('.txn-progress')).toContainText('₹9,500', { timeout: 30000 });
+    await expect(page.locator('.admin-msg.is-error')).toHaveCount(0);
+    expect(reads).toBeGreaterThan(1);
+  });
+
+  test('a read that never succeeds says so plainly, and does not hang', async ({ page }) => {
+    await stub(page);
+    await page.route(`${API}**`, async (route) => {
+      if (route.request().method() !== 'GET') return route.fallback();
+      return route.fulfill({ contentType: 'text/html', body: '<!doctype html><html>Nope</html>' });
+    });
+
+    await page.goto('/admin/transactions');
+
+    // Three attempts and their backoff, then an answer — not a skeleton left
+    // spinning until the browser gives up two minutes later.
+    await expect(page.locator('.admin-msg.is-error')).toContainText(/Could not reach|taking too long/, { timeout: 40000 });
+  });
 });
