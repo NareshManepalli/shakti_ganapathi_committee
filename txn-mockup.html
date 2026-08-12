@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Transactions — layout</title>
+<link rel="stylesheet" href="/src/index.css">
+<link rel="stylesheet" href="/src/admin/Admin.css">
+<style>
+  /* ---- the one new piece: the progress panel that replaces the cards ---- */
+  .txn-progress {
+    padding: 16px 18px 18px;
+    margin-bottom: 14px;
+  }
+
+  .txn-progress-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 9px;
+  }
+
+  .txn-spent { font-size: 13.5px; color: var(--a-muted); }
+  .txn-spent b { font-family: var(--font-display, inherit); font-size: 17px; color: var(--a-text); font-variant-numeric: tabular-nums; }
+
+  .txn-left { font-family: var(--font-display, inherit); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .txn-left small { display: block; font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--a-muted); text-align: right; }
+
+  .is-healthy .txn-left { color: var(--f-credit, #17914c); }
+  .is-low .txn-left     { color: #b8791a; }
+  .is-over .txn-left    { color: var(--f-debit, #d1435f); }
+
+  /* The bar. A track with a filled portion — the fill is what has been spent,
+     so the empty part is money still in the pot, which is the thing being
+     watched. */
+  .txn-bar {
+    height: 13px;
+    border-radius: 999px;
+    background: #e3e8ef;
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(15,30,60,.10);
+  }
+
+  .txn-bar span { display: block; height: 100%; border-radius: 999px; }
+  .is-healthy .txn-bar span { background: linear-gradient(90deg, #1aa05a, #35c07d); }
+  .is-low .txn-bar span     { background: linear-gradient(90deg, #d99a2b, #edb95a); }
+  .is-over .txn-bar span    { background: linear-gradient(90deg, #c33b56, #e2708a); }
+
+  /* Four figures under the bar. A legend, not cards — it explains the bar
+     rather than competing with it. */
+  .txn-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    margin-top: 11px;
+    font-size: 12.5px;
+    color: var(--a-muted);
+  }
+  .txn-legend b { color: var(--a-text); font-variant-numeric: tabular-nums; }
+  .txn-legend i { font-style: normal; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+  .txn-dot-open  { background: #6f8bf5; }
+  .txn-dot-cr    { background: #1aa05a; }
+  .txn-dot-sp    { background: #d1435f; }
+  .txn-dot-left  { background: #2f6fd0; }
+
+  .txn-warn { margin: 12px 0 0; }
+
+  /* Remarks and Paid to carry the only prose in the row. Every other column is
+     a date, a word or a figure that cannot wrap, so without a floor the browser
+     takes their space first and a remark comes apart a word at a time. */
+  .txn-reason { min-width: 150px; }
+  .txn-party  { min-width: 120px; }
+  @media (max-width: 640px) {
+    .txn-reason { min-width: 175px; }
+    .txn-party  { min-width: 160px; }
+  }
+
+  @media (max-width: 640px) {
+    .txn-progress { padding: 14px; }
+    .txn-left { font-size: 18px; }
+    .txn-legend { gap: 5px 16px; font-size: 12px; }
+  }
+
+  /* mockup only */
+  body { margin: 0; }
+  .mock-note { display: none; }
+</style>
+</head>
+<body>
+<div class="admin-root">
+
+  <aside class="admin-sidebar">
+    <div class="admin-brand">
+      <span class="admin-brand-emblem"><img src="/src/assets/logo.png" alt=""></span>
+      <span class="admin-brand-text"><b>SRI SHAKTHI</b><i>Ganapathi Committee</i></span>
+    </div>
+    <nav class="admin-nav">
+      <a class="admin-nav-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.8 1.8 0 0 1 0 3.6h-3a1.8 1.8 0 0 0 0 3.6h4"/></svg>Annual Funds</a>
+      <a class="admin-nav-link is-active" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Transactions</a>
+      <a class="admin-nav-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>About</a>
+      <a class="admin-nav-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.4 6-5.4s6 2.1 6 5.4"/></svg>Members</a>
+      <a class="admin-nav-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m4 17 4.6-4.3a2 2 0 0 1 2.7 0L20 20"/></svg>Gallery</a>
+      <a class="admin-nav-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Schedule</a>
+      <a class="admin-nav-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 5 8v12h14V8z"/><path d="M9 20v-5h6v5"/></svg>Mandapam</a>
+    </nav>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="admin-hamburger"><span></span><span></span><span></span></button>
+      <div class="admin-topbar-title">Admin Portal</div>
+      <div class="admin-profile">
+        <button class="admin-profile-btn">
+          <span class="admin-avatar"><img src="/src/assets/logo.png" alt=""></span>
+          <span class="admin-profile-text"><b>Venkat Naresh</b><i>President / Administrative</i></span>
+          <svg class="admin-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9.5 6 6 6-6"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div class="admin-page-head">
+        <div>
+          <h1 class="admin-page-title">Transactions</h1>
+          <p class="admin-page-sub">What the working pot holds and where it has gone — 2nd year (2025 - 2026)</p>
+        </div>
+      </div>
+
+      <!-- THE PROGRESS PANEL — replaces the four cards -->
+      <section class="admin-card txn-progress is-low">
+        <div class="txn-progress-top">
+          <span class="txn-spent">Spent <b>₹23,000</b> of <b>₹32,500</b></span>
+          <span class="txn-left">₹9,500<small>left in the pot</small></span>
+        </div>
+
+        <div class="txn-bar"><span style="width:70.8%"></span></div>
+
+        <div class="txn-legend">
+          <span><i class="txn-dot-open"></i>Opening <b>₹30,000</b></span>
+          <span><i class="txn-dot-cr"></i>Credits <b>₹2,500</b></span>
+          <span><i class="txn-dot-sp"></i>Spent <b>₹23,000</b></span>
+          <span><i class="txn-dot-left"></i>Left <b>₹9,500</b></span>
+        </div>
+
+        <p class="admin-msg is-warn txn-warn" role="status">
+          <b>Balance is getting low.</b> ₹9,500 left of ₹32,500 — below the ₹10,000 mark.
+        </p>
+      </section>
+
+      <div class="fnd-toolbar">
+        <select class="admin-input tbl-select fnd-year-select">
+          <option>2nd year (2025 - 2026)</option>
+          <option>1st year (2025)</option>
+        </select>
+        <button class="admin-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 16v2.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16"/></svg>
+          Download statement
+        </button>
+      </div>
+
+      <div class="admin-card tbl-card">
+        <div class="tbl-head">
+          <h2 class="tbl-title fnd-history-title">Transaction history</h2>
+          <button class="admin-btn"><span class="tbl-plus">+</span> Add transaction</button>
+          <div class="tbl-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="6.2"/><path d="m15.6 15.6 4.4 4.4"/></svg>
+            <input class="admin-input" type="search" placeholder="Search transactions…">
+          </div>
+        </div>
+
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th class="tbl-sno">S.No</th>
+                <th class="tbl-acts">Actions</th>
+                <th>Date</th>
+                <th class="txn-reason">Remarks</th>
+                <th class="txn-party">Paid to</th>
+                <th>Mode</th>
+                <th class="fnd-num is-credit">Credited</th>
+                <th class="fnd-num is-debit">Debited</th>
+                <th class="fnd-num is-balance">Balance</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+
+        <div class="tbl-foot">
+          <span class="tbl-count">Showing 1–5 of 7</span>
+          <div class="tbl-pager">
+            <button class="tbl-page" disabled>‹</button>
+            <button class="tbl-page is-current">1</button>
+            <button class="tbl-page">2</button>
+            <button class="tbl-page">›</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+const ROWS = [
+  [1, '01-08-2026', 'August', 'Opening amount from annual funds', '—', 'Bank', '₹30,000', '—', '₹30,000', true],
+  [2, '03-08-2026', 'August', 'Pandal advance', 'Sri Venkateswara Decorators', 'UPI', '—', '₹6,500', '₹23,500', false],
+  [3, '05-08-2026', 'August', 'Sound system advance', 'Balaji Sounds', 'Cash', '—', '₹4,200', '₹19,300', false],
+  [4, '06-08-2026', 'August', 'Donation received', 'Sri Ramesh Kumar', 'UPI', '₹2,500', '—', '₹21,800', false],
+  [5, '07-08-2026', 'August', 'Idol advance', 'Kalakar Vinayaka Works', 'Bank', '—', '₹5,600', '₹16,200', false],
+];
+const EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 20h4l10-10a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14.5 6.5l3 3"/></svg>';
+const TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16"/><path d="M9 7V4.8A.8.8 0 0 1 9.8 4h4.4a.8.8 0 0 1 .8.8V7"/><path d="M6.5 7 7.4 20h9.2L17.5 7"/><path d="M10.5 11v5M13.5 11v5"/></svg>';
+document.getElementById('rows').innerHTML = ROWS.map((r) => `
+  <tr>
+    <td class="tbl-sno">${r[0]}</td>
+    <td class="tbl-acts"><div>
+      <button class="tbl-icon">${EDIT}</button>
+      <button class="tbl-icon is-danger"${r[9] ? ' disabled title="The opening row cannot be removed while entries follow it"' : ''}>${TRASH}</button>
+    </div></td>
+    <td class="tbl-nowrap">${r[1]}</td>
+    <td class="txn-reason">${r[3]}${r[9] ? ' <span class="ed-chip">opening</span>' : ''}</td>
+    <td class="txn-party">${r[4]}</td>
+    <td class="tbl-nowrap">${r[5]}</td>
+    <td class="fnd-num is-credit">${r[6]}</td>
+    <td class="fnd-num is-debit">${r[7]}</td>
+    <td class="fnd-num is-balance">${r[8]}</td>
+  </tr>`).join('');
+</script>
+</body>
+</html>
