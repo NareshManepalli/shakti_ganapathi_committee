@@ -30,6 +30,12 @@ const MESSAGES = {
   BAD_EMAIL: 'Enter a valid email address — this is where your sign-in code is sent.',
   MOBILE_TAKEN: 'Another committee member already uses that mobile number.',
   NOT_CONFIGURED: 'Sign-in is not set up yet. Please try again later.',
+  // Distinct from NOT_CONFIGURED on purpose. The service being unwell for a
+  // moment and the service never having been set up are different problems with
+  // different answers — "try again" against "somebody has work to do" — and
+  // reporting the first as the second sent an admin to check a deployment that
+  // was perfectly healthy.
+  NO_ANSWER: 'The sign-in service did not answer. Please try again in a moment.',
   NETWORK: 'Could not reach the committee server. Check your connection and try again.',
 };
 
@@ -38,28 +44,55 @@ export const messageFor = (code, fallback) => MESSAGES[code] || fallback || MESS
 /**
  * Apps Script cannot answer a CORS preflight, so the body goes as text/plain —
  * a "simple request" that never triggers one. The payload is still JSON.
+ *
+ * `retries` is not a default anybody should raise casually: see the callers.
+ * Every action here is a POST, and only one of them is safe to repeat.
  */
-const post = async (payload) => {
+const post = async (payload, retries = 0) => {
   if (!AUTH_API) return { ok: false, code: 'NOT_CONFIGURED', error: MESSAGES.NOT_CONFIGURED };
-  try {
-    const res = await fetch(AUTH_API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload),
-      redirect: 'follow',
-    });
-    const text = await res.text();
-    // An undeployed or unauthorised Web App answers with an HTML page.
-    if (/^\s*</.test(text)) return { ok: false, code: 'NOT_CONFIGURED', error: MESSAGES.NOT_CONFIGURED };
-    const data = JSON.parse(text);
-    if (!data.ok && !data.error) data.error = messageFor(data.code);
-    return data;
-  } catch (err) {
-    console.error('Auth request failed:', err);
-    return { ok: false, code: 'NETWORK', error: MESSAGES.NETWORK };
+
+  let lost = { ok: false, code: 'NO_ANSWER', error: MESSAGES.NO_ANSWER };
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    if (attempt) await new Promise((r) => { setTimeout(r, attempt * 1200); });
+
+    // A deadline per attempt. Without one a hung request holds the sign-in on
+    // its spinner for as long as the browser allows, and a member watching that
+    // has no way to tell it from broken.
+    const control = new AbortController();
+    const timer = setTimeout(() => control.abort(), 20000);
+    try {
+      const res = await fetch(AUTH_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload),
+        redirect: 'follow',
+        signal: control.signal,
+      });
+      const text = await res.text();
+      // A page rather than JSON. It may mean the Web App is not deployed — but
+      // far more often the service is simply having a moment, which is why this
+      // is no longer reported as "not set up".
+      if (/^\s*</.test(text)) continue;
+      const data = JSON.parse(text);
+      if (!data.ok && !data.error) data.error = messageFor(data.code);
+      return data;
+    } catch (err) {
+      console.error('Auth request failed:', err);
+      lost = err.name === 'AbortError'
+        ? { ok: false, code: 'NO_ANSWER', error: MESSAGES.NO_ANSWER }
+        : { ok: false, code: 'NETWORK', error: MESSAGES.NETWORK };
+    } finally {
+      clearTimeout(timer);
+    }
   }
+
+  return lost;
 };
 
+// Not retried, deliberately. It emails a code and spends one of the five the
+// member is allowed in an hour, so a repeat on a lost answer would send a
+// second code — or trip the throttle and refuse a member who did nothing wrong.
 /** Step 1 — look the mobile up and email a code. Never returns the code. */
 export const requestOtp = (mobile) => post({ action: 'requestOtp', mobile });
 
@@ -69,6 +102,9 @@ export const requestOtp = (mobile) => post({ action: 'requestOtp', mobile });
  * nothing is throttled. Refused by the server unless a bypass is live.
  */
 
+// Not retried either: the first attempt burns the code, so a second would be
+// told the code is wrong — the most alarming thing a person can be told at a
+// sign-in, and untrue.
 /** Step 2 — check the code. On success this is where the session comes from. */
 export const verifyOtp = (mobile, otp) => post({ action: 'verifyOtp', mobile, otp });
 
@@ -93,12 +129,17 @@ export const makeCaptcha = () => String(Math.floor(1000 + Math.random() * 9000))
  * The server identifies them from the id inside the signed token, never from
  * anything sent with the request, so a member can only ever read themselves.
  */
-export const getProfile = (token) => post({ action: 'getProfile', token });
+// The one call here worth repeating. It reads and changes nothing, and it runs
+// on every arrival in the portal — so a single hiccup used to end the session
+// of somebody who had just signed in.
+export const getProfile = (token) => post({ action: 'getProfile', token }, 2);
 
 /**
  * Updates the member's own name in both languages, mobile and email. Position
  * and the access flags are not writable — those are the committee's to set, and
  * letting a member edit adm_in would hand out the portal.
  */
+// A write, so never repeated: see settleWrite.js for why a retry on a write
+// whose answer was lost is how a record ends up saved twice.
 export const updateProfile = (token, { name, nameTe, mobile, email }) =>
   post({ action: 'updateProfile', token, name, nameTe, mobile, email });

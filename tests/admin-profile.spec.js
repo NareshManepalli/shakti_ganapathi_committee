@@ -219,7 +219,13 @@ const restoreProfile = async (page, want) => {
 };
 
 test.describe('writes to the live row', () => {
-  test.describe.configure({ mode: 'serial' });
+  // Serial, and given room. Each of these is a dozen live round trips to a
+  // service that takes seconds to answer on a good day — write, poll until the
+  // server agrees, reload, restore, poll again — and reads now retry rather
+  // than fail on a lost answer, which is slower when the service is unwell and
+  // is the point. The default three minutes was already tight and stopped
+  // being enough; a timeout here would report a healthy save as a broken one.
+  test.describe.configure({ mode: 'serial', timeout: 6 * 60 * 1000 });
 
   test('saving a new name reaches the sheet and survives a reload', async ({ page }) => {
     await open(page);
