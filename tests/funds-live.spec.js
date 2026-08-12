@@ -36,9 +36,15 @@ const balanceTile = (page) => page.locator('.fnd-card.is-balance');
  * finds that row too — and then waits forever for the delete button a message
  * does not have. It reads as a delete that failed when the delete is precisely
  * what emptied the table.
+ *
+ * `:not(.tbl-ph)` for the same class of reason. The loading placeholder is a
+ * <table class="tbl tbl-ph"> with rows of its own, so a spec waiting for
+ * ".tbl tbody tr" is satisfied by the skeleton and reads the screen while it is
+ * still grey — which is how "the sheet should carry a balance" came to fail
+ * against a sheet that plainly carries one.
  */
 const rowFor = (page, reason) =>
-  page.locator('.tbl tbody tr:not(:has(.tbl-none))', { hasText: reason });
+  page.locator('.tbl:not(.tbl-ph) tbody tr:not(:has(.tbl-none))', { hasText: reason });
 
 /**
  * Narrows the table to the test row and returns it.
@@ -76,7 +82,7 @@ test.describe('monthly funds — live', () => {
 
     // A real row, not a painted heading: the screen is only proven once the
     // Web App has answered and the balances have been computed from it.
-    await expect(page.locator('.tbl tbody tr').first()).toBeVisible({ timeout: 60000 });
+    await expect(page.locator('.tbl:not(.tbl-ph) tbody tr').first()).toBeVisible({ timeout: 60000 });
     await clearLeftovers(page);
 
     opening = rupees(await balanceTile(page).textContent());
@@ -84,13 +90,13 @@ test.describe('monthly funds — live', () => {
 
     // The dates survived the trip in the committee's own timezone. Read in the
     // script project's instead, every one of these would be a day early.
-    const dates = await page.locator('.tbl tbody tr td:nth-child(3)').allTextContents();
+    const dates = await page.locator('.tbl:not(.tbl-ph) tbody tr td:nth-child(3)').allTextContents();
     for (const d of dates) expect(d).toMatch(/^\d{2}-\d{2}-\d{4}$/);
   });
 
   test('adding a credit raises the balance in the sheet', async ({ page }) => {
     await openFunds(page);
-    await expect(page.locator('.tbl tbody tr').first()).toBeVisible({ timeout: 60000 });
+    await expect(page.locator('.tbl:not(.tbl-ph) tbody tr').first()).toBeVisible({ timeout: 60000 });
 
     await page.getByRole('button', { name: /Add entry/ }).click();
     await page.getByLabel('Date').fill(DATE_ISO);
@@ -155,7 +161,7 @@ test.describe('monthly funds — live', () => {
       URL.createObjectURL = (blob) => { window.__pdfBlobs.push(blob); return original(blob); };
     });
     await openFunds(page);
-    await expect(page.locator('.tbl tbody tr').first()).toBeVisible({ timeout: 60000 });
+    await expect(page.locator('.tbl:not(.tbl-ph) tbody tr').first()).toBeVisible({ timeout: 60000 });
 
     // The range is chosen in a drawer now, so the statement is a document about
     // a period rather than whatever year the table happened to be showing.
