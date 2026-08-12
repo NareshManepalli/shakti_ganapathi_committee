@@ -4,6 +4,7 @@ import React, {
 import { useRevalidate } from '../hooks/useRevalidate';
 import { SHEETS_CONFIG } from '../config/sheetsConfig';
 import { fetchSheetRows, fetchMembersApi, toMediaUrl } from '../utils/sheetService';
+import { readCache, writeCache } from '../utils/contentCache';
 
 // ---------------------------------------------------------------------------
 // Loads every section sheet once on mount and hands the shaped result to the
@@ -102,15 +103,27 @@ const TRANSFORMERS = {
 const PUBLIC_READ_API = new Set(['members']);
 
 export const ContentProvider = ({ children }) => {
-  const [sections, setSections] = useState({});
+  // The last good copy, read synchronously so the first paint already has it.
+  // Read in an initialiser rather than an effect: an effect runs after the
+  // first render, which is one frame of skeleton over content the browser
+  // already had — small, but it is the frame the whole cache exists to avoid.
+  const [sections, setSections] = useState(() => readCache() || {});
   // Which sections could not be read. Distinct from a section that answered
   // and had no rows: only a failure is worth offering a retry for, and only an
   // empty sheet is the committee's to fix.
   const [failed, setFailed] = useState({});
-  const [loading, setLoading] = useState(true);
+  // Only true when there is nothing to show. With a copy in hand the fetch is
+  // a background refresh, and a skeleton over content already on screen would
+  // be a step backwards from showing it.
+  const [loading, setLoading] = useState(() => !readCache());
   // Guards against a slow first load resolving after a refresh and overwriting
   // the newer data with older rows.
   const alive = useRef(true);
+  // What is on screen now, readable from `load` without making it depend on
+  // state — a dependency there would rebuild the callback on every refresh and
+  // set useRevalidate listening all over again.
+  const sectionsRef = useRef(sections);
+  useEffect(() => { sectionsRef.current = sections; }, [sections]);
   useEffect(() => {
     // Reset on every mount, not just the first: StrictMode mounts, unmounts
     // and remounts in development, and a flag left false by that first cleanup
@@ -153,9 +166,21 @@ export const ContentProvider = ({ children }) => {
 
     const next = Object.fromEntries(entries.map(([name, rows]) => [name, rows]));
     const broke = Object.fromEntries(entries.map(([name, , bad]) => [name, Boolean(bad)]));
+
+    // Kept before the state is set, so a copy exists even if this render is the
+    // one the visitor navigates away from.
+    writeCache(next);
+
+    // A section that failed keeps whatever was already on screen. Blanking it
+    // would take content away from a visitor who could see it a moment ago, on
+    // the strength of one unlucky request — and the fetch runs again on their
+    // next visit anyway.
+    const kept = Object.fromEntries(Object.entries(next).map(([name, rows]) => [
+      name, rows === null && sectionsRef.current[name] ? sectionsRef.current[name] : rows,
+    ]));
     // Keep the existing object when nothing actually changed, so a refresh
     // that finds no edits causes no re-render at all.
-    setSections((cur) => (JSON.stringify(cur) === JSON.stringify(next) ? cur : next));
+    setSections((cur) => (JSON.stringify(cur) === JSON.stringify(kept) ? cur : kept));
     setFailed((cur) => (JSON.stringify(cur) === JSON.stringify(broke) ? cur : broke));
     setLoading(false);
   }, []);
