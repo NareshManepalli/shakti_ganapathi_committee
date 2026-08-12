@@ -72,6 +72,18 @@ var SENDER_NAME = 'Sri Shakthi Ganapathi Committee';
 // Optional. Where a reply goes if a member hits Reply; blank uses the sender.
 var REPLY_TO = '';
 
+// The emblem at the top of the code email.
+//
+// Attached to the message rather than linked from it. Nearly every mail client
+// blocks remote images until the reader asks for them, so a linked logo shows
+// as an empty box on the one email where the committee most wants to look like
+// themselves — this is the message that proves the site is theirs. Attached, it
+// simply appears.
+//
+// The 180px touch icon rather than logo.png: the original is 3.2 MB and this is
+// displayed at 54px.
+var LOGO_URL = 'https://srishaktiganapathicommittee.netlify.app/apple-touch-icon.png';
+
 /* ------------------------------------------------------------------ setup */
 
 /** Run once from the editor. Creates the signing key and checks sheet access. */
@@ -252,6 +264,39 @@ function verifyToken(token) {
 function otpKey(mobile) { return 'otp_' + mobile; }
 function sendLogKey(mobile) { return 'sent_' + mobile; }
 
+/**
+ * The emblem, as a blob to attach — or null, and the email goes without it.
+ *
+ * Held in the script cache between sends so a run of codes costs one fetch
+ * rather than one each. Six hours: long enough to cover any burst, short enough
+ * that replacing the file on the site reaches the email the same day.
+ *
+ * Every failure here returns null rather than throwing. A member waiting on a
+ * sign-in code must never be kept waiting by a picture.
+ */
+function committeeLogo() {
+  try {
+    var cache = CacheService.getScriptCache();
+    var b64 = cache.get('otp_logo_png');
+
+    if (!b64) {
+      var res = UrlFetchApp.fetch(LOGO_URL, { muteHttpExceptions: true });
+      if (res.getResponseCode() !== 200) return null;
+      b64 = Utilities.base64Encode(res.getBlob().getBytes());
+      // A cache value is capped at 100 KB. The icon is well inside that, but a
+      // larger file swapped in later would simply not be cached rather than
+      // throwing on every send.
+      if (b64.length < 95000) cache.put('otp_logo_png', b64, 21600);
+    }
+
+    return Utilities.newBlob(Utilities.base64Decode(b64), 'image/png', 'logo.png')
+      .setName('logo.png');
+  } catch (err) {
+    Logger.log('Logo unavailable, sending without it: ' + err);
+    return null;
+  }
+}
+
 function sendOtpEmail(member, code) {
   var subject = 'Your Sri Shakthi Ganapathi Committee code: ' + code;
   var text =
@@ -263,9 +308,17 @@ function sendOtpEmail(member, code) {
     'get in without it.\n\n' +
     '— Sri Shakthi Ganapathi Committee';
 
+  var logo = committeeLogo();
+
   var html =
     '<div style="font-family:Segoe UI,Arial,sans-serif;max-width:460px;margin:0 auto;' +
     'background:#0e1b33;color:#eaf0fb;padding:28px 26px;border-radius:14px">' +
+    // Only when there is one to show: an <img> whose source never arrives is a
+    // broken-image icon at the top of the committee's own email.
+    (logo
+      ? '<img src="cid:ssgclogo" width="54" height="54" alt="" '
+        + 'style="display:block;width:54px;height:54px;border-radius:50%;margin:0 0 14px">'
+      : '') +
     '<p style="margin:0 0 4px;color:#e5b94e;font-size:13px;letter-spacing:.14em;' +
     'text-transform:uppercase">Sri Shakthi Ganapathi Committee</p>' +
     '<p style="margin:0 0 18px;font-size:15px">Namaskaram ' +
@@ -286,6 +339,10 @@ function sendOtpEmail(member, code) {
     subject: subject,
     body: text,
     htmlBody: html,
+    // Keyed to the cid: the html refers to. Omitted entirely when the fetch
+    // failed, so the message is a clean text-and-code email rather than one
+    // with a hole where a picture should be.
+    inlineImages: logo ? { ssgclogo: logo } : undefined,
     // The address is whichever Google account deployed this script; `name`
     // decides what members actually see in their inbox, so the code arrives
     // from the committee rather than from a person.

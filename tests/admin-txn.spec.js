@@ -480,4 +480,38 @@ test.describe('transactions', () => {
     // print ₹0 directly over the ₹0 already there.
     await expect(page.locator('.txn-bar-at')).toHaveCount(0);
   });
+
+  // Every amount on these screens goes through one component, so the sign is
+  // set smaller than its figure with a little air after it — in the cards, on
+  // the bar and in the table alike. The gap is CSS rather than a character,
+  // which is why the assertions above can still match "₹9,500" as one word.
+  test('every amount wears its sign the same way', async ({ page }) => {
+    await open(page);
+    await expect(page.locator('.fnd-card').first()).toBeVisible({ timeout: 20000 });
+
+    const seen = await page.evaluate(() => {
+      const main = document.querySelector('.admin-content');
+      return {
+        signs: document.querySelectorAll('.inr').length,
+        // Any ₹ printed as a bare character would show up here as more rupee
+        // marks in the text than there are .inr elements to account for them.
+        marks: (main.innerText.match(/₹/g) || []).length,
+        places: ['.fnd-card .inr', '.txn-bar-at .inr', '.txn-end .inr', '.txn-warn .inr', 'td.fnd-num .inr']
+          .map((sel) => document.querySelectorAll(sel).length),
+      };
+    });
+
+    expect(seen.marks).toBe(seen.signs);
+    // cards, the mark, both ends, the warning, and the table
+    expect(seen.places.every((n) => n > 0), `missing from ${JSON.stringify(seen.places)}`).toBe(true);
+
+    const sized = await page.locator('.fnd-card.is-credit .fnd-card-v').evaluate((el) => {
+      const sign = el.querySelector('.inr');
+      return {
+        smaller: parseFloat(getComputedStyle(sign).fontSize) < parseFloat(getComputedStyle(el).fontSize),
+        spaced: parseFloat(getComputedStyle(sign).marginRight) > 1,
+      };
+    });
+    expect(sized).toEqual({ smaller: true, spaced: true });
+  });
 });

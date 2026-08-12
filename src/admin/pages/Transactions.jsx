@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../ToastContext';
-import { TableFoot, TableSkeleton } from './EditorShell';
+import { TableFoot, MoneySkeleton, Rs } from './EditorShell';
 import {
   IconTrash, IconEdit, IconSearch, IconDownload,
   IconFunds, IconIn, IconOut, IconBalance,
@@ -263,7 +263,7 @@ const Transactions = () => {
       {error && <p className="admin-msg is-error" role="alert">{error}</p>}
 
       {loading ? (
-        <TableSkeleton columns={COLUMNS} rows={PER_PAGE} withSelect />
+        <MoneySkeleton columns={COLUMNS} rows={PER_PAGE} bar />
       ) : (
         <>
           {totals.pot ? (
@@ -282,7 +282,7 @@ const Transactions = () => {
                     <span className="fnd-card-ico" aria-hidden="true"><Ico /></span>
                     <div className="fnd-card-body">
                       <span className="fnd-card-l">{l}</span>
-                      <b className="fnd-card-v">₹{rupees(v)}</b>
+                      <b className="fnd-card-v"><Rs value={v} /></b>
                     </div>
                     <span className="fnd-card-disc" aria-hidden="true" />
                   </article>
@@ -305,7 +305,7 @@ const Transactions = () => {
                       the ₹0 already at the start and say the same thing twice. */}
                   {totals.spent > 0 && (
                     <span className="txn-tick txn-bar-at" style={{ left: `${totals.percent}%` }}>
-                      <b style={{ transform: `translateX(${markerPull})` }}>₹{rupees(totals.spent)}</b>
+                      <b style={{ transform: `translateX(${markerPull})` }}><Rs value={totals.spent} /></b>
                     </span>
                   )}
 
@@ -325,14 +325,18 @@ const Transactions = () => {
                       warning had a row to itself and read as a separate notice;
                       here it is plainly a remark about the bar above it. */}
                   <div className="txn-foot">
-                    <span className="txn-end">₹0</span>
+                    <span className="txn-end"><Rs value={0} /></span>
                     {warning && (
                       <p className="txn-warn" role="status">
-                        <b>{totals.state === 'over' ? 'The pot is overspent.' : 'Balance is getting low.'}</b>
-                        {' '}{warning}
+                        <b>{warning.head}</b>{' '}
+                        {warning.kind === 'over' ? (
+                          <>Overspent by <Rs value={warning.by} />. The pot held <Rs value={warning.pot} />.</>
+                        ) : (
+                          <><Rs value={warning.left} /> left out of <Rs value={warning.pot} /></>
+                        )}
                       </p>
                     )}
-                    <span className="txn-end">₹{rupees(totals.pot)}</span>
+                    <span className="txn-end"><Rs value={totals.pot} /></span>
                   </div>
                 </div>
               </section>
@@ -453,9 +457,9 @@ const Transactions = () => {
                             </td>
                             <td className="txn-party">{r.paid_to || '—'}</td>
                             <td className="tbl-nowrap">{r.mode || '—'}</td>
-                            <td className="fnd-num is-credit">{r.credit ? `₹${rupees(r.credit)}` : '—'}</td>
-                            <td className="fnd-num is-debit">{r.debit ? `₹${rupees(r.debit)}` : '—'}</td>
-                            <td className="fnd-num is-balance">₹{rupees(r.balance)}</td>
+                            <td className="fnd-num is-credit">{r.credit ? <Rs value={r.credit} /> : '—'}</td>
+                            <td className="fnd-num is-debit">{r.debit ? <Rs value={r.debit} /> : '—'}</td>
+                            <td className="fnd-num is-balance"><Rs value={r.balance} /></td>
                           </tr>
                         );
                       })}
@@ -632,7 +636,7 @@ const Transactions = () => {
               {/* The consequence, before it is committed. */}
               {effect && (
                 <p className={`txn-effect is-${effect.state}`}>
-                  <b>Leaves ₹{rupees(effect.left)} in the pot.</b>
+                  <b>Leaves <Rs value={effect.left} /> in the pot.</b>
                   {effect.state === 'over' && ' That is more than the pot holds.'}
                   {effect.state === 'low' && ` Under the ₹${rupees(LOW_BALANCE)} mark.`}
                 </p>

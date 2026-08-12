@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../ToastContext';
-import { TableFoot, TableSkeleton } from './EditorShell';
+import { TableFoot, MoneySkeleton, Rs } from './EditorShell';
 import {
   IconTrash, IconEdit, IconSearch, IconDownload,
   IconYear, IconIn, IconOut, IconBalance,
@@ -279,7 +279,7 @@ const MonthlyFunds = () => {
       )}
 
       {loading ? (
-        <TableSkeleton columns={COLUMNS} rows={PER_PAGE} withSelect />
+        <MoneySkeleton columns={COLUMNS} rows={PER_PAGE} />
       ) : (
         <>
           {/* All four read the fund year the dropdown below is on — the totals
@@ -289,9 +289,9 @@ const MonthlyFunds = () => {
           <div className="fnd-summary">
             {[
               { k: 'year', Ico: IconYear, l: 'Annual year', v: yearSpan },
-              { k: 'credit', Ico: IconIn, l: 'Total funded amount', v: `₹${rupees(totals.credit)}` },
-              { k: 'debit', Ico: IconOut, l: 'Total spended amount', v: `₹${rupees(totals.debit)}` },
-              { k: 'balance', Ico: IconBalance, l: 'Current balance amount', v: `₹${rupees(totals.balance)}` },
+              { k: 'credit', Ico: IconIn, l: 'Total funded amount', v: <Rs value={totals.credit} /> },
+              { k: 'debit', Ico: IconOut, l: 'Total spended amount', v: <Rs value={totals.debit} /> },
+              { k: 'balance', Ico: IconBalance, l: 'Current balance amount', v: <Rs value={totals.balance} /> },
             ].map(({ k, Ico, l, v }) => (
               <article className={`fnd-card is-${k}`} key={k}>
                 <span className="fnd-card-ico" aria-hidden="true"><Ico /></span>
@@ -415,9 +415,9 @@ const MonthlyFunds = () => {
                           <td className="tbl-nowrap">{r.date || '—'}</td>
                           <td className="tbl-nowrap">{r.month || '—'}</td>
                           <td className="fnd-reason">{r.reason || '—'}</td>
-                          <td className="fnd-num is-credit">{r.credit ? `₹${rupees(r.credit)}` : '—'}</td>
-                          <td className="fnd-num is-debit">{r.debit ? `₹${rupees(r.debit)}` : '—'}</td>
-                          <td className="fnd-num is-balance">₹{rupees(r.balance)}</td>
+                          <td className="fnd-num is-credit">{r.credit ? <Rs value={r.credit} /> : '—'}</td>
+                          <td className="fnd-num is-debit">{r.debit ? <Rs value={r.debit} /> : '—'}</td>
+                          <td className="fnd-num is-balance"><Rs value={r.balance} /></td>
                           <td className="fnd-people">{r.fund_persons || '—'}</td>
                         </tr>
                       ))}
@@ -435,9 +435,9 @@ const MonthlyFunds = () => {
                       <tfoot>
                         <tr className="fnd-total">
                           <td colSpan={isAdmin ? 5 : 4}>Total for the {currentLabel}</td>
-                          <td className="fnd-num is-credit">₹{rupees(totals.credit)}</td>
-                          <td className="fnd-num is-debit">₹{rupees(totals.debit)}</td>
-                          <td className="fnd-num is-balance">₹{rupees(totals.balance)}</td>
+                          <td className="fnd-num is-credit"><Rs value={totals.credit} /></td>
+                          <td className="fnd-num is-debit"><Rs value={totals.debit} /></td>
+                          <td className="fnd-num is-balance"><Rs value={totals.balance} /></td>
                           <td />
                         </tr>
                       </tfoot>

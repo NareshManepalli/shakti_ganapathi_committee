@@ -1087,9 +1087,13 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 16px;
-  min-height: 92px;
-  border-radius: 18px;
+  /* Tighter top and bottom than the sides: the icon is 40px and the two lines
+     beside it about 38, so the card was carrying 92px of height for 40px of
+     content. The horizontal padding stays — that is what keeps the label off
+     the edge. */
+  padding: 10px 16px;
+  min-height: 0;
+  border-radius: 16px;
   color: #fff;
   box-shadow: 0 10px 24px rgba(15, 30, 60, 0.16);
 }
@@ -1250,9 +1254,9 @@
 
   .fnd-card {
     gap: 9px;
-    padding: 12px;
+    padding: 9px 12px;
     min-height: 0;
-    border-radius: 15px;
+    border-radius: 14px;
   }
 
   .fnd-card-ico { flex-basis: 34px; width: 34px; height: 34px; }
@@ -1488,6 +1492,52 @@
   font-size: 15px; font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--a-red);
+}
+
+/* The rupee sign, set smaller than the figure it qualifies and given a little
+   air after it. At the same size it read as part of the number rather than a
+   mark on it. `em` so one rule serves a 22px card and a 13.5px table cell. */
+.inr {
+  font-style: normal;
+  font-size: 0.72em;
+  margin-right: 0.28em;
+  font-weight: inherit;
+  /* Sits a shade above the baseline. Shrinking a glyph drops its optical centre
+     with it, and the sign ended up hanging below a row of figures it is meant
+     to sit beside. */
+  vertical-align: 0.04em;
+}
+
+/* --- the money screens' placeholder ------------------------------------- */
+/* The same boxes the real cards occupy, in the same grid, so nothing moves when
+   the figures arrive. Pale rather than coloured: a grey card that turns green
+   is a card filling in, where a green card that stays green reads as loaded and
+   empty. */
+.fnd-card-ph {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  min-height: 0;
+  border-radius: 16px;
+  border: 1px solid var(--a-border);
+  background: var(--a-surface);
+  box-shadow: none;
+}
+
+.fnd-ph-ico  { width: 40px; height: 40px; border-radius: 50%; flex: none; }
+.fnd-ph-body { flex: 1; min-width: 0; }
+.fnd-ph-l    { display: block; width: 68%; height: 8px; border-radius: 3px; }
+.fnd-ph-v    { display: block; width: 46%; height: 15px; border-radius: 4px; margin-top: 7px; }
+
+.txn-ph-fill { display: block; width: 42%; height: 100%; }
+.txn-ph-end  { display: block; width: 46px; height: 10px; border-radius: 3px; }
+.fnd-ph-year { width: 170px; }
+
+@media (max-width: 640px) {
+  .fnd-card-ph { gap: 9px; padding: 9px 12px; border-radius: 14px; }
+  .fnd-ph-ico  { width: 34px; height: 34px; }
+  .fnd-ph-year, .fnd-toolbar .tbl-ph-btn { flex: 1 1 0; width: auto; min-width: 0; }
 }
 
 /* ============================= transactions ============================= */

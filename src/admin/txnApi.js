@@ -132,19 +132,28 @@ export const summariseTxns = (rows) => {
   };
 };
 
-/** The sentence under the bar, or '' when there is nothing to warn about. */
+/**
+ * What the bar needs said, in parts rather than as a sentence.
+ *
+ * Parts because the screen renders each amount through the same component the
+ * cards and the table use — the sign set smaller, with a little air after it —
+ * and a finished string cannot carry that. It also keeps the wording where the
+ * wording belongs, in the screen, rather than half here and half there.
+ *
+ * Null when there is nothing worth saying.
+ */
 export const warningFor = (totals) => {
-  if (!totals.pot) return '';
+  if (!totals.pot) return null;
   if (totals.state === 'over') {
-    return `Overspent by ₹${rupees(Math.abs(totals.left))}. The pot held ₹${rupees(totals.pot)}.`;
+    return { kind: 'over', head: 'The pot is overspent.', by: Math.abs(totals.left), pot: totals.pot };
   }
   if (totals.state === 'low') {
-    // The mark itself is not in the sentence. It explained why the warning had
-    // appeared, but the warning appearing is the explanation — and a member
+    // The ten-thousand mark is not in the sentence. It explained why the warning
+    // had appeared, but the warning appearing is the explanation — and a member
     // reading it needs the two figures, not the rule that produced them.
-    return `₹${rupees(totals.left)} left out of ₹${rupees(totals.pot)}`;
+    return { kind: 'low', head: 'Balance is getting low.', left: totals.left, pot: totals.pot };
   }
-  return '';
+  return null;
 };
 
 /**

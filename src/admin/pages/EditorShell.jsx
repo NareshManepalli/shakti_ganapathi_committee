@@ -1,6 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { isContentConfigured } from '../contentApi';
 import { toMediaUrl } from '../../utils/sheetService';
+import { rupees } from '../fundsApi';
+
+/**
+ * An amount with its sign.
+ *
+ * The sign is its own element so it can be set smaller than the figure and
+ * given a little air — at the same weight and size it competed with the number
+ * it is only there to qualify. Sized in `em`, so it follows whatever context it
+ * lands in: 22px on a card, 13.5px in a table cell, without a rule for each.
+ */
+export const Rs = ({ value }) => (
+  <>
+    <i className="inr">₹</i>
+    {rupees(value)}
+  </>
+);
 
 /** Shown on every editor screen while the Content Web App is not deployed. */
 export const NotConnected = ({ title }) => (
@@ -112,6 +128,49 @@ export const SplitSkeleton = () => (
  * meaningless column headings is worse than it announcing nothing while the
  * page is still loading.
  */
+/**
+ * The money screens' own placeholder: four cards, the toolbar, and the table.
+ *
+ * Shaped like what arrives rather than a generic grey block. A skeleton that
+ * does not match its screen is worse than none — the page jumps when the data
+ * lands, and the jump is the thing people notice. `bar` adds the progress panel
+ * Transactions carries between the two; Annual Funds has no bar and gets none.
+ */
+export const MoneySkeleton = ({ columns, rows = 5, bar = false }) => (
+  <>
+    <div className="fnd-summary" aria-hidden="true">
+      {['year', 'credit', 'debit', 'balance'].map((k) => (
+        <div className={`admin-card fnd-card-ph is-${k}`} key={k}>
+          <span className="admin-skel fnd-ph-ico" />
+          <div className="fnd-ph-body">
+            <span className="admin-skel fnd-ph-l" />
+            <span className="admin-skel fnd-ph-v" />
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {bar && (
+      <div className="admin-card txn-progress" aria-hidden="true">
+        <div className="txn-scale">
+          <div className="txn-bar"><span className="admin-skel txn-ph-fill" /></div>
+          <div className="txn-foot">
+            <span className="admin-skel txn-ph-end" />
+            <span className="admin-skel txn-ph-end" />
+          </div>
+        </div>
+      </div>
+    )}
+
+    <div className="fnd-toolbar" aria-hidden="true">
+      <span className="admin-skel tbl-ph-select fnd-ph-year" />
+      <span className="admin-skel tbl-ph-btn" />
+    </div>
+
+    <TableSkeleton columns={columns} rows={rows} />
+  </>
+);
+
 export const TableSkeleton = ({ columns, rows = 5, withSelect = false }) => (
   <div className="admin-card tbl-card" aria-hidden="true">
     <div className="tbl-head">
