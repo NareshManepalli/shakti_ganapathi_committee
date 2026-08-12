@@ -273,35 +273,24 @@
   <div class="pending">
 
     <div class="item">
-      <h3>Tests are kept until development is complete</h3>
-      <p>They earn it. Each of these looked fine in a browser and was found only by a test: a
-      statement button that reset silently and produced no file at all; an entry drawer whose
-      fields vanished the moment a date was typed; screens asserted as loaded while still grey,
-      because the placeholder table matched the selector waiting for the real one. None of them
-      showed up in a build.</p>
-      <p>The cost is that a spec goes stale whenever the screen it watches changes — renaming
-      photos to files, retiring Settings, adding two fields ahead of a third. Rows are found by
-      their accessible names now rather than by counting, which is what kept breaking.</p>
-      <p><span class="need">Run before each deploy:</span> <code>npx playwright test</code>.
-      <code>--project=stubbed --project=docs</code> needs nothing and runs 66 specs in under two
-      minutes. The rest hit the live services and need a member with <code>bypass_in = 1</code> in
-      <code>tests/.local.json</code>, gitignored because this repository is public.</p>
-      <p>All pass. Two of them write to the President's real row and put it back — and the
-      undo is now checked against the server rather than assumed, because a run that assumed it
-      left <i>"Venkat Naresh QA"</i> as the name on the live public site. If the screen fails to
-      restore, the spec repairs the record directly and still fails, so the data is never the
-      thing that pays for a broken test.</p>
-      <p>The live funds specs sweep before and after themselves, through the Web App rather than
-      the screen, so a run killed part way — a timeout, a lost answer, Ctrl-C — cannot leave a
-      "Playwright check" row in the committee's ledger. Enough of those accumulated once to put
-      the balance out by 1,500 rupees for a fortnight before anyone looked. Proved by stranding a
-      row deliberately and watching the next run take it out.</p>
-      <p>A member with <code>bypass_in = 1</code> signs the suite in through the fixed code
-      directly, rather than asking the gate to email one. The throttle is on <i>sending</i> — one
-      a minute, five an hour — and it interrupted these runs repeatedly, always reporting itself
-      as "Sign-in is not set up yet", which sends whoever is reading off to check a configuration
-      that is perfectly fine. The full sign-in still runs for a member without the flag, since it
-      is the only thing that exercises the captcha and the OTP screen.</p>
+      <h3>The tests have been retired</h3>
+      <p>They were removed once the build was finished, at the committee's instruction. What they
+      caught is worth recording, because every one of these looked fine in a browser and none
+      showed up in a build: a statement button that reset silently and produced no file; an entry
+      drawer whose fields vanished the moment a date was typed; screens asserted as loaded while
+      still grey, because the loading placeholder matched the selector waiting for the real table;
+      a progress bar whose fill had been styled out of existence, leaving the bar, the ticks and
+      every figure looking perfectly correct; a write that succeeded while the screen called it a
+      failure; and a run that left <i>"Venkat Naresh QA"</i> as the President's name on the live
+      site.</p>
+      <p><span class="need">What this costs from here on.</span> Nothing now checks that a change
+      to one screen has not broken another, and the two money screens share their table, their
+      drawer, their statement and half their arithmetic. The Apps Script side is unaffected — it
+      was never covered by these — but the browser side is now only as correct as the last person
+      to look at it.</p>
+      <p>Everything is in the history if it is ever wanted back: <code>git show 41b6807 --
+      tests/</code> restores the lot, and <code>npm i -D @playwright/test</code> puts the runner
+      back.</p>
     </div>
 
     <div class="item">

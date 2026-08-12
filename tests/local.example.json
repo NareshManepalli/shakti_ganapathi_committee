@@ -1,4 +1,0 @@
-{
-  "_comment": "Copy to .local.json (gitignored) and fill in. The member must have access_in = 1, adm_in = 1 and bypass_in = 1.",
-  "adminMobile": "9999999999"
-}
