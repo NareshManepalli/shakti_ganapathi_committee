@@ -386,4 +386,40 @@ test.describe('transactions', () => {
     // spinning until the browser gives up two minutes later.
     await expect(page.locator('.admin-msg.is-error')).toContainText(/Could not reach|taking too long/, { timeout: 40000 });
   });
+
+  // Both of these were regressions found by eye, not by a spec — the tick
+  // pointing somewhere the fill did not end, and a drawer that fell back to the
+  // browser's bare radios after a careless range edit took its CSS out. Neither
+  // showed up in a build or in any assertion, which is exactly why they are
+  // worth one each.
+  test('the mark on the bar sits where the fill actually ends', async ({ page }) => {
+    await open(page);
+    await expect(page.locator('.fnd-card').first()).toBeVisible({ timeout: 20000 });
+
+    const { fillEnd, tickAt } = await page.evaluate(() => ({
+      fillEnd: document.querySelector('.txn-bar span').getBoundingClientRect().right,
+      tickAt: document.querySelector('.txn-bar-at').getBoundingClientRect().left,
+    }));
+
+    // The label may be shifted for readability; the mark itself may not. A
+    // transform on the whole thing used to carry its tick along with it.
+    expect(Math.abs(tickAt - fillEnd), 'the mark drifted from the fill').toBeLessThan(2);
+  });
+
+  test("the type control is the drawer's own, not the browser's", async ({ page }) => {
+    await open(page);
+    await page.getByRole('button', { name: /Add transaction/ }).click();
+
+    const opts = page.locator('.txn-kind-opt');
+    await expect(opts).toHaveCount(3);
+    // Styled boxes. Stripped of their CSS these are three bare radios on one
+    // line, which is legible and looks like a mistake.
+    const box = await opts.first().evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { border: cs.borderStyle, radius: cs.borderRadius, pad: cs.paddingTop };
+    });
+    expect(box.border).not.toBe('none');
+    expect(box.radius).not.toBe('0px');
+    expect(box.pad).not.toBe('0px');
+  });
 });

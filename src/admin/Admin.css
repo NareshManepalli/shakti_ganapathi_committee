@@ -1580,13 +1580,20 @@
 /* The figure riding the end of the fill. Absolute against the card so it can
    sit exactly over the boundary, and pulled back at the two extremes where
    centring would hang it off the end of the bar. */
+/* Zero-width, so `left: 42%` puts its tick on the boundary and nothing else has
+   to be corrected for. The label inside is what moves. */
 .txn-bar-at {
+  width: 0;
   font-weight: 700;
   transition: left 0.5s ease;
 }
 
-/* The marker's tick sits under its own left edge normally, and under whichever
-   edge was pulled to the bar's end at the extremes. */
+.txn-bar-at b {
+  display: inline-block;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .txn-bar-at::after { left: 0; }
 
 .is-healthy .txn-bar-at { color: var(--f-credit, #17914c); }
@@ -1637,6 +1644,40 @@
 
 /* The opening row's chip, beside its remark in the table. */
 .txn-reason .ed-chip { margin-left: 7px; vertical-align: 1px; }
+
+/* The drawer's own pieces. Recovered from the approved mockup after a careless
+   range edit here took them out along with the progress panel they sat beside —
+   the radios fell back to the browser's bare defaults, which is not a design
+   anybody chose. */
+.txn-kind { display: flex; gap: 8px; flex-wrap: wrap; }
+.txn-kind-opt {
+  flex: 1 1 90px;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 9px 10px;
+  border: 1px solid var(--a-border);
+  border-radius: var(--a-radius-sm);
+  background: var(--a-surface-2);
+  font-size: 13px;
+  cursor: pointer;
+}
+.txn-kind-opt input { accent-color: var(--a-heading); margin: 0; }
+.txn-kind-opt:has(input:checked) { border-color: var(--a-heading); box-shadow: 0 0 0 2px rgba(22,38,90,.10); }
+.txn-kind-opt.is-in:has(input:checked)  { border-color: #17914c; box-shadow: 0 0 0 2px rgba(23,145,76,.12); }
+.txn-kind-opt.is-out:has(input:checked) { border-color: #d1435f; box-shadow: 0 0 0 2px rgba(209,67,95,.12); }
+
+.txn-req { font-style: normal; color: var(--a-red); }
+
+.txn-effect {
+  margin: 4px 0 2px;
+  padding: 10px 12px;
+  border-radius: var(--a-radius-sm);
+  font-size: 12.5px;
+  background: #eef4fd;
+  border: 1px solid #c9daf3;
+  color: #1c4a86;
+}
+.txn-effect.is-low { background: #fdf4e3; border-color: #ecd39a; color: #8a5c12; }
+.txn-effect.is-over { background: #fdecef; border-color: #f0b2c0; color: #9c2740; }
 
 /* The one checkbox in the drawer, which decides whether the other book hears
    about this entry — so it reads as a sentence rather than a toggle. */

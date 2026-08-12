@@ -301,11 +301,11 @@ const Transactions = () => {
                     spent that" without a sentence. */}
                 <div className="txn-scale">
                   <span className="txn-tick is-start">₹0</span>
-                  <span
-                    className="txn-tick txn-bar-at"
-                    style={{ left: `${totals.percent}%`, transform: `translateX(${markerPull})` }}
-                  >
-                    ₹{rupees(totals.spent)}
+                  {/* The mark sits exactly on the boundary; only the words
+                      shift. Translating the whole thing moved its tick too, so
+                      the tick pointed at a place the fill did not end. */}
+                  <span className="txn-tick txn-bar-at" style={{ left: `${totals.percent}%` }}>
+                    <b style={{ transform: `translateX(${markerPull})` }}>₹{rupees(totals.spent)}</b>
                   </span>
                   <span className="txn-tick is-end">₹{rupees(totals.pot)}</span>
 
