@@ -147,7 +147,12 @@ const LoginPage = () => {
           {busy ? t.authSending : t.authVerifySendOtp}
         </button>
 
-        <button type="button" className="auth-back" onClick={() => navigate('/')}>
+        {/* replace, not push. Pushed, the gate stays in the history behind the
+            site — and a visitor who swipes back from the public page lands on a
+            sign-in screen they had already left, which reads as the site
+            throwing them out. The verify page's own back button already does
+            this; only this one did not. */}
+        <button type="button" className="auth-back" onClick={() => navigate('/', { replace: true })}>
           ← {t.authBackToSite}
         </button>
       </form>

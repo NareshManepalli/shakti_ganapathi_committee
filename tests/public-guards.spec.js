@@ -106,3 +106,32 @@ test.describe('gallery download', () => {
     await expect(page.locator('.gallery-lightbox')).toHaveCount(0);
   });
 });
+
+test.describe('leaving the sign-in gate', () => {
+  // A visitor who opens the gate, thinks better of it, and goes back to the
+  // site should not be able to swipe their way into the gate again. The back
+  // gesture is the most-used control on a phone, and landing on a sign-in
+  // screen you had already left reads as the site throwing you out.
+  test('back from the public page does not return to the sign-in', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#home')).toBeVisible({ timeout: 30000 });
+
+    await page.goto('/funds');
+    await expect(page.locator('.auth-card')).toBeVisible();
+
+    await page.getByRole('button', { name: /Back to the website|వెబ్‌సైట్/ }).click();
+    await expect(page).toHaveURL(/\/$/);
+
+    // The gate replaced itself, so this goes past it rather than back into it.
+    await page.goBack();
+    await expect(page).not.toHaveURL(/\/funds/);
+  });
+
+  test('the page does not offer itself for reading aloud', async ({ page }) => {
+    await page.goto('/');
+    // Google's documented opt-out. An English voice reading Telugu names is not
+    // something the committee wants attached to their site.
+    await expect(page.locator('meta[name="google"][content="nopagereadaloud"]'))
+      .toHaveCount(1);
+  });
+});

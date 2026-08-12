@@ -81,7 +81,12 @@ const AdminLayout = () => {
     // A full navigation, not router.navigate(): clearing the session re-renders
     // the route guard while /admin is still current, and its redirect would win
     // the race. A reload also drops every scrap of in-memory state.
-    window.location.assign('/funds');
+    //
+    // replace, not assign: assign leaves /admin in the history, so back from
+    // the gate returns to a screen the member is no longer allowed on, which
+    // bounces them straight to the gate again. Replaced, the portal is simply
+    // behind them.
+    window.location.replace('/funds');
   };
 
   const name = (profile && profile.name) || (member && member.name) || '';
