@@ -1037,6 +1037,30 @@ function deleteTxn(body) {
 
   writeRow(sheet, target.__row, { a_in: 0, d_ts: stamp() });
   restate(sheet);
+
+  // An opening takes its transfer with it. Left behind, the fund would carry a
+  // debit for money that went nowhere — the pot it moved into no longer exists
+  // — and the committee's total would be short by exactly that amount with
+  // nothing on either screen to say why.
+  if (String(target.kind || '').trim().toLowerCase() === 'opening') {
+    unmirrorOpening(String(target.trnsctn_id));
+  }
+
   SpreadsheetApp.flush();
   return jsonOut({ ok: true, txns: txnLedger(), funds: ledger() });
+}
+
+/** Removes the funds debit an opening row put there, if it is still there. */
+function unmirrorOpening(txnId) {
+  var sheet = fundsSheet();
+  var mark = '(' + txnId + ')';
+  var found = null;
+  readRows(sheet).forEach(function (r) {
+    if (String(r.a_in === undefined ? '1' : r.a_in).trim() !== '1') return;
+    if (String(r.reason || '').indexOf(mark) >= 0) found = r;
+  });
+  if (!found) return;
+
+  writeRow(sheet, found.__row, { a_in: 0, d_ts: stamp() });
+  restate(sheet);
 }
