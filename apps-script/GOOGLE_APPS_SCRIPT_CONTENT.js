@@ -30,9 +30,9 @@
  * ---------------------------------------------------------------------------
  */
 
-var CONTENT_SHEET_ID  = '1KYhZ-3pImxBIW68f3ZljQi3RivM51O7kwKR1awC0UbA';
-var SCHEDULE_SHEET_ID = '1rtsurWepUJlzebf2LczLO_2f_EZ0YXJ7M06plNLtGV8';
-var MEMBERS_SHEET_ID  = '1nzynJzTm72i7C0lmfR50VZ6lONArSrh7ncbejMSiYyc';
+var CONTENT_SHEET_ID  = '12D2ZJfFfJ7JBLIlCwrEA3RzY3fujD_v6yakeTmTug_U';
+var SCHEDULE_SHEET_ID = '1nZcSPH0WQY5xmZtcWhGo2r_VazkZX0B8SKFVLlSLEFo';
+var MEMBERS_SHEET_ID  = '1b9yAfTUe4ntJKvGYJSLPtNLSsusUjKflbJR1ImifpJA';
 
 // Audit stamps in the committee's own time. A new Apps Script project defaults
 // to America/Los_Angeles, which would date every i_ts and u_ts to the previous

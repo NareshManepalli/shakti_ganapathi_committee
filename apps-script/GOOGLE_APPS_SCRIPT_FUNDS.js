@@ -70,18 +70,18 @@
  */
 
 // The committee's funds workbook (id or full URL — both work).
-// https://docs.google.com/spreadsheets/d/1qGY_P2g8Fg2pmWuj9iDGxW9Lc_GJplb3WxKYBxcZIg0/edit
-var FUNDS_SHEET_ID = '1qGY_P2g8Fg2pmWuj9iDGxW9Lc_GJplb3WxKYBxcZIg0';
+// https://docs.google.com/spreadsheets/d/13Tssnt0f8pLXj54kBCf8eefsv7e8_CqYODi1ws3buZk/edit
+var FUNDS_SHEET_ID = '13Tssnt0f8pLXj54kBCf8eefsv7e8_CqYODi1ws3buZk';
 
 // The schedule workbook, read only to learn where each fund year begins and
 // ends. Day 1 of a year is that year's celebration date, and annual_year beside
 // it is what the committee calls the span it closes.
-var SCHEDULE_SHEET_ID = '1rtsurWepUJlzebf2LczLO_2f_EZ0YXJ7M06plNLtGV8';
+var SCHEDULE_SHEET_ID = '1nZcSPH0WQY5xmZtcWhGo2r_VazkZX0B8SKFVLlSLEFo';
 
 // The transactions workbook — the working pot, kept as its own book at the
 // committee's instruction rather than as a second tab here.
-// https://docs.google.com/spreadsheets/d/1oRuHXLYY9zQLK38W9AA-mPENPYQq6XOLmriSxUXlJ0g/edit
-var TRANSACTIONS_SHEET_ID = '1oRuHXLYY9zQLK38W9AA-mPENPYQq6XOLmriSxUXlJ0g';
+// https://docs.google.com/spreadsheets/d/1swn7831hxQmCaMDsi_xbCmRoJLx5fBN1nDw7571_GbM/edit
+var TRANSACTIONS_SHEET_ID = '1swn7831hxQmCaMDsi_xbCmRoJLx5fBN1nDw7571_GbM';
 
 
 // Audit stamps are written in the committee's own time, not the workbook's.

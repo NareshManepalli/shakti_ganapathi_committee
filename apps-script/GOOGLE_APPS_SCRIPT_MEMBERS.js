@@ -46,7 +46,7 @@
  * ---------------------------------------------------------------------------
  */
 
-var MEMBERS_SHEET_ID = '1nzynJzTm72i7C0lmfR50VZ6lONArSrh7ncbejMSiYyc';
+var MEMBERS_SHEET_ID = '1b9yAfTUe4ntJKvGYJSLPtNLSsusUjKflbJR1ImifpJA';
 
 // Tab name. Left as a hint rather than a requirement: if no tab matches, the
 // first one is used, so renaming the tab cannot break the public site.

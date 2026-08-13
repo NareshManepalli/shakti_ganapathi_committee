@@ -34,19 +34,19 @@ export const SHEETS_CONFIG = {
     // About + Mandapam Location — two rows, keyed by `section`.
     // Columns: section | content_en | content_te | image | map_url |
     //          a_in | i_ts | u_ts | d_ts
-    content: 'https://docs.google.com/spreadsheets/d/1KYhZ-3pImxBIW68f3ZljQi3RivM51O7kwKR1awC0UbA/edit?usp=sharing',
+    content: 'https://docs.google.com/spreadsheets/d/12D2ZJfFfJ7JBLIlCwrEA3RzY3fujD_v6yakeTmTug_U/edit?usp=sharing',
 
     // Committee members. Columns: id | name_en | name_te | position_en |
     //   position_te | mobile | email | photo | display_order | is_executive |
     //   access_in | adm_in | a_in | i_ts | u_ts | d_ts | prfle_photo
     // email / access_in / adm_in are never rendered publicly. `mobile` is —
     // the identity card shows it.
-    members: 'https://docs.google.com/spreadsheets/d/1nzynJzTm72i7C0lmfR50VZ6lONArSrh7ncbejMSiYyc/edit?usp=sharing',
+    members: 'https://docs.google.com/spreadsheets/d/1b9yAfTUe4ntJKvGYJSLPtNLSsusUjKflbJR1ImifpJA/edit?usp=sharing',
 
     // The nine festival days, per year. Columns: year | day_no | date |
     //   day_en | day_te | time | title_en | title_te | image |
     //   a_in | i_ts | u_ts | d_ts
-    schedule: 'https://docs.google.com/spreadsheets/d/1rtsurWepUJlzebf2LczLO_2f_EZ0YXJ7M06plNLtGV8/edit?usp=sharing',
+    schedule: 'https://docs.google.com/spreadsheets/d/1nZcSPH0WQY5xmZtcWhGo2r_VazkZX0B8SKFVLlSLEFo/edit?usp=sharing',
   },
 
   // Gallery photos, served from Drive by an Apps Script Web App
@@ -60,7 +60,7 @@ export const SHEETS_CONFIG = {
   // everything in this file is bundled and readable by anyone who opens the
   // site. The write token belongs to the admin portal in Phase 6.
   media: {
-    gallery: 'https://script.google.com/macros/s/AKfycbwoAlxupP-zkEi7CtehvZgZ1yztNe450F_t6Iq7vfGjMF_tGXKVzvROp36qSeiFd6pVJQ/exec',
+    gallery: 'https://script.google.com/macros/s/AKfycbypUcJ15mPLWU7-p6ey7_rEqM3S0ICyjm1G-tGJFErQEwOGtH-Wuj3HMvXHyeUzV7dh/exec',
   },
 
   // Committee-member sign-in, served by the Auth Web App
@@ -73,7 +73,7 @@ export const SHEETS_CONFIG = {
   // never sent to the browser, and the session token is signed with a key that
   // lives in Script Properties.
   auth: {
-    url: 'https://script.google.com/macros/s/AKfycbzu0ocShGl1JzZCvGtyV8KMV3u0r5RXAu-X1YOObj8x0SQ2wigTYmruAjK957frGZkg/exec',
+    url: 'https://script.google.com/macros/s/AKfycbx6PzeF-r9RcRcz1UeQvRgDQU8pt1dugqVu6l1XeR_wbvIgGS2XBFBEjcNBd-t6AGc9EQ/exec',
   },
 
   // Web Apps that serve a sheet instead of the browser reading its CSV export.
@@ -97,9 +97,9 @@ export const SHEETS_CONFIG = {
     //   into the live sheet; it means those specs run now instead of sitting
     //   skipped until the deployment lands. Paste the real /exec URL below.
     content: (import.meta.env && import.meta.env.VITE_CONTENT_API)
-      || 'https://script.google.com/macros/s/AKfycbzJH8kx4HlG1Jmf-pElUnFCOgwQQvsSxv5ozncMHr5_Xy4YKbYdSB6Q4NAhmHfAllxZEQ/exec',
+      || 'https://script.google.com/macros/s/AKfycby7dEMdWp8rtrDZW3sMSPL7HtgdgbWweMna5KL3gjroJ9-qJHLVd7iexoKTeMaYNBG-HQ/exec',
 
-    members: 'https://script.google.com/macros/s/AKfycbzB_4OcL26B4SbVkfb1byNV8ZLzqPMHXc0t18hs1ZnlO7iVx7W6jqio6QTGGar-dUdHuw/exec',
+    members: 'https://script.google.com/macros/s/AKfycbxhoIXkdzbfxAsm7ZJH9pipSkuLwH_DemUczld93xpdPdkP0EFjglComOiHjadp4KJjIA/exec',
 
     // funds: the Funds Web App (apps-script/GOOGLE_APPS_SCRIPT_FUNDS.js), which
     //   serves the money ledger behind Monthly Funds.
@@ -115,6 +115,6 @@ export const SHEETS_CONFIG = {
     //   tests answer the endpoint themselves rather than write invented money
     //   into the committee's own ledger.
     funds: (import.meta.env && import.meta.env.VITE_FUNDS_API)
-      || 'https://script.google.com/macros/s/AKfycbydcYhcll0rOVoH_HGAE4hq1IVic72Mu7wRswy0vhnzzzhoxc4-HnmkD3Zg81EqGV-J0Q/exec',
+      || 'https://script.google.com/macros/s/AKfycbzwT9AUQwWooGcBnn8p5eAtqDKBoEV71eaD8pmq9Tb20bFE2Ohsj8npVIRBAykMj8lsOw/exec',
   },
 };

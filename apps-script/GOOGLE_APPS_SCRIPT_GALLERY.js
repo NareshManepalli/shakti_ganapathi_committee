@@ -61,8 +61,8 @@
  */
 
 // The committee's "Gallery" folder in Drive (id or full URL — both work).
-// https://drive.google.com/drive/folders/1OuWdBCnuMdw5Ese6R925mMARc5x3HsQO
-var GALLERY_FOLDER_ID = '1OuWdBCnuMdw5Ese6R925mMARc5x3HsQO';
+// https://drive.google.com/drive/folders/1squrvCB7aeHm-bCpwq7ov-0MSUfHL62N
+var GALLERY_FOLDER_ID = '1squrvCB7aeHm-bCpwq7ov-0MSUfHL62N';
 
 // One flat folder of event photos, named after the events themselves. The
 // Schedule screen in the admin portal lists these by name, so a day is given
@@ -73,8 +73,8 @@ var GALLERY_FOLDER_ID = '1OuWdBCnuMdw5Ese6R925mMARc5x3HsQO';
 //
 // Share it "Anyone with the link -> Viewer", like the gallery folder: the
 // browser loads the chosen photo directly from Drive.
-// https://drive.google.com/drive/folders/1nKoW6gFRRPwAY_auPRC_TLFAmQ5J6kQH
-var EVENT_IMAGES_FOLDER_ID = '1nKoW6gFRRPwAY_auPRC_TLFAmQ5J6kQH';
+// https://drive.google.com/drive/folders/1YUsAYcp4Fc9fJTPODUAesX8UzDrRLSBH
+var EVENT_IMAGES_FOLDER_ID = '1YUsAYcp4Fc9fJTPODUAesX8UzDrRLSBH';
 
 // The write secret is NOT stored in this file. This file is committed to a
 // public GitHub repo, so a secret written here would be published with it.
