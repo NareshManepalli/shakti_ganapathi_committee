@@ -52,7 +52,10 @@ const Transactions = () => {
   const { token, member } = useAuth();
   const toast = useToast();
   const configured = isFundsConfigured();
-  const isAdmin = Boolean(member && member.isAdmin);
+  // Two hands may write here: adm_in edits everything, and trns_adm_in exists
+  // for exactly this screen — a member who keeps the pot without holding the
+  // rest of the portal. The server checks the same claim on every write.
+  const canWrite = Boolean(member && (member.isAdmin || member.isTxnAdmin));
 
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(configured);
@@ -349,7 +352,7 @@ const Transactions = () => {
                   The {currentLabel} starts with an opening amount moved across from the annual
                   fund. Everything after it is counted against that.
                 </span>
-                {isAdmin && (
+                {canWrite && (
                   <button className="admin-btn" onClick={() => openNew('opening')}>
                     Set the opening amount
                   </button>
@@ -380,7 +383,7 @@ const Transactions = () => {
             <div className="tbl-head">
               <h2 className="tbl-title fnd-history-title">Transaction history</h2>
 
-              {isAdmin && (
+              {canWrite && (
                 <button className="admin-btn" onClick={() => openNew()} disabled={busy}>
                   <span className="tbl-plus" aria-hidden="true">+</span> Add transaction
                 </button>
@@ -406,7 +409,7 @@ const Transactions = () => {
                     <thead>
                       <tr>
                         <th className="tbl-sno">S.No</th>
-                        {isAdmin && <th className="tbl-acts">Actions</th>}
+                        {canWrite && <th className="tbl-acts">Actions</th>}
                         <th>Date</th>
                         <th className="txn-reason">Remarks</th>
                         <th className="txn-party">Paid to</th>
@@ -422,7 +425,7 @@ const Transactions = () => {
                         return (
                           <tr key={r.trnsctn_id || `${r.date}-${i}`}>
                             <td className="tbl-sno">{start + i + 1}</td>
-                            {isAdmin && (
+                            {canWrite && (
                               <td className="tbl-acts">
                                 <div>
                                   <button

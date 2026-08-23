@@ -141,6 +141,10 @@ var TRANSACTIONS_HEADER = [
   'annual_year', 'annual_yr_id',
   'kind', 'reason', 'paid_to', 'mode',
   'a_in', 'i_ts', 'u_ts', 'd_ts',
+  // Who last touched the row — written from the signed token's name on every
+  // save and delete, never from anything the caller typed. Last at the sheet's
+  // edge so the committee's familiar column order stays where it was.
+  'trnsfr_nm',
 ];
 
 /* ------------------------------------------------------------------ utils */
@@ -595,6 +599,20 @@ function requireAdmin(body) {
   return claims;
 }
 
+/**
+ * The pot accepts a second hand. trns_adm_in = 1 marks a transactions admin —
+ * a member trusted with this one ledger and nothing else in the portal. The
+ * claim travels in the signed token (txa), so it is the auth script's word,
+ * not the caller's.
+ */
+function requireTxnWriter(body) {
+  var claims = requireMember(body);
+  if (Number(claims.adm) !== 1 && Number(claims.txa) !== 1) {
+    throw new Error('You do not have permission to edit the transactions.');
+  }
+  return claims;
+}
+
 /* -------------------------------------------------------------- READ (GET) */
 
 /** The live rows, oldest first, shaped for the screen. */
@@ -662,13 +680,16 @@ function doPost(e) {
   try {
     var body = {};
     if (e && e.postData && e.postData.contents) body = JSON.parse(e.postData.contents);
-    requireAdmin(body);
 
     var action = String(body.action || '').trim();
-    if (action === 'saveFund')   return saveFund(body);
-    if (action === 'deleteFund') return deleteFund(body);
-    if (action === 'saveTxn')    return saveTxn(body);
-    if (action === 'deleteTxn')  return deleteTxn(body);
+    // Checked per action, not once at the door: the fund is adm_in = 1 only,
+    // while the pot also takes a transactions admin — the one ledger that role
+    // exists for. The claims ride into the write so it can record whose hand
+    // it was.
+    if (action === 'saveFund')   { requireAdmin(body); return saveFund(body); }
+    if (action === 'deleteFund') { requireAdmin(body); return deleteFund(body); }
+    if (action === 'saveTxn')    return saveTxn(body, requireTxnWriter(body));
+    if (action === 'deleteTxn')  return deleteTxn(body, requireTxnWriter(body));
     return fail('UNKNOWN_ACTION', 'Unknown action: ' + action);
   } catch (err) {
     return fail('SERVER_ERROR', String(err && err.message ? err.message : err));
@@ -868,7 +889,7 @@ function txnYearKey(row) {
  * same call, so the money cannot be in both books at once. `mirror: false`
  * skips that — for a committee that already entered the transfer by hand.
  */
-function saveTxn(body) {
+function saveTxn(body, claims) {
   var entry = body.entry || {};
   var date = String(entry.date || '').trim();
   if (!dateKey(date)) return fail('BAD_DATE', 'Give the transaction a date as dd-mm-yyyy.');
@@ -913,6 +934,10 @@ function saveTxn(body) {
     reason: reason,
     paid_to: String(entry.paid_to || ''),
     mode: String(entry.mode || ''),
+    // The name out of the signed token, whoever holds the pen — full admin or
+    // transactions admin alike. Not taken from the entry: the caller does not
+    // get to sign someone else's name.
+    trnsfr_nm: String((claims && claims.nm) || ''),
     u_ts: stamp()
   };
   if (String(entry.annual_year || '').trim()) fields.annual_year = String(entry.annual_year).trim();
@@ -1008,7 +1033,7 @@ function mirrorOpeningToFunds(txnId, date, amount) {
  * is measured from that figure, and removing it would silently restate the
  * whole year rather than fail.
  */
-function deleteTxn(body) {
+function deleteTxn(body, claims) {
   var id = String(body.trnsctn_id || '').trim();
   if (!id) return fail('BAD_ID', 'Which transaction?');
 
@@ -1035,7 +1060,12 @@ function deleteTxn(body) {
     }
   }
 
-  writeRow(sheet, target.__row, { a_in: 0, d_ts: stamp() });
+  // The deleter's name lands beside the soft delete, same as on a save — the
+  // row stays in the sheet, so it should say who retired it as well as when.
+  writeRow(sheet, target.__row, {
+    a_in: 0, d_ts: stamp(),
+    trnsfr_nm: String((claims && claims.nm) || ''),
+  });
   restate(sheet);
 
   // An opening takes its transfer with it. Left behind, the fund would carry a

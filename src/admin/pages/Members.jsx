@@ -18,15 +18,17 @@ const COLUMNS = [
 const blank = {
   id: '', name_en: '', name_te: '', position_en: '', position_te: '',
   mobile: '', email: '', photo: '', prfle_photo: '', display_order: '',
-  is_executive: false, access_in: false, adm_in: false, bypass_in: false,
+  is_executive: false, access_in: false, adm_in: false, trns_adm_in: false,
+  bypass_in: false,
 };
 
 const asBool = (v) => String(v ?? '').trim() === '1';
 
 // The committee list. This is the only screen that can grant portal access, so
-// the three flags are laid out with what each one means rather than as bare
+// the flags are laid out with what each one means rather than as bare
 // checkboxes — access_in decides who can sign in at all, adm_in decides who can
-// edit, and bypass_in is a development shortcut that must be off before launch.
+// edit everything, trns_adm_in hands out just the transactions ledger, and
+// bypass_in is a development shortcut that must be off before launch.
 const Members = () => {
   const { members, loading, error, merge, token } = useAdminData();
   const { member: me } = useAuth();
@@ -75,7 +77,8 @@ const Members = () => {
     photo: String(r.photo || ''), prfle_photo: String(r.prfle_photo || ''),
     display_order: String(r.display_order || ''),
     is_executive: asBool(r.is_executive), access_in: asBool(r.access_in),
-    adm_in: asBool(r.adm_in), bypass_in: asBool(r.bypass_in),
+    adm_in: asBool(r.adm_in), trns_adm_in: asBool(r.trns_adm_in),
+    bypass_in: asBool(r.bypass_in),
   });
 
   const save = async (e) => {
@@ -301,13 +304,18 @@ const Members = () => {
                 </label>
                 <label className="ed-flag">
                   <input type="checkbox" checked={editing.access_in}
-                         onChange={(e) => setEditing({ ...editing, access_in: e.target.checked, adm_in: e.target.checked && editing.adm_in })} />
+                         onChange={(e) => setEditing({ ...editing, access_in: e.target.checked, adm_in: e.target.checked && editing.adm_in, trns_adm_in: e.target.checked && editing.trns_adm_in })} />
                   <span><b>Can sign in</b><i>Without this, they appear on the site but cannot reach the portal</i></span>
                 </label>
                 <label className={`ed-flag${editing.access_in ? '' : ' is-disabled'}`}>
                   <input type="checkbox" checked={editing.adm_in} disabled={!editing.access_in}
                          onChange={(e) => setEditing({ ...editing, adm_in: e.target.checked })} />
                   <span><b>Full access</b><i>Can edit every section. Otherwise: funds screens only</i></span>
+                </label>
+                <label className={`ed-flag${editing.access_in ? '' : ' is-disabled'}`}>
+                  <input type="checkbox" checked={editing.trns_adm_in} disabled={!editing.access_in}
+                         onChange={(e) => setEditing({ ...editing, trns_adm_in: e.target.checked })} />
+                  <span><b>Transactions admin</b><i>Can add and edit transactions only. Full access already includes this</i></span>
                 </label>
                 <label className="ed-flag is-warn">
                   <input type="checkbox" checked={editing.bypass_in}

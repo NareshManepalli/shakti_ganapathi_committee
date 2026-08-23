@@ -325,7 +325,7 @@ function saveMember(body) {
    'photo', 'prfle_photo', 'display_order'].forEach(function (k) {
     if (m[k] !== undefined) fields[k] = String(m[k]);
   });
-  ['is_executive', 'access_in', 'adm_in', 'bypass_in'].forEach(function (k) {
+  ['is_executive', 'access_in', 'adm_in', 'trns_adm_in', 'bypass_in'].forEach(function (k) {
     if (m[k] !== undefined) fields[k] = m[k] ? 1 : 0;
   });
 

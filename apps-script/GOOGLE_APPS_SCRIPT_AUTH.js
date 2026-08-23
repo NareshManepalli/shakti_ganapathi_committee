@@ -485,6 +485,7 @@ function readMembers() {
   var iMobile = col('mobile'), iEmail = col('email');
   var iAccess = col('access_in'), iAdm = col('adm_in'), iActive = col('a_in');
   var iBypass = col('bypass_in');   // -1 when the column is absent, i.e. off
+  var iTxnAdm = col('trns_adm_in'); // ditto — absent reads as nobody holding it
 
   var out = [];
   for (var r = 1; r < values.length; r++) {
@@ -499,6 +500,7 @@ function readMembers() {
       email: iEmail < 0 ? '' : String(row[iEmail] || '').trim(),
       accessIn: String(iAccess < 0 ? '0' : row[iAccess]).trim() === '1',
       admIn: String(iAdm < 0 ? '0' : row[iAdm]).trim() === '1',
+      txnAdmIn: String(iTxnAdm < 0 ? '0' : row[iTxnAdm]).trim() === '1',
       bypassIn: String(iBypass < 0 ? '0' : row[iBypass]).trim() === '1',
     });
   }
@@ -561,6 +563,10 @@ function issueToken(member) {
     mid: member.id,
     nm: member.name,
     adm: member.admIn ? 1 : 0,
+    // trns_adm_in — may write the transactions ledger and nothing else. Carried
+    // separately from adm rather than folded into it, so the funds service can
+    // tell the two hands apart without a second look at the sheet.
+    txa: member.txnAdmIn ? 1 : 0,
     exp: Date.now() + SESSION_TTL_MINUTES * 60 * 1000,
   };
   var body = b64url(Utilities.newBlob(JSON.stringify(payload)).getBytes());
@@ -812,7 +818,7 @@ function handleVerifyOtp(body) {
       ok: true,
       bypass: true,
       token: issueToken(early),
-      member: { id: early.id, name: early.name, nameTe: early.nameTe, isAdmin: early.admIn },
+      member: { id: early.id, name: early.name, nameTe: early.nameTe, isAdmin: early.admIn, isTxnAdmin: early.txnAdmIn },
       expiresInMin: SESSION_TTL_MINUTES,
     });
   }
@@ -860,7 +866,8 @@ function handleVerifyOtp(body) {
       id: member.id,
       name: member.name,
       nameTe: member.nameTe,
-      isAdmin: member.admIn,   // adm_in = 1 -> full portal, 0 -> funds screens only
+      isAdmin: member.admIn,        // adm_in = 1 -> full portal, 0 -> funds screens only
+      isTxnAdmin: member.txnAdmIn,  // trns_adm_in = 1 -> may write the transactions screen
     },
     expiresInMin: SESSION_TTL_MINUTES,
   });
@@ -902,6 +909,7 @@ function profileOf(m) {
     photo: row.photo || '',
     profilePhoto: row.prfle_photo || '',
     isAdmin: m.admIn,
+    isTxnAdmin: m.txnAdmIn,
   };
 }
 
