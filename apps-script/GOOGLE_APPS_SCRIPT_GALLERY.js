@@ -278,6 +278,10 @@ function readImages(folder, eventName, out) {
       event: eventName || '',
       // The browser needs this to know whether to render a tile or a player.
       mime: mime,
+      // When the file landed in Drive, which is what "first uploaded" means.
+      // Drive's own iterator returns files in no promised order at all, so
+      // this is the only fact the gallery can honestly sort by.
+      created: f.getDateCreated().getTime(),
     });
   }
   return acc;
@@ -313,7 +317,14 @@ function readYear(yearFolder) {
     var sub = subIt.next();
     readImages(sub, sub.getName(), images);
   }
-  images.sort(function (a, b) { return a.name.localeCompare(b.name); });
+  // First upload first, the way the committee added them. Same-moment ties —
+  // a batch dragged in together, or the photos copied across during the
+  // account move — fall back to the filename, which on a phone's IMG_ names
+  // still reads in the order they were taken.
+  images.sort(function (a, b) {
+    if (a.created !== b.created) return a.created - b.created;
+    return a.name.localeCompare(b.name);
+  });
   return images;
 }
 
