@@ -61,7 +61,13 @@ const AdminLayout = () => {
   const menuRef = useRef(null);
 
   const isAdmin = Boolean(member && member.isAdmin);
-  const nav = useMemo(() => NAV.filter((n) => !n.admin || isAdmin), [isAdmin]);
+  // A transactions-only admin holds exactly one screen, so the menu offers
+  // exactly one door. adm_in = 1 keeps everything whatever txa says — full
+  // access already includes the pot.
+  const txnOnly = Boolean(member && member.isTxnAdmin && !member.isAdmin);
+  const nav = useMemo(() => NAV.filter((n) => (
+    txnOnly ? n.to === '/admin/transactions' : (!n.admin || isAdmin)
+  )), [isAdmin, txnOnly]);
 
   // Close the profile menu on an outside click or Escape.
   useEffect(() => {

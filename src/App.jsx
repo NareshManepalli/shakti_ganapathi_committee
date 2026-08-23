@@ -69,6 +69,13 @@ const RequireAuth = ({ children }) => {
   return isAuthed ? children : <Navigate to="/funds" replace />
 }
 
+// Where sign-in lands, by role. A transactions-only admin (trns_adm_in = 1,
+// adm_in = 0) holds exactly one screen, so everything that would land anywhere
+// else sends them there instead.
+const homeFor = (member) => (member && member.isTxnAdmin && !member.isAdmin
+  ? '/admin/transactions'
+  : '/admin/monthly-funds')
+
 // The editing screens, for adm_in = 1 only.
 //
 // The sidebar already leaves these out for a funds-only member, but a menu is
@@ -81,7 +88,23 @@ const RequireAdmin = ({ children }) => {
   const { member } = useAuth()
   return member && member.isAdmin
     ? children
-    : <Navigate to="/admin/monthly-funds" replace />
+    : <Navigate to={homeFor(member)} replace />
+}
+
+// The funds screens belong to every member except the transactions-only
+// admin, whose whole role is the one other screen. Same reasoning as above:
+// the sidebar already hides the door, this is the lock behind it.
+const RequireFundsView = ({ children }) => {
+  const { member } = useAuth()
+  return member && member.isTxnAdmin && !member.isAdmin
+    ? <Navigate to="/admin/transactions" replace />
+    : children
+}
+
+// The landing screen depends on who arrived, so the index redirect has to ask.
+const AdminHome = () => {
+  const { member } = useAuth()
+  return <Navigate to={homeFor(member)} replace />
 }
 
 function App() {
@@ -98,10 +121,10 @@ function App() {
                   filtered by adm_in, but the server checks the signed token on
                   every write, so hiding a link is convenience, not security. */}
               <Route path="/admin" element={<RequireAuth><AdminLayout /></RequireAuth>}>
-                {/* No landing screen of its own — sign-in drops everyone
-                    straight into Monthly Funds, the one screen every member
-                    can reach whatever their adm_in says. */}
-                <Route index element={<Navigate to="/admin/monthly-funds" replace />} />
+                {/* No landing screen of its own — sign-in drops a member into
+                    Monthly Funds, and a transactions-only admin into the one
+                    screen their role is for. */}
+                <Route index element={<AdminHome />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="about" element={<RequireAdmin><AdminAbout /></RequireAdmin>} />
                 <Route path="members" element={<RequireAdmin><AdminMembers /></RequireAdmin>} />
@@ -112,7 +135,7 @@ function App() {
                 {/* Settings retired: the festival date it edited is now read
                     from the schedule sheet's day 1, so the screen had nothing
                     left to change. */}
-                <Route path="monthly-funds" element={<MonthlyFunds />} />
+                <Route path="monthly-funds" element={<RequireFundsView><MonthlyFunds /></RequireFundsView>} />
               </Route>
               {/* Anything unknown goes back to the public page rather than a
                   blank screen. */}
