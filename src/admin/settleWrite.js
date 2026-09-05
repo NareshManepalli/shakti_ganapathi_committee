@@ -61,12 +61,23 @@ export const holdsEntry = (rows, entry) => {
   const credit = Number(entry.credit) || 0;
   const debit = Number(entry.debit) || 0;
   const reason = String(entry.reason || '').trim();
-  const date = String(entry.date || '').trim();
+  const date = dayOf(entry.date);
 
-  return rows.some((r) => String(r.date).trim() === date
+  return rows.some((r) => dayOf(r.date) === date
     && String(r.reason || '').trim() === reason
     && (Number(r.credit) || 0) === credit
     && (Number(r.debit) || 0) === debit);
+};
+
+/**
+ * `5-8-2026`, `05/08/2026` and `05-08-2026` are the same day, and a ledger
+ * read back must be allowed to say it either way. Compared as a number so the
+ * padding cannot make a landed write look lost — which is what sends the
+ * committee back to Save, and the row into the sheet twice.
+ */
+const dayOf = (dmy) => {
+  const m = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/.exec(String(dmy || '').trim());
+  return m ? Number(m[3]) * 10000 + Number(m[2]) * 100 + Number(m[1]) : String(dmy || '').trim();
 };
 
 /** Whether a ledger no longer holds this id. */

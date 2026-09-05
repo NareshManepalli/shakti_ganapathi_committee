@@ -18,10 +18,10 @@
  * SNO AND TRNSCTN_ID
  *   Two numbers doing two jobs. `sno` is the ledger's line number, renumbered
  *   1..N in date order on every write — an entry added for an earlier month
- *   lands in its right place and the rows after it move down, as they would on
- *   a bank statement. `trnsctn_id` never moves: it is handed out once and is
- *   what an edit or a delete names, because the line number under a row changes
- *   the moment anybody inserts an earlier one.
+ *   is moved to its right place on the sheet and the rows after it move down,
+ *   as they would on a bank statement. `trnsctn_id` never moves: it is handed
+ *   out once and is what an edit or a delete names, because the line number
+ *   under a row changes the moment anybody inserts an earlier one.
  *
  * WHY THIS IS NOT PART OF THE CONTENT WEB APP
  *   That one refuses anyone without adm_in = 1, and Monthly Funds is the screen
@@ -36,9 +36,12 @@
  *     sheets/funds.csv is it, with the committee's history already in place:
  *       sno | trnsctn_id | date | year | month | credit | debit | balance
  *           | reason | fund_persons | a_in | i_ts | u_ts | d_ts
- *     The date column may be plain text or a real date column — both are read
- *     the same. If you leave it as a date, check the workbook's locale reads
- *     `05-10-2025` as 5 October and not 10 May: File -> Settings -> Locale.
+ *     The date column is kept as PLAIN TEXT, `dd-MM-yyyy`, by this script. It
+ *     cannot be left to the workbook: a Google Sheet on the default US locale
+ *     reads a typed "05-08-2026" as the 8th of May, and a ledger row then
+ *     carries a date its own month column contradicts. Every write formats
+ *     the cell as text before filling it, and restate() below turns any cell
+ *     the sheet has already converted back into the day that was meant.
  *  2. Put its id in FUNDS_SHEET_ID below.
  *  3. script.new -> paste this file -> Save.
  *  4. Give it the auth project's signing key, or every call is refused:
@@ -46,8 +49,10 @@
  *     SESSION_SIGNING_KEY, then run setSigningKey('<that value>') here once.
  *  5. Deploy -> New deployment -> Web app, Execute as Me, access Anyone.
  *  6. Put the /exec URL in src/config/sheetsConfig.js -> api.funds.
- *  7. Run paintFundsSheet() once to colour the money columns of rows that are
- *     already there. New rows are coloured as they are written.
+ *  7. Run repairFundsSheet() once. It puts the rows that are already there in
+ *     date order, renumbers them, rewrites the running balance, mends any date
+ *     the workbook mangled and colours the money columns. Every write after
+ *     that does the same for itself.
  *
  * THE SECOND LEDGER
  *   Transactions — the pot the committee spends from during a celebration —
@@ -63,9 +68,25 @@
  *   deployments, that movement could half-happen.
  *
  *  8. Put the transactions workbook's id in TRANSACTIONS_SHEET_ID below.
- *  9. Run setupTransactionsSheet() once to write its header.
+ *  9. Run setupTransactionsSheet() once to write its header — or, if the
+ *     header was typed by hand, run repairTransactionsSheet() once instead.
  * 10. Run checkTransactions() to confirm this project can reach all three
  *     books and holds the signing key, before wondering why a screen is blank.
+ *
+ * WHAT WENT WRONG BEFORE, AND WHAT NOW HOLDS IT RIGHT
+ *   Rows were appended to the bottom of the sheet and only their line numbers
+ *   were reordered, so an entry for an earlier month sat last on the sheet
+ *   with a number from the middle. And the date went in as a bare string,
+ *   which the workbook parsed month-first — 05-08-2026 became 8 May — so the
+ *   row sorted into the wrong month, and the screen, reading the mangled
+ *   date back, could not find the entry it had just written and reported the
+ *   save as failed; a second press then put the row in twice.
+ *
+ *   Now every write ends in restate(): the date column is text, the rows are
+ *   physically in date order with retired rows below the live ones, sno runs
+ *   1..N down the page, and the balance is rewritten along it. Writes take a
+ *   script lock, because a whole-block rewrite that overlapped another would
+ *   lose a row.
  * ---------------------------------------------------------------------------
  */
 
@@ -319,35 +340,92 @@ function stamp() {
   return Utilities.formatDate(new Date(), COMMITTEE_TZ, 'yyyy-MM-dd HH:mm:ss');
 }
 
+function pad2(n) {
+  var s = String(n);
+  return s.length < 2 ? '0' + s : s;
+}
+
 /**
- * A date cell as `dd-MM-yyyy`, the form the committee writes.
+ * Typed date text tidied into `dd-MM-yyyy`, the form the committee writes.
  *
- * The column may hold either text or a real date — Sheets reinterprets one as
- * the other depending on the column's format, and both have to read the same.
- * A real date is turned back into text HERE rather than left to JSON, which
- * would send a UTC instant that lands a day early for anyone west of the sheet.
+ * 5/8/2026, 05.08.2026, 2026-08-05 and 05-08-26 all mean the same day and all
+ * come out as 05-08-2026. Anything else is handed back as it was, trimmed —
+ * a value nobody can parse is still something somebody typed.
  */
-function asDateText(value, tz) {
-  if (value instanceof Date) {
-    return Utilities.formatDate(value, tz || sheetTimeZone(), 'dd-MM-yyyy');
+function normaliseDateText(value) {
+  var s = String(value === undefined || value === null ? '' : value).trim();
+  var m;
+  if ((m = /^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/.exec(s))) return pad2(m[3]) + '-' + pad2(m[2]) + '-' + m[1];
+  if ((m = /^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/.exec(s))) return pad2(m[1]) + '-' + pad2(m[2]) + '-' + m[3];
+  if ((m = /^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2})$/.exec(s))) return pad2(m[1]) + '-' + pad2(m[2]) + '-20' + m[3];
+  return s;
+}
+
+/** 1..12 for a month name or its first three letters, 0 for anything else. */
+function monthIndex(name) {
+  var s = String(name || '').trim().toLowerCase().slice(0, 3);
+  if (!s) return 0;
+  for (var i = 0; i < MONTHS.length; i++) {
+    if (MONTHS[i].toLowerCase().slice(0, 3) === s) return i + 1;
   }
-  return String(value || '').trim();
+  return 0;
+}
+
+/**
+ * A date cell as `dd-MM-yyyy`, however it arrived.
+ *
+ * Text is tidied (see normaliseDateText). A real Date is what Sheets made of a
+ * string it decided to parse for itself, and in a workbook on the default US
+ * locale it parses month-first: "05-08-2026" written by this script came back
+ * as the 8th of May. The month column beside it was written from the string
+ * before the workbook got to it, so when the two disagree and swapping day and
+ * month makes them agree, the swap is the correction. Only a Date is ever
+ * swapped — text stands as typed. A bare serial number (a date cell whose
+ * format was changed under it) is turned back into its day too.
+ *
+ * A real date is turned into text HERE rather than left to JSON, which would
+ * send a UTC instant that lands a day early for anyone west of the sheet.
+ */
+function mendDate(value, monthName, tz) {
+  if (typeof value === 'number' && value > 20000) {
+    // Days since 30 December 1899, which is how the sheet counts.
+    value = new Date(Date.UTC(1899, 11, 30) + Math.round(value) * 86400000);
+    tz = 'UTC';
+  }
+  if (!(value instanceof Date)) return normaliseDateText(value);
+
+  var text = Utilities.formatDate(value, tz || sheetTimeZone(), 'dd-MM-yyyy');
+  var m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(text);
+  if (!m) return text;
+
+  var day = Number(m[1]);
+  var month = Number(m[2]);
+  var want = monthIndex(monthName);
+  if (want && want !== month && want === day && month <= 12) {
+    return pad2(month) + '-' + pad2(day) + '-' + m[3];
+  }
+  return text;
+}
+
+/** mendDate without a month column to check against. */
+function asDateText(value, tz) {
+  return mendDate(value, '', tz);
 }
 
 /** `dd-MM-yyyy` -> `yyyyMMdd`, which sorts and compares as a plain number. */
 function dateKey(text) {
-  var m = /^(\d{1,2})-(\d{1,2})-(\d{4})$/.exec(String(text || '').trim());
+  var m = /^(\d{1,2})-(\d{1,2})-(\d{4})$/.exec(normaliseDateText(text));
   if (!m) return 0;
   return Number(m[3]) * 10000 + Number(m[2]) * 100 + Number(m[1]);
 }
 
 function yearOfDate(text) {
-  var m = /^(\d{1,2})-(\d{1,2})-(\d{4})$/.exec(String(text || '').trim());
+  var m = /^(\d{1,2})-(\d{1,2})-(\d{4})$/.exec(normaliseDateText(text));
   return m ? m[3] : '';
 }
 
 function monthOfDate(text) {
-  var m = /^(\d{1,2})-(\d{1,2})-(\d{4})$/.exec(String(text || '').trim());
+  var m = /^(\d{1,2})-(\d{1,2})-(\d{4})$/.exec(normaliseDateText(text));
   return m ? (MONTHS[Number(m[2]) - 1] || '') : '';
 }
 
@@ -356,19 +434,45 @@ function asNumber(value) {
   return isNaN(n) ? 0 : n;
 }
 
+/**
+ * The date column, forced to plain text before anything is written into it.
+ *
+ * Set on the cell first and the value second: a cell that is already text
+ * keeps "05-08-2026" as the six characters it is, where an automatic cell
+ * parses them into whatever day the workbook's locale prefers. The other
+ * order would show a date cell's serial number as text and fix nothing.
+ */
+function textDateCell(sheet, rowNumber) {
+  var c = headerOf(sheet).indexOf('date');
+  if (c >= 0) sheet.getRange(rowNumber, c + 1).setNumberFormat('@');
+}
+
 function writeRow(sheet, rowNumber, fields) {
   var header = headerOf(sheet);
+  if (fields.date !== undefined) textDateCell(sheet, rowNumber);
   Object.keys(fields).forEach(function (key) {
     var c = header.indexOf(key);
     if (c >= 0) sheet.getRange(rowNumber, c + 1).setValue(fields[key]);
   });
 }
 
+/**
+ * Adds a row after the last one with anything in it.
+ *
+ * Written by range rather than with appendRow(), because the date cell has to
+ * be made text before the value lands in it, and appendRow() gives no chance
+ * to do that. The sheet is grown if the row would fall off its end.
+ */
 function appendRow(sheet, fields) {
   var header = headerOf(sheet);
   var row = header.map(function (h) { return h && fields[h] !== undefined ? fields[h] : ''; });
-  sheet.appendRow(row);
-  return sheet.getLastRow();
+  var rowNumber = sheet.getLastRow() + 1;
+  if (rowNumber > sheet.getMaxRows()) {
+    sheet.insertRowsAfter(sheet.getMaxRows(), rowNumber - sheet.getMaxRows());
+  }
+  textDateCell(sheet, rowNumber);
+  sheet.getRange(rowNumber, 1, 1, row.length).setValues([row]);
+  return rowNumber;
 }
 
 /**
@@ -476,26 +580,39 @@ function annualYearFor(dateText) {
   return '';
 }
 
-/** Green for money in, red for money out, blue for the balance. */
-function paintRow(sheet, rowNumber) {
-  var header = headerOf(sheet);
-  var pairs = [['credit', FILL_CREDIT], ['debit', FILL_DEBIT], ['balance', FILL_BALANCE]];
-  pairs.forEach(function (p) {
-    var c = header.indexOf(p[0]);
-    if (c >= 0) sheet.getRange(rowNumber, c + 1).setBackground(p[1]);
-  });
+/**
+ * Puts an existing sheet right, once.
+ *
+ * Run from the Apps Script editor: Run ▸ repairFundsSheet, and the same for
+ * the transactions book. It is restate() — what every write already does —
+ * run over rows that arrived some other way: pasted-in history, rows the old
+ * script appended out of order, dates the workbook parsed into the wrong
+ * month. Nothing is deleted; rows are moved into date order, renumbered,
+ * their balances rewritten, their dates made text, the money columns coloured.
+ * Running it twice costs nothing but a moment.
+ */
+function repairFundsSheet() {
+  return repairSheet_(fundsSheet(), 'funds');
 }
 
-/**
- * Colours every existing row. Run once after pasting in history the committee
- * kept elsewhere — writes through this script colour themselves.
- */
-function paintFundsSheet() {
-  var sheet = fundsSheet();
-  var rows = readRows(sheet);
-  rows.forEach(function (r) { paintRow(sheet, r.__row); });
+function repairTransactionsSheet() {
+  return repairSheet_(transactionsSheet(), 'transactions');
+}
+
+function repairSheet_(sheet, name) {
+  var done = restate(sheet);
   SpreadsheetApp.flush();
-  Logger.log('Painted ' + rows.length + ' rows.');
+  var line = name + ': ' + done.rows + ' row' + (done.rows === 1 ? '' : 's')
+    + ' (' + done.live + ' live) now in date order; '
+    + done.mended + ' date cell' + (done.mended === 1 ? '' : 's')
+    + ' rewritten as dd-MM-yyyy text.';
+  Logger.log(line);
+  return line;
+}
+
+/** The old name for repairFundsSheet(), kept so older notes still run. */
+function paintFundsSheet() {
+  return repairFundsSheet();
 }
 
 /**
@@ -620,7 +737,10 @@ function ledger() {
   return readRows(fundsSheet())
     .filter(function (r) { return String(r.a_in === undefined ? '1' : r.a_in).trim() === '1'; })
     .map(function (r) {
-      var date = asDateText(r.date);
+      // Read against the month column, so a date the workbook parsed into the
+      // wrong month is shown as the day that was meant even before the sheet
+      // has been repaired.
+      var date = mendDate(r.date, r.month, sheetTimeZone());
       return {
         sno: Number(r.sno) || 0,
         trnsctn_id: String(r.trnsctn_id || ''),
@@ -677,11 +797,24 @@ function doGet(e) {
  * row stays, so a mistaken click is one cell away from being undone.
  */
 function doPost(e) {
+  var lock = null;
   try {
     var body = {};
     if (e && e.postData && e.postData.contents) body = JSON.parse(e.postData.contents);
 
     var action = String(body.action || '').trim();
+
+    // One write at a time. restate() rewrites the whole ledger block, and two
+    // of those overlapping would each write back the rows they read — the
+    // later one without the row the earlier one added. Thirty seconds is far
+    // longer than a write takes; a caller that waits it out is refused with
+    // a coded error, so the screen reports it rather than re-reading.
+    lock = LockService.getScriptLock();
+    if (!lock.tryLock(30000)) {
+      lock = null;
+      return fail('BUSY', 'Another entry is being saved. Please try again in a moment.');
+    }
+
     // Checked per action, not once at the door: the fund is adm_in = 1 only,
     // while the pot also takes a transactions admin — the one ledger that role
     // exists for. The claims ride into the write so it can record whose hand
@@ -693,6 +826,8 @@ function doPost(e) {
     return fail('UNKNOWN_ACTION', 'Unknown action: ' + action);
   } catch (err) {
     return fail('SERVER_ERROR', String(err && err.message ? err.message : err));
+  } finally {
+    if (lock) lock.releaseLock();
   }
 }
 
@@ -774,39 +909,138 @@ function deleteFund(body) {
 /**
  * Puts the ledger back in order after any write.
  *
- * Renumbers sno 1..N in date order, rewrites the running balance along it, and
- * repaints the money columns. All three are consequences of one entry — adding
- * a January row when February is already there moves every line after it, and a
- * sheet the committee reads directly has to show that rather than leave them to
- * work it out.
+ * The rows are physically sorted into date order — not merely renumbered —
+ * so the sheet reads top to bottom the way the screen does. Adding a January
+ * row when February is already there moves every line after it down, as it
+ * would on a bank statement, and a committee that reads this sheet directly
+ * sees that rather than a row at the bottom wearing a number from the middle.
+ *
+ * Along the way: every date cell becomes `dd-MM-yyyy` text (mending any the
+ * workbook parsed into the wrong month — see mendDate), year and month are
+ * rewritten from the date, sno runs 1..N down the live rows, the running
+ * balance is rewritten along them, the fund year is filled in where blank,
+ * and the money columns are coloured. Retired rows (a_in = 0) keep their
+ * place in the sheet but move below the live ones, lose their line number and
+ * their colour, and keep everything else, so a mistaken delete is still one
+ * cell away from being undone.
+ *
+ * Reads and writes the block in one go each, which is both faster than a cell
+ * at a time and the only way to move rows. Formulas survive: a cell holding
+ * one is written back as the formula, not its last value.
+ *
+ * Returns { rows, live, mended } for the repair functions' log line.
  */
 function restate(sheet) {
   var header = headerOf(sheet);
-  var colSno = header.indexOf('sno');
-  var colBal = header.indexOf('balance');
+  var col = function (name) { return header.indexOf(name); };
+  var cDate = col('date');
+  var cYear = col('year');
+  var cMonth = col('month');
+  var cSno = col('sno');
+  var cBal = col('balance');
+  var cAnnual = col('annual_year');
+  var cAin = col('a_in');
+  var cCredit = col('credit');
+  var cDebit = col('debit');
+  if (cDate < 0) throw new Error('The sheet "' + sheet.getName() + '" has no date column.');
 
-  var live = readRows(sheet)
-    .filter(function (r) { return String(r.a_in === undefined ? '1' : r.a_in).trim() === '1'; })
-    .map(function (r) { r.__k = dateKey(asDateText(r.date)); return r; })
-    .sort(function (a, b) {
-      if (a.__k !== b.__k) return a.__k - b.__k;
-      return (Number(a.sno) || 0) - (Number(b.sno) || 0);
+  var width = header.length;
+  var tz = sheet.getParent().getSpreadsheetTimeZone();
+
+  // The whole column, to the sheet's last row, so a date typed by hand into a
+  // spare row below the ledger stays the text it was typed as.
+  if (sheet.getMaxRows() > 1) {
+    sheet.getRange(2, cDate + 1, sheet.getMaxRows() - 1, 1).setNumberFormat('@');
+  }
+
+  var last = sheet.getLastRow();
+  if (last < 2) return { rows: 0, live: 0, mended: 0 };
+
+  var block = sheet.getRange(2, 1, last - 1, width);
+  var values = block.getValues();
+  var formulas = block.getFormulas();
+
+  var mended = 0;
+  var rows = [];
+  values.forEach(function (raw, i) {
+    var blank = raw.every(function (x) { return String(x === 0 ? '0' : (x || '')).trim() === ''; });
+    if (blank) return;
+
+    var v = raw.map(function (x, j) { return formulas[i][j] ? formulas[i][j] : x; });
+
+    var before = raw[cDate];
+    var date = mendDate(before, cMonth >= 0 ? raw[cMonth] : '', tz);
+    if (before instanceof Date || typeof before === 'number' || String(before) !== date) mended += 1;
+    v[cDate] = date;
+
+    // The same test ledger() applies: no a_in column means every row is live;
+    // with the column, only a 1 is.
+    var live = cAin < 0 || String(raw[cAin] === '' ? '' : raw[cAin]).trim() === '1';
+    var sno = Number(raw[cSno]);
+
+    rows.push({
+      v: v,
+      live: live,
+      // A row with no readable date sorts last, where it can be seen.
+      key: dateKey(date) || 99999999,
+      // Two movements on the same day keep the order they were entered in:
+      // the line numbers they already carry, then the new row (which has
+      // none yet) after them, then the order they sat in.
+      sno: cSno >= 0 && sno > 0 ? sno : 1e9,
+      pos: i
     });
+  });
 
-  var colAnnual = header.indexOf('annual_year');
+  rows.sort(function (a, b) {
+    if (a.live !== b.live) return a.live ? -1 : 1;
+    if (a.key !== b.key) return a.key - b.key;
+    if (a.sno !== b.sno) return a.sno - b.sno;
+    return a.pos - b.pos;
+  });
 
   var running = 0;
-  live.forEach(function (r, i) {
-    running += asNumber(r.credit) - asNumber(r.debit);
-    if (colSno >= 0) sheet.getRange(r.__row, colSno + 1).setValue(i + 1);
-    if (colBal >= 0) sheet.getRange(r.__row, colBal + 1).setValue(running);
+  var liveCount = 0;
+  rows.forEach(function (r, i) {
+    var v = r.v;
+    if (!r.live) {
+      if (cSno >= 0 && String(v[cAin] === undefined ? '' : v[cAin]).trim() === '0') v[cSno] = '';
+      return;
+    }
+    liveCount += 1;
+    running += asNumber(v[cCredit]) - asNumber(v[cDebit]);
+    if (cSno >= 0) v[cSno] = i + 1;
+    if (cBal >= 0) v[cBal] = running;
+    // Year and month follow the date, so the three can never tell different
+    // stories about the same row.
+    if (cYear >= 0 && yearOfDate(v[cDate])) v[cYear] = Number(yearOfDate(v[cDate]));
+    if (cMonth >= 0 && monthOfDate(v[cDate])) v[cMonth] = monthOfDate(v[cDate]);
     // Written rather than typed, so the sheet reads standalone and cannot
     // disagree with the screen about which year a row belongs to.
-    if (colAnnual >= 0 && !String(r.annual_year || '').trim()) {
-      sheet.getRange(r.__row, colAnnual + 1).setValue(annualYearFor(asDateText(r.date)));
-    }
-    paintRow(sheet, r.__row);
+    if (cAnnual >= 0 && !String(v[cAnnual] || '').trim()) v[cAnnual] = annualYearFor(v[cDate]);
   });
+
+  var out = rows.map(function (r) { return r.v; });
+  if (out.length) sheet.getRange(2, 1, out.length, width).setValues(out);
+
+  // Blank lines that sat between rows have been closed up; whatever is left
+  // below the block is cleared so no row appears twice.
+  var spare = values.length - out.length;
+  if (spare > 0) {
+    var tail = sheet.getRange(2 + out.length, 1, spare, width);
+    tail.clearContent();
+    tail.setBackground(null);
+  }
+
+  // Green for money in, red for money out, blue for the balance — on the live
+  // rows; a retired row goes uncoloured so it reads as outside the ledger.
+  [['credit', FILL_CREDIT], ['debit', FILL_DEBIT], ['balance', FILL_BALANCE]].forEach(function (p) {
+    var c = col(p[0]);
+    if (c < 0 || !out.length) return;
+    var fills = rows.map(function (r) { return [r.live ? p[1] : null]; });
+    sheet.getRange(2, c + 1, out.length, 1).setBackgrounds(fills);
+  });
+
+  return { rows: out.length, live: liveCount, mended: mended };
 }
 
 /* ==========================================================================
@@ -845,7 +1079,7 @@ function txnLedger() {
   return readRows(transactionsSheet())
     .filter(function (r) { return String(r.a_in === undefined ? '1' : r.a_in).trim() === '1'; })
     .map(function (r) {
-      var date = asDateText(r.date, txnTimeZone());
+      var date = mendDate(r.date, r.month, txnTimeZone());
       return {
         sno: Number(r.sno) || 0,
         trnsctn_id: String(r.trnsctn_id || ''),
@@ -875,7 +1109,8 @@ function txnLedger() {
 function txnYearKey(row) {
   var id = String(row.annual_yr_id || '').trim();
   if (id) return 'id:' + id;
-  return 'yr:' + String(row.annual_year || annualYearFor(asDateText(row.date)) || '').trim();
+  var date = mendDate(row.date, row.month, txnTimeZone());
+  return 'yr:' + String(row.annual_year || annualYearFor(date) || '').trim();
 }
 
 /**

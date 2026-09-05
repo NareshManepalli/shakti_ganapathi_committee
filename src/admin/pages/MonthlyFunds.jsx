@@ -129,6 +129,12 @@ const MonthlyFunds = () => {
   const totals = useMemo(() => summarise(forYear), [forYear]);
   const drifted = useMemo(() => forYear.filter((r) => r.drift).length, [forYear]);
 
+  // A fund cannot spend what it has not collected, so a running balance below
+  // zero is not a figure — it is a debit sitting ahead of the money that paid
+  // for it, almost always because its date is wrong. Named rather than merely
+  // flagged: the row to check is the first one that goes under.
+  const belowZero = useMemo(() => forYear.find((r) => r.balance < 0) || null, [forYear]);
+
   const found = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return forYear;
@@ -275,6 +281,15 @@ const MonthlyFunds = () => {
           <b>{drifted} row{drifted === 1 ? '' : 's'} carry a balance that does not match the
           arithmetic.</b> The figures here are recomputed from the amounts; saving any entry
           rewrites the sheet's own column to agree.
+        </p>
+      )}
+
+      {belowZero && (
+        <p className="admin-msg is-warn" role="status">
+          <b>The balance goes below zero at {belowZero.date}
+          {belowZero.reason ? ` (${belowZero.reason})` : ''}.</b> A fund cannot spend what it
+          has not yet collected, so that entry is dated ahead of the money that paid for it.
+          Check its date.
         </p>
       )}
 
